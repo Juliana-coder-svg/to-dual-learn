@@ -2,10 +2,12 @@
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { getSupabase } from "@/lib/supabase/server";
-import { setDailyEmail, setUserRole, type Role } from "@/lib/db/queries";
-import { homeFor, requireUser } from "@/lib/auth/session";
+import type { EmailOtpType } from "@supabase/supabase-js";
+import { createServiceClient, getSupabase } from "@/lib/supabase/server";
+import { setDailyEmail, setUserRole, updateProfile, type Role } from "@/lib/db/queries";
+import { getCurrentUser, homeFor, requireUser } from "@/lib/auth/session";
 import { setLoginPrefs } from "@/lib/auth/login-prefs";
+import { loginMode } from "@/lib/auth/mode";
 
 function parseRole(v: FormDataEntryValue | null): Role {
   return v === "teacher" ? "teacher" : "student";
@@ -23,8 +25,8 @@ async function siteOrigin(): Promise<string> {
   return `${proto}://${host}`;
 }
 
-/** Отправляет magic link. Имя и роль уходят в user_metadata (для нового пользователя)
- *  и в cookie (для обновления профиля существующего после перехода по ссылке). */
+/** Вход. В режиме direct — сразу, без письма; в режиме magic — ссылка на почту.
+ *  Имя и роль уходят в user_metadata (для нового пользователя) и в профиль (для существующего). */
 export async function login(formData: FormData): Promise<void> {
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const name = String(formData.get("name") ?? "").trim();
@@ -32,6 +34,16 @@ export async function login(formData: FormData): Promise<void> {
   if (!email.includes("@") || name.length < 2) redirect("/login?error=1");
   const next = String(formData.get("next") ?? "");
   const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : "";
+
+  if (loginMode() === "direct") {
+    const failed = await loginDirect(email, name, role);
+    if (failed) {
+      console.error("[auth] direct login", failed);
+      redirect(`/login?error=send&role=${role}${safeNext ? `&next=${encodeURIComponent(safeNext)}` : ""}`);
+    }
+    const user = await getCurrentUser();
+    redirect(safeNext || (user ? homeFor(user) : "/login"));
+  }
 
   const supabase = await getSupabase();
   const { error } = await supabase.auth.signInWithOtp({
@@ -48,6 +60,23 @@ export async function login(formData: FormData): Promise<void> {
   }
   await setLoginPrefs({ name, role, next: safeNext });
   redirect(`/login?sent=1&role=${role}`);
+}
+
+/** Вход без письма: service role выпускает одноразовый токен входа, мы тут же подтверждаем его
+ *  от имени пользователя, и @supabase/ssr кладёт сессию в cookie. Письмо при этом не отправляется.
+ *  Возвращает текст ошибки или null. */
+async function loginDirect(email: string, name: string, role: Role): Promise<string | null> {
+  const admin = createServiceClient();
+  const { data, error } = await admin.auth.admin.generateLink({ type: "magiclink", email, options: { data: { name, role } } });
+  if (error) return error.message;
+  const supabase = await getSupabase();
+  const { data: session, error: verifyError } = await supabase.auth.verifyOtp({
+    token_hash: data.properties.hashed_token,
+    type: data.properties.verification_type as EmailOtpType,
+  });
+  if (verifyError) return verifyError.message;
+  if (session.user) await updateProfile(session.user.id, { name, role });
+  return null;
 }
 
 export async function logout(): Promise<void> {

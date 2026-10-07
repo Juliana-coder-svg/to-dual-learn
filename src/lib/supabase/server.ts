@@ -31,8 +31,9 @@ const getUserSupabase = cache(async (): Promise<SupabaseServerClient> => {
 
 const serviceScope = new AsyncLocalStorage<SupabaseServerClient>();
 
-/** Клиент с service-role ключом: RLS не действует. Только для фоновых задач без пользователя (крон). */
-function createServiceClient(): SupabaseServerClient {
+/** Клиент с service-role ключом: RLS не действует. Только для фоновых задач без пользователя (крон)
+ *  и для admin API (вход без письма). В Server Components и клиентский код не передавать. */
+export function createServiceClient(): SupabaseServerClient {
   const { url } = supabaseEnv();
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!key) throw new Error("Не задан SUPABASE_SERVICE_ROLE_KEY.");

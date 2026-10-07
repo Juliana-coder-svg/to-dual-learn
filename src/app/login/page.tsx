@@ -2,13 +2,14 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser, homeFor } from "@/lib/auth/session";
 import { login } from "@/lib/actions/auth";
+import { loginMode } from "@/lib/auth/mode";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 const ERRORS: Record<string, string> = {
   "1": "Проверьте почту и имя.",
-  send: "Не удалось отправить письмо. Попробуйте ещё раз через минуту.",
+  send: "Не удалось войти. Попробуйте ещё раз через минуту.",
   email: "На этот адрес письмо не уйдёт. Проверьте, нет ли опечатки.",
   link: "Ссылка не сработала или устарела. Запросите новую.",
 };
@@ -22,6 +23,7 @@ export default async function LoginPage({
   if (user) redirect(homeFor(user));
   const sp = await searchParams;
   const defaultRole = sp.role === "teacher" ? "teacher" : "student";
+  const magic = loginMode() === "magic";
 
   if (sp.sent) {
     return (
@@ -42,7 +44,7 @@ export default async function LoginPage({
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-16">
       <h1 className="text-2xl font-semibold tracking-tight">Вход</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Пароль не нужен: пришлём на почту ссылку для входа. Профиль появится при первом входе.
+        {magic ? "Пароль не нужен: пришлём на почту ссылку для входа." : "Пароль не нужен: введите почту и имя."} Профиль появится при первом входе.
       </p>
       {sp.error ? <p className="mt-4 text-sm text-destructive">{ERRORS[sp.error] ?? ERRORS["1"]}</p> : null}
       <form action={login} className="mt-8 space-y-5">
@@ -66,7 +68,7 @@ export default async function LoginPage({
             </label>
           </div>
         </fieldset>
-        <Button type="submit" className="w-full">Получить ссылку для входа</Button>
+        <Button type="submit" className="w-full">{magic ? "Получить ссылку для входа" : "Войти"}</Button>
       </form>
     </main>
   );
