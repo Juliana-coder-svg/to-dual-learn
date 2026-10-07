@@ -53,8 +53,9 @@ async function complete(kind: Kind, ctx: CallContext, req: AiRequest): Promise<A
   const provider = getProvider();
   const started = Date.now();
   const result = await provider.complete(req);
+  const modelLabel = result.model.includes("/") ? result.model : `${result.provider}/${result.model}`;
   console.info(
-    `[ai] ${kind} ${result.provider}/${result.model} in=${result.usage.inputTokens} cache_w=${result.usage.cacheWriteTokens} cache_r=${result.usage.cacheReadTokens} out=${result.usage.outputTokens} ${Date.now() - started}ms`,
+    `[ai] ${kind} ${modelLabel} in=${result.usage.inputTokens} cache_w=${result.usage.cacheWriteTokens} cache_r=${result.usage.cacheReadTokens} out=${result.usage.outputTokens} ${Date.now() - started}ms`,
   );
   addAiCall({
     courseId: ctx.courseId ?? null,
@@ -66,7 +67,7 @@ async function complete(kind: Kind, ctx: CallContext, req: AiRequest): Promise<A
     outputTokens: result.usage.outputTokens,
     cacheReadTokens: result.usage.cacheReadTokens,
     cacheWriteTokens: result.usage.cacheWriteTokens,
-    costUsd: estimateCostUsd(result.usage),
+    costUsd: estimateCostUsd(result.usage, result.model),
     durationMs: Date.now() - started,
   });
   return result;
