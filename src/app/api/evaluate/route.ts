@@ -27,8 +27,6 @@ export async function POST(req: Request) {
     const { user, course } = ctx;
     const isOwner = course.owner_id === user.id;
     if (lesson.status !== "published" && !isOwner) return jsonError("Урок ещё не опубликован", 403);
-    const answer = String(body.answer ?? "").trim().slice(0, 6000);
-    if (answer.length < 10) return jsonError("Напиши ответ хотя бы в одно предложение");
     const callCtx = { userId: user.id, courseId: course.id };
     const previous = getLatestSubmission(lesson.id, user.id);
 
@@ -41,6 +39,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true, feedback, firstTime: false, progress: { streak: user.streak, xp: user.xp, gained: 0 } });
     }
 
+    const answer = String(body.answer ?? "").trim().slice(0, 6000);
+    if (answer.length < 10) return jsonError("Напиши ответ хотя бы в одно предложение");
     const firstTime = !previous;
     if (firstTime && !isOwner && course.daily_limit > 0 && countLessonsStartedToday(user.id, course.id) >= course.daily_limit) {
       return jsonError(`На сегодня лимит: ${course.daily_limit === 1 ? "один новый урок" : `${course.daily_limit} новых урока`}. Следующий откроется завтра.`, 429);
