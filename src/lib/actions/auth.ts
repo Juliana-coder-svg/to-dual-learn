@@ -43,7 +43,8 @@ export async function login(formData: FormData): Promise<void> {
   });
   if (error) {
     console.error("[auth] signInWithOtp", error.message);
-    redirect(`/login?error=send&role=${role}`);
+    const kind = error.code === "email_address_invalid" ? "email" : "send";
+    redirect(`/login?error=${kind}&role=${role}${safeNext ? `&next=${encodeURIComponent(safeNext)}` : ""}`);
   }
   await setLoginPrefs({ name, role, next: safeNext });
   redirect(`/login?sent=1&role=${role}`);
