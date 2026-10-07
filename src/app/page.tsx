@@ -11,8 +11,8 @@ export default async function Home() {
     <div className="flex min-h-screen flex-col">
       <header className="border-b">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-3">
-          <span className="text-base font-semibold tracking-tight"><span className="text-primary">To Dual</span> Learn</span>
-          <Button render={<Link href="/login" />} size="sm">Войти</Button>
+          <span className="whitespace-nowrap text-base font-semibold tracking-tight"><span className="text-primary">To Dual</span> Learn</span>
+          <Button nativeButton={false} render={<Link href="/login" />} size="sm">Войти</Button>
         </div>
       </header>
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-16">
@@ -44,8 +44,8 @@ export default async function Home() {
           </div>
         </div>
         <div className="mt-10 flex gap-3">
-          <Button render={<Link href="/login?role=teacher" />} size="lg">Я преподаватель</Button>
-          <Button render={<Link href="/login?role=student" />} size="lg" variant="outline">Я студент</Button>
+          <Button nativeButton={false} render={<Link href="/login?role=teacher" />} size="lg">Я преподаватель</Button>
+          <Button nativeButton={false} render={<Link href="/login?role=student" />} size="lg" variant="outline">Я студент</Button>
         </div>
       </main>
     </div>

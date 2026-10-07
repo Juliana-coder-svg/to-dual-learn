@@ -117,7 +117,7 @@ export function LessonPlayer({ lesson, previous, nextHref, nextLabel }: Props) {
             <p className="mt-1">{c.keyTakeaway}</p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <Button render={<Link href={nextHref} />} size="lg">{nextLabel}</Button>
+            <Button nativeButton={false} render={<Link href={nextHref} />} size="lg">{nextLabel}</Button>
             <Button size="lg" variant="outline" onClick={() => setStep("task")}>Ответить ещё раз</Button>
           </div>
         </section>

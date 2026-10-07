@@ -10,7 +10,7 @@ export function AppShell({ user, children }: { user: User; children: React.React
       <header className="border-b">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-4 py-3">
           <div className="flex items-center gap-6">
-            <Link href={isTeacher ? "/teach" : "/learn"} className="text-base font-semibold tracking-tight">
+            <Link href={isTeacher ? "/teach" : "/learn"} className="whitespace-nowrap text-base font-semibold tracking-tight">
               <span className="text-primary">To Dual</span> Learn
             </Link>
             <nav className="hidden gap-4 text-sm text-muted-foreground sm:flex">

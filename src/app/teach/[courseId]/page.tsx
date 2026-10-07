@@ -4,7 +4,7 @@ import { listMaterials } from "@/lib/db/queries";
 import { deleteMaterialAction } from "@/lib/actions/courses";
 import { MaterialsUploader } from "@/components/teach/MaterialsUploader";
 import { Button } from "@/components/ui/button";
-import { formatDate } from "@/lib/utils/format";
+import { formatChars, formatDate } from "@/lib/utils/format";
 
 export default async function MaterialsPage({ params }: { params: Promise<{ courseId: string }> }) {
   const { courseId } = await params;
@@ -29,7 +29,7 @@ export default async function MaterialsPage({ params }: { params: Promise<{ cour
                 <div className="min-w-0">
                   <div className="truncate font-medium">{m.filename}</div>
                   <div className="text-xs text-muted-foreground">
-                    {m.kind.toUpperCase()} · {Math.round(m.char_count / 1000)} тыс. знаков · {formatDate(m.created_at)}
+                    {m.kind.toUpperCase()} · {formatChars(m.char_count)} · {formatDate(m.created_at)}
                   </div>
                   <details className="mt-1 text-xs">
                     <summary className="cursor-pointer text-muted-foreground">Показать текст</summary>
@@ -44,7 +44,7 @@ export default async function MaterialsPage({ params }: { params: Promise<{ cour
           </ul>
         )}
         {materials.length > 0 ? (
-          <p className="mt-3 text-xs text-muted-foreground">Всего {Math.round(totalChars / 1000)} тыс. знаков (~{Math.round(totalChars / 3.5 / 1000)} тыс. токенов). Они кэшируются между запросами.</p>
+          <p className="mt-3 text-xs text-muted-foreground">Всего {formatChars(totalChars)} (~{Math.max(1, Math.round(totalChars / 3.5 / 1000))} тыс. токенов). Материалы кэшируются между запросами к модели.</p>
         ) : null}
       </section>
       <aside>

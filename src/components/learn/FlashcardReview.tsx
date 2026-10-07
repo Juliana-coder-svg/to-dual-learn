@@ -18,7 +18,7 @@ export function FlashcardReview({ cards }: { cards: CardData[] }) {
     return (
       <div className="rounded-md border border-dashed p-8 text-center">
         <p className="text-sm text-muted-foreground">На сегодня повторять нечего.</p>
-        <Button render={<Link href="/learn" />} variant="outline" className="mt-4">К курсам</Button>
+        <Button nativeButton={false} render={<Link href="/learn" />} variant="outline" className="mt-4">К курсам</Button>
       </div>
     );
   }
@@ -26,7 +26,7 @@ export function FlashcardReview({ cards }: { cards: CardData[] }) {
     return (
       <div className="rounded-md border p-8 text-center">
         <p className="text-lg font-medium">Готово: {cards.length} из {cards.length}</p>
-        <Button render={<Link href="/learn" />} className="mt-4">К курсам</Button>
+        <Button nativeButton={false} render={<Link href="/learn" />} className="mt-4">К курсам</Button>
       </div>
     );
   }

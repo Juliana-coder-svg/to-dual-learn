@@ -27,7 +27,7 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
             <div className="font-medium">{next.title}</div>
             <div className="text-sm text-muted-foreground">{next.concept} · 5 минут</div>
           </div>
-          <Button render={<Link href={`/learn/${courseId}/lesson/${next.id}`} />}>Начать</Button>
+          <Button nativeButton={false} render={<Link href={`/learn/${courseId}/lesson/${next.id}`} />}>Начать</Button>
         </div>
       ) : null}
       <ol className="mt-8 space-y-2">

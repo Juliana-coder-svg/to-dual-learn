@@ -51,7 +51,7 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
                       </div>
                       <div className="mt-4">
                         {next ? (
-                          <Button render={<Link href={`/learn/${c.id}/lesson/${next.id}`} />} size="sm">Урок дня: {next.title}</Button>
+                          <Button nativeButton={false} render={<Link href={`/learn/${c.id}/lesson/${next.id}`} />} size="sm">Урок дня: {next.title}</Button>
                         ) : lessons.length === 0 ? (
                           <span className="text-sm text-muted-foreground">Преподаватель ещё не опубликовал уроки.</span>
                         ) : (
