@@ -18,8 +18,8 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
   return (
     <AppShell user={user}>
       <div className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-md border p-4"><div className="text-xs text-muted-foreground">Streak</div><div className="mt-1 text-2xl font-semibold">{plural(user.streak, "день", "дня", "дней")}</div></div>
-        <div className="rounded-md border p-4"><div className="text-xs text-muted-foreground">Очки</div><div className="mt-1 text-2xl font-semibold">{user.xp} XP</div></div>
+        <div className="rounded-md border p-4"><div className="text-xs text-muted-foreground">Дней подряд</div><div className="mt-1 text-2xl font-semibold">{plural(user.streak, "день", "дня", "дней")}</div></div>
+        <div className="rounded-md border p-4"><div className="text-xs text-muted-foreground">Баллы</div><div className="mt-1 text-2xl font-semibold">{user.xp}</div></div>
         <Link href="/learn/review" className="rounded-md border p-4 transition-colors hover:border-primary">
           <div className="text-xs text-muted-foreground">Повторение</div>
           <div className="mt-1 text-2xl font-semibold">{due > 0 ? plural(due, "карточка", "карточки", "карточек") : "Пусто"}</div>
@@ -30,7 +30,7 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
         <section>
           <h1 className="text-2xl font-semibold tracking-tight">Мои курсы</h1>
           {courses.length === 0 ? (
-            <p className="mt-4 text-sm text-muted-foreground">Пока нет курсов. Введи код от преподавателя справа.</p>
+            <p className="mt-4 text-sm text-muted-foreground">Пока нет курсов. Введите код от преподавателя справа.</p>
           ) : (
             <div className="mt-6 space-y-4">
               {courses.map((c) => {
@@ -58,7 +58,7 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
                         ) : lessons.length === 0 ? (
                           <span className="text-sm text-muted-foreground">Преподаватель ещё не опубликовал уроки.</span>
                         ) : (
-                          <span className="text-sm text-muted-foreground">Все уроки пройдены. Загляни в повторение.</span>
+                          <span className="text-sm text-muted-foreground">Все уроки пройдены. Загляните в повторение.</span>
                         )}
                       </div>
                     </CardContent>
@@ -85,7 +85,7 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
           <Card className="mt-4">
             <CardHeader>
               <CardTitle>Письмо с уроком дня</CardTitle>
-              <CardDescription>Каждое утро на {user.email}: какой урок ждёт и сколько карточек на повторение.</CardDescription>
+              <CardDescription>Каждое утро на {user.email}: какой урок ждёт и сколько карточек пора повторить.</CardDescription>
             </CardHeader>
             <CardContent>
               <form action={setDailyEmailAction} className="flex items-center justify-between gap-3 text-sm">

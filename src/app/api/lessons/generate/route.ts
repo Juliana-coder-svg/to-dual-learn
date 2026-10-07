@@ -14,7 +14,7 @@ export async function POST(req: Request) {
     if (!ctx) return jsonError("Нет доступа к курсу", 403);
     const count = Math.min(10, Math.max(1, Number(body.count) || 5));
     const materials = listMaterials(ctx.course.id);
-    if (materials.length === 0) return jsonError("Сначала загрузи материалы");
+    if (materials.length === 0) return jsonError("Сначала загрузите материалы");
     const existingTitles = listLessons(ctx.course.id).map((l) => l.title);
     const callCtx = { userId: ctx.user.id, courseId: ctx.course.id };
     const generated = await generateLessons(callCtx, ctx.course, materials, { count, existingTitles });

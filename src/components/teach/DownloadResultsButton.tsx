@@ -6,7 +6,7 @@ import { toCsv } from "@/lib/homework/csv";
 
 export function DownloadResultsButton({ results }: { results: HomeworkResults }) {
   function download() {
-    const rows: (string | number)[][] = [["Студент", "Балл", "Критерии выполнены", "Флаги", "Фидбек"]];
+    const rows: (string | number)[][] = [["Студент", "Балл", "Критерии выполнены", "Отметки", "Комментарий"]];
     for (const r of results.results) {
       rows.push([r.student, r.score, `${r.criteria.filter((c) => c.met).length}/${r.criteria.length}`, r.flags.join("; "), r.feedback]);
     }

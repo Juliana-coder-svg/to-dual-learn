@@ -72,7 +72,7 @@ export function FlashcardReview({ cards }: { cards: CardData[] }) {
           <Button size="lg" onClick={() => setRevealed(true)}>Показать ответ</Button>
         ) : (
           <>
-            <Button size="lg" variant="outline" disabled={busy} onClick={() => rate("forgot")}>Забыл</Button>
+            <Button size="lg" variant="outline" disabled={busy} onClick={() => rate("forgot")}>Не помню</Button>
             <Button size="lg" variant="outline" disabled={busy} onClick={() => rate("vague")}>Смутно</Button>
             <Button size="lg" disabled={busy} onClick={() => rate("remembered")}>Помню</Button>
           </>

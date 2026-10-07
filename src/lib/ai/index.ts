@@ -195,7 +195,7 @@ export async function reevaluateAnswer(
 ): Promise<Feedback> {
   if (isDemoMode()) {
     const f = demo.feedback(lesson, answer);
-    return { ...f, summary: `Демо-режим: возражение получено («${objection.slice(0, 60)}…»). В реальном режиме ментор пересмотрит оценку.` };
+    return { ...f, summary: `Демо-режим: возражение получено («${objection.slice(0, 60)}…»). С подключённой моделью наставник пересмотрит оценку.` };
   }
   return completeJson("evaluate", ctx, FeedbackSchema, {
     task: reevaluatePrompt(lesson, answer, previous.summary, previous.score, objection, opts),

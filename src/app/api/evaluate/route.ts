@@ -40,7 +40,7 @@ export async function POST(req: Request) {
     }
 
     const answer = String(body.answer ?? "").trim().slice(0, 6000);
-    if (answer.length < 10) return jsonError("Напиши ответ хотя бы в одно предложение");
+    if (answer.length < 10) return jsonError("Напишите ответ хотя бы в одно предложение");
     const firstTime = !previous;
     if (firstTime && !isOwner && course.daily_limit > 0 && countLessonsStartedToday(user.id, course.id) >= course.daily_limit) {
       return jsonError(`На сегодня лимит: ${course.daily_limit === 1 ? "один новый урок" : `${course.daily_limit} новых урока`}. Следующий откроется завтра.`, 429);

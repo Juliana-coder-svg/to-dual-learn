@@ -22,7 +22,7 @@ export default async function StudentsPage({ params }: { params: Promise<{ cours
         ) : (
           <table className="mt-6 w-full text-sm">
             <thead className="text-left text-xs text-muted-foreground">
-              <tr className="border-b"><th className="py-2 pr-4 font-medium">Студент</th><th className="py-2 pr-4 font-medium">Пройдено</th><th className="py-2 pr-4 font-medium">Средний балл</th><th className="py-2 pr-4 font-medium">Streak</th><th className="py-2 font-medium">XP</th></tr>
+              <tr className="border-b"><th className="py-2 pr-4 font-medium">Студент</th><th className="py-2 pr-4 font-medium">Пройдено</th><th className="py-2 pr-4 font-medium">Средний балл</th><th className="py-2 pr-4 font-medium">Дней подряд</th><th className="py-2 font-medium">Баллы</th></tr>
             </thead>
             <tbody>
               {students.map((s) => (
@@ -49,7 +49,7 @@ export default async function StudentsPage({ params }: { params: Promise<{ cours
                   <Badge>{s.score}/5</Badge>
                 </div>
                 <details className="mt-2">
-                  <summary className="cursor-pointer text-muted-foreground">Ответ и фидбек</summary>
+                  <summary className="cursor-pointer text-muted-foreground">Ответ и разбор</summary>
                   <blockquote className="mt-2 whitespace-pre-wrap border-l-2 pl-3">{s.answer}</blockquote>
                   <p className="mt-2 text-muted-foreground">{s.feedback.summary}</p>
                 </details>

@@ -52,12 +52,12 @@ export const FeedbackSchema = z.object({
     z.object({
       criterion: z.string(),
       met: z.boolean(),
-      comment: z.string().describe("Одно предложение с цитатой из ответа, если критерий выполнен или нарушен"),
+      comment: z.string().describe("Одно предложение с цитатой из ответа: почему критерий выполнен или нет"),
     }),
   ),
   strengths: z.array(z.string()).describe("Что сделано хорошо, 1–3 пункта"),
   improvements: z.array(z.string()).describe("Что улучшить, 1–3 конкретных пункта"),
-  summary: z.string().describe("2–3 предложения итогового фидбека от ментора"),
+  summary: z.string().describe("2–3 предложения итогового разбора от наставника, по-человечески, без штампов"),
 });
 export type Feedback = z.infer<typeof FeedbackSchema>;
 

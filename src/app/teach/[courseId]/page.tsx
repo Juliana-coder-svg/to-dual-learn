@@ -18,10 +18,10 @@ export default async function MaterialsPage({ params }: { params: Promise<{ cour
       <section>
         <h2 className="text-lg font-semibold">Материалы курса</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Программа, методички, учебники, статьи. Всё, что загрузишь, модель будет использовать при генерации уроков, заданий и в чате.
+          Программа, методички, учебники, статьи. Всё, что вы загрузите, ИИ использует, когда собирает уроки и задания и отвечает на вопросы.
         </p>
         {materials.length === 0 ? (
-          <p className="mt-6 rounded-md border border-dashed p-6 text-sm text-muted-foreground">Материалов пока нет. Загрузи хотя бы один файл, чтобы собрать уроки.</p>
+          <p className="mt-6 rounded-md border border-dashed p-6 text-sm text-muted-foreground">Материалов пока нет. Загрузите хотя бы один файл, чтобы собрать уроки.</p>
         ) : (
           <ul className="mt-6 divide-y rounded-md border">
             {materials.map((m) => (
@@ -44,7 +44,7 @@ export default async function MaterialsPage({ params }: { params: Promise<{ cour
           </ul>
         )}
         {materials.length > 0 ? (
-          <p className="mt-3 text-xs text-muted-foreground">Всего {formatChars(totalChars)} (~{Math.max(1, Math.round(totalChars / 3.5 / 1000))} тыс. токенов). Материалы кэшируются между запросами к модели.</p>
+          <p className="mt-3 text-xs text-muted-foreground">Всего {formatChars(totalChars)} (~{Math.max(1, Math.round(totalChars / 3.5 / 1000))} тыс. токенов, в них считается расход на ИИ). Материалы кэшируются, повторные запросы выходят дешевле.</p>
         ) : null}
       </section>
       <aside>

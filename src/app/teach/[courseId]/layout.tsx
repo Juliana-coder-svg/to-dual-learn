@@ -25,14 +25,14 @@ export default async function CourseLayout({ children, params }: { children: Rea
           <div className="rounded-md border px-3 py-2">
             Код для студентов: <span className="font-mono font-semibold">{course.join_code}</span>
           </div>
-          <div className="rounded-md border px-3 py-2 text-muted-foreground" title={`Провайдер: ${providerLabel()}`}>
-            Расход: <span className="font-semibold text-foreground">${usage.cost_usd.toFixed(2)}</span> · {usage.calls} вызовов
+          <div className="rounded-md border px-3 py-2 text-muted-foreground" title={`Модель: ${providerLabel()}`}>
+            Расход на ИИ: <span className="font-semibold text-foreground">${usage.cost_usd.toFixed(2)}</span> · {usage.calls} запросов
           </div>
         </div>
       </div>
       {isDemoMode() ? (
         <p className="mt-4 rounded-md border border-dashed px-3 py-2 text-xs text-muted-foreground">
-          Демо-режим: ключ модели не задан, AI отвечает заглушками. Добавь ANTHROPIC_API_KEY или OPENAI_COMPAT_API_KEY в .env.local и перезапусти сервер.
+          Пробный режим: ключ модели не задан, вместо ответов ИИ показываются примеры. Добавьте ключ в .env.local и перезапустите сервер.
         </p>
       ) : null}
       <CourseTabs courseId={course.id} />

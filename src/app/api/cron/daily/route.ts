@@ -35,8 +35,8 @@ export async function GET(req: Request) {
     const due = countDueFlashcards(user.id);
     if (items.length === 0 && due === 0) continue;
     const html = `<p>${user.name}, на сегодня:</p>
-<ul>${items.join("")}${due > 0 ? `<li><a href="${site}/learn/review">Повторение: ${due} карт.</a></li>` : ""}</ul>
-<p>Пять минут, и streak ${user.streak > 0 ? `останется ${user.streak}` : "начнётся"}.</p>
+<ul>${items.join("")}${due > 0 ? `<li><a href="${site}/learn/review">Повторить карточки: ${due}</a></li>` : ""}</ul>
+<p>Пять минут, и серия ${user.streak > 0 ? `дойдёт до ${user.streak + 1}` : "начнётся"}.</p>
 <p style="color:#888;font-size:12px">Отключить письма можно на <a href="${site}/learn">странице курсов</a>.</p>`;
     const result = await sendMail(user.email, items.length > 0 ? "Урок дня ждёт" : "Пора повторить карточки", html);
     if (result === "sent") { sent++; markDigestSent(user.id); } else skipped++;

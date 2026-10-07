@@ -12,11 +12,11 @@ import { Badge } from "@/components/ui/badge";
 const KIND_LABELS: Record<string, string> = {
   extract: "Извлечение PDF",
   lessons: "Генерация уроков",
-  review: "Ревью уроков",
-  artifact: "Документы",
+  review: "Проверка уроков методистом",
+  artifact: "Материалы для занятий",
   evaluate: "Оценка ответов",
-  homework: "Проверка ДЗ",
-  chat: "Чат",
+  homework: "Проверка работ",
+  chat: "Вопросы по материалам",
 };
 
 export default async function SettingsPage({ params, searchParams }: { params: Promise<{ courseId: string }>; searchParams: Promise<{ saved?: string; error?: string }> }) {
@@ -35,7 +35,7 @@ export default async function SettingsPage({ params, searchParams }: { params: P
       <Card>
         <CardHeader>
           <CardTitle>Курс</CardTitle>
-          <CardDescription>Образовательные результаты и тон попадают во все промпты: генерацию, ревью и оценку.</CardDescription>
+          <CardDescription>Образовательные результаты и тон учитываются везде: когда ИИ собирает уроки, проверяет их и оценивает ответы.</CardDescription>
         </CardHeader>
         <CardContent>
           {sp.saved ? <p className="mb-3 text-sm text-primary">Сохранено.</p> : null}
@@ -83,7 +83,7 @@ export default async function SettingsPage({ params, searchParams }: { params: P
         <Card>
           <CardHeader>
             <CardTitle>Образцы оценок</CardTitle>
-            <CardDescription>Покажи ментору, что для тебя «5» и что «2». Образцы попадают в промпт оценки.</CardDescription>
+            <CardDescription>Покажите наставнику, что для вас «5» и что «2». ИИ сверяется с образцами, когда оценивает ответы.</CardDescription>
           </CardHeader>
           <CardContent>
             {sp.error === "sample" ? <p className="mb-3 text-sm text-destructive">Нужен ответ длиннее 10 символов и балл от 1 до 5.</p> : null}
@@ -121,12 +121,12 @@ export default async function SettingsPage({ params, searchParams }: { params: P
         <Card>
           <CardHeader>
             <CardTitle>Расход по курсу</CardTitle>
-            <CardDescription>Оценка по ценам из настроек, точная сумма в кабинете провайдера.</CardDescription>
+            <CardDescription>Оценка по ценам из настроек, точная сумма в кабинете поставщика модели.</CardDescription>
           </CardHeader>
           <CardContent>
-            {usage.length === 0 ? <p className="text-sm text-muted-foreground">Вызовов модели пока не было.</p> : (
+            {usage.length === 0 ? <p className="text-sm text-muted-foreground">Запросов к ИИ пока не было.</p> : (
               <table className="w-full text-sm">
-                <thead className="text-left text-xs text-muted-foreground"><tr className="border-b"><th className="py-1 font-medium">Операция</th><th className="py-1 font-medium">Вызовов</th><th className="py-1 font-medium">Токены вх/вых</th><th className="py-1 text-right font-medium">USD</th></tr></thead>
+                <thead className="text-left text-xs text-muted-foreground"><tr className="border-b"><th className="py-1 font-medium">Операция</th><th className="py-1 font-medium">Запросов</th><th className="py-1 font-medium">Токены, тыс. (вход / выход)</th><th className="py-1 text-right font-medium">USD</th></tr></thead>
                 <tbody>{usage.map((u) => (
                   <tr key={u.kind} className="border-b"><td className="py-1">{KIND_LABELS[u.kind] ?? u.kind}</td><td className="py-1">{u.calls}</td><td className="py-1">{Math.round(u.input_tokens / 1000)}k / {Math.round(u.output_tokens / 1000)}k</td><td className="py-1 text-right">{u.cost_usd.toFixed(3)}</td></tr>
                 ))}</tbody>

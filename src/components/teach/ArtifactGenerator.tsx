@@ -28,7 +28,7 @@ export function ArtifactGenerator({ courseId, disabled }: { courseId: string; di
         body: JSON.stringify({ courseId, kind, instructions }),
       });
       const data = (await res.json()) as { ok?: boolean; error?: string; output?: string };
-      if (!res.ok || !data.ok || !data.output) throw new Error(data.error ?? "Не удалось сгенерировать");
+      if (!res.ok || !data.ok || !data.output) throw new Error(data.error ?? "Не удалось собрать документ");
       setResult(data.output);
       router.refresh();
     } catch (e) {
@@ -43,7 +43,7 @@ export function ArtifactGenerator({ courseId, disabled }: { courseId: string; di
       <Card>
         <CardHeader>
           <CardTitle>Что собрать</CardTitle>
-          <CardDescription>По материалам курса. Результат можно скопировать в любой формат.</CardDescription>
+          <CardDescription>По материалам курса. Результат можно скопировать в документ или презентацию.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -61,8 +61,8 @@ export function ArtifactGenerator({ courseId, disabled }: { courseId: string; di
             <Label htmlFor="instructions">Пожелания</Label>
             <Textarea id="instructions" rows={4} value={instructions} onChange={(e) => setInstructions(e.target.value)} placeholder="Тема, уровень сложности, формат, что обязательно включить" />
           </div>
-          <Button onClick={generate} disabled={busy || disabled} className="w-full">{busy ? "Генерирую…" : "Сгенерировать"}</Button>
-          {disabled ? <p className="text-xs text-muted-foreground">Сначала загрузи материалы.</p> : null}
+          <Button onClick={generate} disabled={busy || disabled} className="w-full">{busy ? "Собираю…" : "Собрать"}</Button>
+          {disabled ? <p className="text-xs text-muted-foreground">Сначала загрузите материалы.</p> : null}
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
         </CardContent>
       </Card>
@@ -75,7 +75,7 @@ export function ArtifactGenerator({ courseId, disabled }: { courseId: string; di
             <Markdown text={result} />
           </>
         ) : (
-          <p className="text-sm text-muted-foreground">{busy ? "Модель читает материалы и собирает документ…" : "Здесь появится результат."}</p>
+          <p className="text-sm text-muted-foreground">{busy ? "ИИ читает материалы и собирает документ…" : "Здесь появится результат."}</p>
         )}
       </div>
     </div>

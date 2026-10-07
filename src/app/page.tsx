@@ -20,26 +20,26 @@ export default async function Home() {
           Из методички преподавателя — в&nbsp;курс по&nbsp;5&nbsp;минут в&nbsp;день
         </h1>
         <p className="mt-6 text-lg text-muted-foreground">
-          Преподаватель загружает программу и материалы. AI собирает из них микроуроки с задачами и проверяет ответы.
-          Студенты проходят по уроку в день, получают фидбек ментора и возвращаются к повторению через 1, 3 и 7 дней.
+          Преподаватель загружает программу и материалы. Сервис собирает из них короткие уроки с задачами и разбирает ответы студентов.
+          Студент проходит по одному уроку в день, получает разбор от наставника и возвращается к повторению через день, неделю и месяц.
         </p>
         <div className="mt-10 grid gap-6 sm:grid-cols-2">
           <div className="rounded-lg border p-5">
             <div className="text-sm font-medium text-primary">Преподавателю</div>
             <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
-              <li>Материалы в PDF, TXT, MD</li>
+              <li>Материалы в PDF или текстом</li>
               <li>Уроки, задания, конспекты, планы занятий</li>
-              <li>Чат по своим материалам</li>
-              <li>Проверка домашек по критериям</li>
+              <li>Ответы на вопросы по своим материалам</li>
+              <li>Проверка домашних работ по критериям</li>
             </ul>
           </div>
           <div className="rounded-lg border p-5">
             <div className="text-sm font-medium text-primary">Студенту</div>
             <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
               <li>Один урок в день, 5 минут</li>
-              <li>Открытая задача и фидбек от AI-ментора</li>
-              <li>Streak и очки</li>
-              <li>Флешкарты для повторения</li>
+              <li>Открытая задача и разбор ответа</li>
+              <li>Серия дней и баллы</li>
+              <li>Карточки для повторения</li>
             </ul>
           </div>
         </div>
