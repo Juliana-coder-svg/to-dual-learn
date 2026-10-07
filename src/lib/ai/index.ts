@@ -209,7 +209,7 @@ export async function reevaluateAnswer(
 export async function checkHomework(
   ctx: CallContext,
   materials: Material[],
-  opts: { task: string; criteria: string; submissions: { student: string; answer: string }[] },
+  opts: { task: string; criteria: string; submissions: { student: string; answer: string }[]; tone: Course["tone"] },
 ): Promise<HomeworkResults> {
   if (isDemoMode()) return demo.homework(opts.submissions);
   return completeJson("homework", ctx, HomeworkResultsSchema, {

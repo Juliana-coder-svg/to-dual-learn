@@ -1,7 +1,10 @@
+import { toneInstruction, type Tone } from "./tone";
+
 export function checkHomeworkPrompt(opts: {
   task: string;
   criteria: string;
   submissions: { student: string; answer: string }[];
+  tone: Tone;
 }): string {
   const items = opts.submissions
     .map(
@@ -20,6 +23,7 @@ ${opts.criteria}
 ${items}
 
 Как проверять:
+- ${toneInstruction(opts.tone)}
 - По каждой работе пройди по всем критериям: выполнен или нет, с цитатой.
 - Балл от 0 до 10. Пустая работа или не по заданию — 0–2.
 - Отметь в flags, если работа похожа на копипаст из материалов, повторяет другую работу, или написана не по теме.
