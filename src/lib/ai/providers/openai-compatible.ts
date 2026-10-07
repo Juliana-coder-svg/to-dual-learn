@@ -31,7 +31,8 @@ export function openAiCompatibleProvider(): AiProvider {
     name: "openai",
     model,
     async complete(req: AiRequest): Promise<AiResult> {
-      const systemText = [`${SYSTEM_PROMPT}\n\n${req.task}`, req.materials].filter(Boolean).join("\n\n");
+      // Тот же порядок, что у Anthropic-провайдера: стабильное первым, задача последней (для кэша на стороне провайдера).
+      const systemText = [SYSTEM_PROMPT, req.materials, req.task].filter(Boolean).join("\n\n");
       const messages: { role: string; content: string | Part[] }[] = [
         { role: "system", content: systemText },
         ...req.messages.map((m) => ({ role: m.role, content: toParts(m.content) })),

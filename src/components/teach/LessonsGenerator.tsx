@@ -24,7 +24,7 @@ export function LessonsGenerator({ courseId, disabled }: { courseId: string; dis
       });
       const data = (await res.json()) as { ok?: boolean; error?: string; added?: number; reviewSummary?: string };
       if (!res.ok || !data.ok) throw new Error(data.error ?? "Не удалось собрать уроки");
-      setMsg(`Добавлено уроков: ${data.added}. ${data.reviewSummary ?? "Проверь и опубликуй."}`);
+      setMsg(`Добавлено уроков: ${data.added}. ${data.reviewSummary ?? "Проверьте и опубликуйте."}`);
       router.refresh();
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "Ошибка");
@@ -37,7 +37,7 @@ export function LessonsGenerator({ courseId, disabled }: { courseId: string; dis
     <Card>
       <CardHeader>
         <CardTitle>Собрать уроки</CardTitle>
-        <CardDescription>Модель прочитает материалы и соберет из них уроки с задачами и критериями. Это займет 1-3 минуты.</CardDescription>
+        <CardDescription>ИИ прочитает материалы и соберёт последовательность коротких уроков с задачами и критериями. Это 1–3 минуты.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
@@ -48,10 +48,10 @@ export function LessonsGenerator({ courseId, disabled }: { courseId: string; dis
         </div>
         <label className="flex cursor-pointer items-start gap-2 text-sm">
           <input type="checkbox" checked={review} onChange={(e) => setReview(e.target.checked)} className="mt-1" />
-          <span>Проверить ревьюером<span className="block text-xs text-muted-foreground">Второй проход, в котором методист сверяет уроки с материалами и правит критерии. Время и расход удваиваются.</span></span>
+          <span>Проверить методистом<span className="block text-xs text-muted-foreground">Второй проход: ИИ-методист сверяет уроки с материалами и результатами курса и правит критерии. Удваивает время и расход.</span></span>
         </label>
         <Button onClick={generate} disabled={busy || disabled} className="w-full">{busy ? (review ? "Собираю и проверяю…" : "Собираю…") : "Собрать"}</Button>
-        {disabled ? <p className="text-xs text-muted-foreground">Сначала загрузи материалы.</p> : null}
+        {disabled ? <p className="text-xs text-muted-foreground">Сначала загрузите материалы.</p> : null}
         {msg ? <p className="text-sm text-muted-foreground">{msg}</p> : null}
       </CardContent>
     </Card>

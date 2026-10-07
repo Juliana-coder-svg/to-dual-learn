@@ -20,7 +20,7 @@ export function AppShell({ user, children }: { user: User; children: React.React
                 <>
                   <Link href="/learn" className="hover:text-foreground">Учиться</Link>
                   <Link href="/learn/review" className="hover:text-foreground">Повторение</Link>
-                  <Link href="/learn/history" className="hover:text-foreground">История</Link>
+                  <Link href="/learn/history" className="hover:text-foreground">Мои ответы</Link>
                 </>
               )}
             </nav>
@@ -40,7 +40,7 @@ export function AppShell({ user, children }: { user: User; children: React.React
       </header>
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">{children}</main>
       <footer className="border-t py-4 text-center text-xs text-muted-foreground">
-        To Dual Education · MVP
+        To Dual Education
       </footer>
     </div>
   );

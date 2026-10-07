@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     const kind = body.kind as ArtifactKind;
     if (!(kind in ARTIFACT_KINDS)) return jsonError("Неизвестный тип документа");
     const materials = await listMaterials(ctx.course.id);
-    if (materials.length === 0) return jsonError("Сначала загрузи материалы");
+    if (materials.length === 0) return jsonError("Сначала загрузите материалы");
     const instructions = String(body.instructions ?? "").slice(0, 4000);
     const output = await generateArtifact({ userId: ctx.user.id, courseId: ctx.course.id }, ctx.course, materials, { kind, instructions });
     await addGeneration({ courseId: ctx.course.id, userId: ctx.user.id, kind, prompt: instructions, output });

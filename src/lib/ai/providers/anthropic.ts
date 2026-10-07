@@ -29,8 +29,13 @@ export function anthropicProvider(): AiProvider {
     name: "anthropic",
     model,
     async complete(req: AiRequest): Promise<AiResult> {
-      const system: Anthropic.Beta.BetaTextBlockParam[] = [{ type: "text", text: `${SYSTEM_PROMPT}\n\n${req.task}` }];
+      // Порядок важен для кэша: кэш префиксный, поэтому стабильные блоки (общая инструкция, материалы курса)
+      // идут первыми с точками кэша, а текст конкретной задачи — после них.
+      const system: Anthropic.Beta.BetaTextBlockParam[] = [
+        { type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } },
+      ];
       if (req.materials) system.push({ type: "text", text: req.materials, cache_control: { type: "ephemeral" } });
+      system.push({ type: "text", text: req.task });
       const stream = client().beta.messages.stream({
         model,
         max_tokens: req.maxTokens,

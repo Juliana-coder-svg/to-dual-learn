@@ -53,8 +53,9 @@ async function complete(kind: Kind, ctx: CallContext, req: AiRequest): Promise<A
   const provider = getProvider();
   const started = Date.now();
   const result = await provider.complete(req);
+  const modelLabel = result.model.includes("/") ? result.model : `${result.provider}/${result.model}`;
   console.info(
-    `[ai] ${kind} ${result.provider}/${result.model} in=${result.usage.inputTokens} cache_w=${result.usage.cacheWriteTokens} cache_r=${result.usage.cacheReadTokens} out=${result.usage.outputTokens} ${Date.now() - started}ms`,
+    `[ai] ${kind} ${modelLabel} in=${result.usage.inputTokens} cache_w=${result.usage.cacheWriteTokens} cache_r=${result.usage.cacheReadTokens} out=${result.usage.outputTokens} ${Date.now() - started}ms`,
   );
   await addAiCall({
     courseId: ctx.courseId ?? null,
@@ -66,7 +67,7 @@ async function complete(kind: Kind, ctx: CallContext, req: AiRequest): Promise<A
     outputTokens: result.usage.outputTokens,
     cacheReadTokens: result.usage.cacheReadTokens,
     cacheWriteTokens: result.usage.cacheWriteTokens,
-    costUsd: estimateCostUsd(result.usage),
+    costUsd: estimateCostUsd(result.usage, result.model),
     durationMs: Date.now() - started,
   });
   return result;
@@ -195,7 +196,7 @@ export async function reevaluateAnswer(
 ): Promise<Feedback> {
   if (isDemoMode()) {
     const f = demo.feedback(lesson, answer);
-    return { ...f, summary: `Демо-режим: возражение получено («${objection.slice(0, 60)}…»). В реальном режиме ментор пересмотрит оценку.` };
+    return { ...f, summary: `Демо-режим: возражение получено («${objection.slice(0, 60)}…»). С подключённой моделью наставник пересмотрит оценку.` };
   }
   return completeJson("evaluate", ctx, FeedbackSchema, {
     task: reevaluatePrompt(lesson, answer, previous.summary, previous.score, objection, opts),
@@ -208,7 +209,7 @@ export async function reevaluateAnswer(
 export async function checkHomework(
   ctx: CallContext,
   materials: Material[],
-  opts: { task: string; criteria: string; submissions: { student: string; answer: string }[] },
+  opts: { task: string; criteria: string; submissions: { student: string; answer: string }[]; tone: Course["tone"] },
 ): Promise<HomeworkResults> {
   if (isDemoMode()) return demo.homework(opts.submissions);
   return completeJson("homework", ctx, HomeworkResultsSchema, {

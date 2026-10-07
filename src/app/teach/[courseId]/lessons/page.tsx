@@ -22,7 +22,7 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h2 className="text-lg font-semibold">Уроки</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Микроуроки по 5 минут. Студенты видят только опубликованные.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Короткие уроки по 5 минут. Студенты видят только опубликованные.</p>
           </div>
           <div className="flex gap-2">
             {lessons.length > 0 && hasMaterials ? <ReviewButton courseId={courseId} /> : null}
@@ -35,7 +35,7 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
         </div>
         {lessons.length === 0 ? (
           <p className="mt-6 rounded-md border border-dashed p-6 text-sm text-muted-foreground">
-            Уроков пока нет. {hasMaterials ? "Собери первые уроки справа." : "Сначала загрузи материалы на вкладке «Материалы»."}
+            Уроков пока нет. {hasMaterials ? "Соберите первые уроки справа." : "Сначала загрузите материалы на вкладке «Материалы»."}
           </p>
         ) : (
           <ol className="mt-6 space-y-3">
@@ -52,7 +52,7 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
                           {l.review.flags.map((f, j) => <li key={j} className="flex gap-2"><span className="text-primary">!</span><span>{f}</span></li>)}
                         </ul>
                       ) : (
-                        <div className="mt-2 text-xs text-muted-foreground">Ревьюер: замечаний нет{l.review.changed ? ", текст подправлен" : ""}.</div>
+                        <div className="mt-2 text-xs text-muted-foreground">Методист: замечаний нет{l.review.changed ? ", текст подправлен" : ""}.</div>
                       )
                     ) : null}
                   </div>
@@ -79,7 +79,7 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
                     {l.content.sample ? <blockquote className="whitespace-pre-wrap border-l-2 pl-3 text-muted-foreground">{l.content.sample}</blockquote> : null}
                     <div><span className="font-medium">Критерии:</span><ul className="mt-1 list-disc pl-5">{l.content.rubricCriteria.map((s, j) => <li key={j}>{s}</li>)}</ul></div>
                     <p><span className="font-medium">Вывод:</span> {l.content.keyTakeaway}</p>
-                    <div><span className="font-medium">Флешкарты:</span><ul className="mt-1 list-disc pl-5">{l.content.flashcards.map((f, j) => <li key={j}>{f.question} - <span className="text-muted-foreground">{f.answer}</span></li>)}</ul></div>
+                    <div><span className="font-medium">Карточки для повторения:</span><ul className="mt-1 list-disc pl-5">{l.content.flashcards.map((f, j) => <li key={j}>{f.question} — <span className="text-muted-foreground">{f.answer}</span></li>)}</ul></div>
                   </div>
                 </details>
               </li>

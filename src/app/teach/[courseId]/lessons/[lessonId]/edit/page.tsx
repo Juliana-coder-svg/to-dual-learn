@@ -21,10 +21,10 @@ export default async function EditLessonPage({ params, searchParams }: { params:
     <div className="mx-auto max-w-2xl">
       <Link href={`/teach/${courseId}/lessons`} className="text-sm text-muted-foreground hover:text-foreground">← Уроки</Link>
       <h2 className="mt-1 text-lg font-semibold">Урок {lesson.position}: правка</h2>
-      {sp.error ? <p className="mt-3 text-sm text-destructive">Не удалось сохранить. Проверь, что заполнены все поля и есть хотя бы два признака и два критерия.</p> : null}
+      {sp.error ? <p className="mt-3 text-sm text-destructive">Не удалось сохранить: проверьте, что заполнены все поля, есть хотя бы два признака и два критерия.</p> : null}
       {lesson.review?.flags.length ? (
         <div className="mt-3 rounded-md border border-dashed p-3 text-sm">
-          <div className="font-medium">Замечания ревьюера</div>
+          <div className="font-medium">Замечания методиста</div>
           <ul className="mt-1 list-disc pl-5 text-muted-foreground">{lesson.review.flags.map((f, i) => <li key={i}>{f}</li>)}</ul>
         </div>
       ) : null}
@@ -35,11 +35,11 @@ export default async function EditLessonPage({ params, searchParams }: { params:
         <div className="space-y-2"><Label htmlFor="keyIdea">Ключевая идея</Label><Textarea id="keyIdea" name="keyIdea" rows={3} defaultValue={c.keyIdea} required /></div>
         <div className="space-y-2"><Label htmlFor="signals">Признаки, по одному на строку</Label><Textarea id="signals" name="signals" rows={4} defaultValue={c.signals.join("\n")} required /></div>
         <div className="space-y-2"><Label htmlFor="task">Задача</Label><Textarea id="task" name="task" rows={3} defaultValue={c.task} required /></div>
-        <div className="space-y-2"><Label htmlFor="sample">Текст или кейс для разбора (пусто, если не нужен)</Label><Textarea id="sample" name="sample" rows={4} defaultValue={c.sample ?? ""} /></div>
+        <div className="space-y-2"><Label htmlFor="sample">Текст или пример для разбора (пусто, если не нужен)</Label><Textarea id="sample" name="sample" rows={4} defaultValue={c.sample ?? ""} /></div>
         <div className="space-y-2"><Label htmlFor="rubricCriteria">Критерии оценки, по одному на строку</Label><Textarea id="rubricCriteria" name="rubricCriteria" rows={4} defaultValue={c.rubricCriteria.join("\n")} required /></div>
         <div className="space-y-2"><Label htmlFor="keyTakeaway">Вывод</Label><Input id="keyTakeaway" name="keyTakeaway" defaultValue={c.keyTakeaway} required /></div>
         <div className="space-y-2">
-          <Label htmlFor="flashcards">Флешкарты: «вопрос | ответ», по одной на строку</Label>
+          <Label htmlFor="flashcards">Карточки для повторения: «вопрос | ответ», по одной на строку</Label>
           <Textarea id="flashcards" name="flashcards" rows={4} defaultValue={c.flashcards.map((f) => `${f.question} | ${f.answer}`).join("\n")} />
         </div>
         <div className="flex gap-3">

@@ -60,7 +60,7 @@ export function MaterialsUploader({ courseId }: { courseId: string }) {
       <Card>
         <CardHeader>
           <CardTitle>Загрузить файлы</CardTitle>
-          <CardDescription>PDF, TXT или MD. PDF переводится в текст моделью, это занимает до минуты.</CardDescription>
+          <CardDescription>PDF, TXT или MD. PDF переводит в текст ИИ, это занимает до минуты.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={uploadFiles} className="space-y-3">
@@ -80,7 +80,7 @@ export function MaterialsUploader({ courseId }: { courseId: string }) {
               <Label htmlFor="paste-title">Название</Label>
               <Input id="paste-title" value={pasteTitle} onChange={(e) => setPasteTitle(e.target.value)} placeholder="Программа курса" />
             </div>
-            <Textarea rows={6} value={pasteText} onChange={(e) => setPasteText(e.target.value)} placeholder="Вставь текст…" />
+            <Textarea rows={6} value={pasteText} onChange={(e) => setPasteText(e.target.value)} placeholder="Вставьте текст…" />
             <Button type="submit" variant="outline" disabled={busy} className="w-full">Добавить текст</Button>
           </form>
         </CardContent>

@@ -14,7 +14,7 @@ export async function POST(req: Request) {
     if (!ctx) return jsonError("Нет доступа к курсу", 403);
     const lessons = await listLessons(ctx.course.id);
     if (lessons.length === 0) return jsonError("Нет уроков для проверки");
-    if (lessons.length > 15) return jsonError("За раз ревьюер проверяет до 15 уроков");
+    if (lessons.length > 15) return jsonError("За раз методист проверяет до 15 уроков");
     const materials = await listMaterials(ctx.course.id);
     const review = await reviewLessons({ userId: ctx.user.id, courseId: ctx.course.id }, ctx.course, materials, lessons.map((l) => l.content));
     for (const [i, l] of lessons.entries()) {
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     }
     const changed = review.notes.filter((n) => n.changed).length;
     const flagged = review.notes.filter((n) => n.flags.length > 0).length;
-    return NextResponse.json({ ok: true, summary: `${review.summary} Уроков изменено ${changed}, с замечаниями ${flagged}.` });
+    return NextResponse.json({ ok: true, summary: `${review.summary} Изменено уроков: ${changed}, с замечаниями: ${flagged}.` });
   } catch (e) {
     return handleRouteError(e);
   }

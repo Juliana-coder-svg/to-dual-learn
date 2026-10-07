@@ -62,16 +62,23 @@ export class AiTruncatedError extends Error {
   }
 }
 
-/** Цены за миллион токенов в долларах. По умолчанию — Claude Opus 5.5 на Anthropic API.
- *  Для других моделей задаются через AI_PRICE_INPUT_PER_M / AI_PRICE_OUTPUT_PER_M. */
-export function pricing(): { input: number; output: number; cacheRead: number; cacheWrite: number } {
-  const input = Number(process.env.AI_PRICE_INPUT_PER_M ?? 4);
-  const output = Number(process.env.AI_PRICE_OUTPUT_PER_M ?? 20);
+/** Цены за миллион токенов в долларах по семейству модели, которая реально ответила
+ *  (через fallback запрос может уйти на другую модель). Переопределяются через AI_PRICE_INPUT_PER_M / AI_PRICE_OUTPUT_PER_M.
+ *  Это оценка: точная сумма — в кабинете поставщика модели. */
+export function pricing(model: string): { input: number; output: number; cacheRead: number; cacheWrite: number } {
+  const m = model.toLowerCase();
+  let input = 4;
+  let output = 20;
+  if (m.includes("opus-4")) [input, output] = [5, 25];
+  else if (m.includes("sonnet")) [input, output] = [2, 10];
+  else if (m.includes("haiku")) [input, output] = [1, 5];
+  if (process.env.AI_PRICE_INPUT_PER_M) input = Number(process.env.AI_PRICE_INPUT_PER_M);
+  if (process.env.AI_PRICE_OUTPUT_PER_M) output = Number(process.env.AI_PRICE_OUTPUT_PER_M);
   return { input, output, cacheRead: Number(process.env.AI_PRICE_CACHE_READ_PER_M ?? input * 0.05), cacheWrite: input * 1.25 };
 }
 
-export function estimateCostUsd(u: AiUsage): number {
-  const p = pricing();
+export function estimateCostUsd(u: AiUsage, model: string): number {
+  const p = pricing(model);
   return (
     (u.inputTokens * p.input + u.outputTokens * p.output + u.cacheReadTokens * p.cacheRead + u.cacheWriteTokens * p.cacheWrite) /
     1_000_000

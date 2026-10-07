@@ -26,7 +26,7 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
         <div className="mt-6 rounded-md border border-dashed p-4">
           <div className="text-xs text-muted-foreground">На сегодня все</div>
           <div className="font-medium">Следующий урок откроется завтра: {next.title}</div>
-          <div className="mt-1 text-sm text-muted-foreground">Пока можно повторить карточки или перечитать фидбек по пройденным урокам.</div>
+          <div className="mt-1 text-sm text-muted-foreground">Пока можно повторить карточки или перечитать разбор пройденных уроков.</div>
           <Button nativeButton={false} render={<Link href="/learn/review" />} variant="outline" size="sm" className="mt-3">К повторению</Button>
         </div>
       ) : next ? (

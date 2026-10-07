@@ -7,9 +7,9 @@ import { cn } from "@/lib/utils";
 const TABS = [
   { href: "", label: "Материалы" },
   { href: "/lessons", label: "Уроки" },
-  { href: "/generate", label: "Генерация" },
-  { href: "/chat", label: "Чат" },
-  { href: "/homework", label: "Проверка ДЗ" },
+  { href: "/generate", label: "Для занятий" },
+  { href: "/chat", label: "Вопросы" },
+  { href: "/homework", label: "Проверка работ" },
   { href: "/students", label: "Студенты" },
   { href: "/settings", label: "Настройки" },
 ];

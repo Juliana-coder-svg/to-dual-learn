@@ -7,10 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 const ERRORS: Record<string, string> = {
-  "1": "Проверь почту и имя.",
-  send: "Не удалось отправить письмо. Попробуй еще раз через минуту.",
-  email: "На этот адрес письмо не уйдет. Проверь, нет ли опечатки.",
-  link: "Ссылка не сработала или устарела. Запроси новую.",
+  "1": "Проверьте почту и имя.",
+  send: "Не удалось отправить письмо. Попробуйте ещё раз через минуту.",
+  email: "На этот адрес письмо не уйдёт. Проверьте, нет ли опечатки.",
+  link: "Ссылка не сработала или устарела. Запросите новую.",
 };
 
 export default async function LoginPage({
@@ -26,13 +26,13 @@ export default async function LoginPage({
   if (sp.sent) {
     return (
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-16">
-        <h1 className="text-2xl font-semibold tracking-tight">Проверь почту</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Проверьте почту</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Отправили письмо со ссылкой для входа. Открой его в этом же браузере и нажми на ссылку. Ссылка действует час.
+          Отправили письмо со ссылкой для входа. Откройте его в этом же браузере и нажмите на ссылку. Ссылка действует час.
         </p>
         <p className="mt-6 text-sm text-muted-foreground">
-          Письма нет? Проверь «Спам» или{" "}
-          <Link href={`/login?role=${defaultRole}`} className="underline hover:text-foreground">запроси ссылку еще раз</Link>.
+          Письма нет? Проверьте «Спам» или{" "}
+          <Link href={`/login?role=${defaultRole}`} className="underline hover:text-foreground">запросите ссылку ещё раз</Link>.
         </p>
       </main>
     );
@@ -42,7 +42,7 @@ export default async function LoginPage({
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-16">
       <h1 className="text-2xl font-semibold tracking-tight">Вход</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Пароль не нужен, пришлем на почту ссылку для входа. Профиль создается при первом входе.
+        Пароль не нужен: пришлём на почту ссылку для входа. Профиль появится при первом входе.
       </p>
       {sp.error ? <p className="mt-4 text-sm text-destructive">{ERRORS[sp.error] ?? ERRORS["1"]}</p> : null}
       <form action={login} className="mt-8 space-y-5">
@@ -53,7 +53,7 @@ export default async function LoginPage({
         </div>
         <div className="space-y-2">
           <Label htmlFor="name">Имя</Label>
-          <Input id="name" name="name" required minLength={2} placeholder="Как к тебе обращаться" />
+          <Input id="name" name="name" required minLength={2} placeholder="Как к вам обращаться" />
         </div>
         <fieldset className="space-y-2">
           <legend className="text-sm font-medium">Роль</legend>
