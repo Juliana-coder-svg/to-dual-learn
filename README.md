@@ -6,13 +6,20 @@
 
 ```bash
 npm install
-cp .env.example .env.local   # вписать ANTHROPIC_API_KEY
+cp .env.example .env.local   # вписать ключи Supabase и ключ модели
 npm run dev                   # http://localhost:3000
 ```
 
+Supabase поднимается за пять минут:
+
+1. Создать проект на supabase.com и вписать в `.env.local` Project URL, publishable-ключ (`NEXT_PUBLIC_SUPABASE_ANON_KEY`) и secret-ключ (`SUPABASE_SERVICE_ROLE_KEY`, только на сервере).
+2. Выполнить `supabase/migrations/0001_init.sql` в SQL Editor проекта (или `supabase db push`, если стоит CLI). Миграция создаёт таблицы, триггер профиля и политики RLS.
+3. В Authentication → URL Configuration добавить в Redirect URLs адрес приложения с `/**`, например `http://localhost:3000/**`, иначе ссылка из письма не вернёт на сайт. Для прода задать `NEXT_PUBLIC_SITE_URL`.
+4. Встроенная почта Supabase отправляет несколько писем в час и не шлёт на зарезервированные домены вроде example.com. Для реальных пользователей нужен свой SMTP в Authentication → Email.
+
 Модель подключается одним из двух способов: `ANTHROPIC_API_KEY` (Anthropic напрямую, с кэшированием промпта и server-side fallback) или `OPENAI_COMPAT_API_KEY` + `OPENAI_COMPAT_BASE_URL` + `OPENAI_COMPAT_MODEL` (любой OpenAI-совместимый эндпоинт: OpenRouter, GigaChat, Qwen во внутреннем контуре). Без ключей приложение работает в демо-режиме: все AI-ответы — заглушки, интерфейс прокликивается целиком. Каждый вызов модели пишется в таблицу `ai_calls` с токенами и оценкой стоимости; расход виден в шапке курса и на вкладке «Настройки».
 
-База — SQLite через встроенный `node:sqlite` (Node 22.5+), файл `data/app.db` создаётся сам. Вход — по почте и имени без пароля (dev-сессия в подписанной cookie). Оба слоя рассчитаны на замену на Supabase.
+База и вход — Supabase. Схема в `supabase/migrations/0001_init.sql`; доступ к строкам ограничивает Row Level Security: преподаватель видит свои курсы и всё внутри, студент — курсы, где записан, опубликованные уроки, свои ответы и флешкарты. Вход по magic link: форма просит почту, имя и роль, Supabase присылает ссылку, `/auth/callback` открывает сессию и переносит имя и роль в `profiles`. Роль переключается кнопкой в шапке. Крон писем работает от service-role ключа, потому что у него нет пользователя.
 
 ## Сценарии
 
@@ -25,10 +32,11 @@ npm run dev                   # http://localhost:3000
 - `src/app/` — страницы (App Router) и route handlers в `src/app/api/`
 - `src/lib/ai/index.ts` — единственная точка вызова модели с учётом расхода; `providers/` — Anthropic и OpenAI-совместимый; `demo.ts` — заглушки
 - `src/lib/prompts/` — промпты, один файл на промпт (править можно без кода)
-- `src/lib/db/` — схема и запросы SQLite
+- `src/lib/db/queries.ts` — все запросы к базе через supabase-js (RLS проверяет доступ); `src/lib/supabase/` — клиенты, типы схемы, сервисный режим для крона; `src/proxy.ts` — обновление сессии
+- `supabase/migrations/` — SQL-миграции (таблицы, триггер профиля, RPC, политики RLS)
 - `src/lib/lessons/types.ts` — zod-схемы урока, фидбека, результатов проверки
 - `src/lib/progress/` — streak, XP, интервалы повторения
-- `src/lib/auth/` — сессия и проверки доступа
+- `src/lib/auth/` — обёртка над Supabase Auth, cookie с данными формы входа, проверки доступа как второй слой поверх RLS
 - `content/courses/` — готовые курсы для кнопки «Добавить демо-курс»
 - `docs/` — разбор продукта с шести позиций и страница технологии для Сколково
 - `src/components/` — UI (shadcn/ui в `ui/`, остальное по ролям)

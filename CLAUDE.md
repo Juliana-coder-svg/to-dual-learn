@@ -66,10 +66,12 @@ This file is read at the start of every Claude Code session. It defines what we'
 
 🟢 MVP собран 7 октября 2026 (см. README.md). Продукт расширен по итогам созвона 6 октября: кроме студенческого контура (уроки, фидбек, streak, флешкарты) есть контур преподавателя — материалы, генерация уроков и документов, чат по материалам, проверка домашек, результаты студентов.
 
+База и вход переведены на Supabase (7 октября 2026): Postgres с RLS по миграции `supabase/migrations/0001_init.sql`, вход по magic link через Supabase Auth, профиль создаётся триггером. Все запросы — в `src/lib/db/queries.ts` через серверный клиент из `src/lib/supabase/server.ts`; для фоновых задач без пользователя есть `runAsService()`. При изменении схемы править три места: миграцию, `src/lib/supabase/types.ts` и `queries.ts`.
+
 Временные решения, которые нужно заменить перед выходом за пределы демо:
-- БД — `node:sqlite` (`data/app.db`) вместо Supabase; схема в `src/lib/db/schema.ts` повторяет таблицы из ARCHITECTURE.md
-- Вход — по почте и имени без пароля (`src/lib/auth/session.ts`) вместо Supabase Auth
 - RAG — материалы целиком кладутся в system-промпт с prompt caching; без эмбеддингов и векторной базы
+- Письма входа идут через встроенную почту Supabase с лимитом в несколько писем в час; для прода нужен свой SMTP
+- Старые модули SQLite (`src/lib/db/index.ts`, `schema.ts`) и файл `data/app.db` больше не используются и ждут удаления
 - Версии: Next.js 16, Tailwind 4, shadcn/ui на base-ui (у кнопок `render`, а не `asChild`)
 
 ## Контекст по To Dual
