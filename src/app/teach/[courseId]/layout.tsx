@@ -5,6 +5,7 @@ import { AppShell } from "@/components/shared/AppShell";
 import { CourseTabs } from "@/components/teach/CourseTabs";
 import { isDemoMode, providerLabel } from "@/lib/ai";
 import { courseUsage } from "@/lib/db/queries";
+import { formatRub, usdToRub } from "@/lib/utils/money";
 
 export default async function CourseLayout({ children, params }: { children: React.ReactNode; params: Promise<{ courseId: string }> }) {
   const { courseId } = await params;
@@ -25,8 +26,8 @@ export default async function CourseLayout({ children, params }: { children: Rea
           <div className="rounded-md border px-3 py-2">
             Код для студентов: <span className="font-mono font-semibold">{course.join_code}</span>
           </div>
-          <div className="rounded-md border px-3 py-2 text-muted-foreground" title={`Модель: ${providerLabel()}`}>
-            Расход на ИИ: <span className="font-semibold text-foreground">${usage.cost_usd.toFixed(2)}</span> · {usage.calls} запросов
+          <div className="rounded-md border px-3 py-2 text-muted-foreground" title={`Модель: ${providerLabel()}. Сумма оценочная, в долларах: $${usage.cost_usd.toFixed(2)}`}>
+            Расход на ИИ: <span className="font-semibold text-foreground">≈ {formatRub(usdToRub(usage.cost_usd))}</span> · {usage.calls} запросов
           </div>
         </div>
       </div>

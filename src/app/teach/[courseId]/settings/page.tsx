@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { formatRub, usdRubRate, usdToRub } from "@/lib/utils/money";
 
 const KIND_LABELS: Record<string, string> = {
   extract: "Извлечение PDF",
@@ -121,14 +122,14 @@ export default async function SettingsPage({ params, searchParams }: { params: P
         <Card>
           <CardHeader>
             <CardTitle>Расход по курсу</CardTitle>
-            <CardDescription>Оценка по ценам из настроек, точная сумма в кабинете поставщика модели.</CardDescription>
+            <CardDescription>Оценка в рублях по курсу {usdRubRate()} ₽ за доллар (переменная USD_RUB_RATE). Точная сумма в кабинете поставщика модели.</CardDescription>
           </CardHeader>
           <CardContent>
             {usage.length === 0 ? <p className="text-sm text-muted-foreground">Запросов к ИИ пока не было.</p> : (
               <table className="w-full text-sm">
-                <thead className="text-left text-xs text-muted-foreground"><tr className="border-b"><th className="py-1 font-medium">Операция</th><th className="py-1 font-medium">Запросов</th><th className="py-1 font-medium">Токены, тыс. (вход / выход)</th><th className="py-1 text-right font-medium">USD</th></tr></thead>
+                <thead className="text-left text-xs text-muted-foreground"><tr className="border-b"><th className="py-1 font-medium">Операция</th><th className="py-1 font-medium">Запросов</th><th className="py-1 font-medium">Токены, тыс. (вход / выход)</th><th className="py-1 text-right font-medium">Рубли</th></tr></thead>
                 <tbody>{usage.map((u) => (
-                  <tr key={u.kind} className="border-b"><td className="py-1">{KIND_LABELS[u.kind] ?? u.kind}</td><td className="py-1">{u.calls}</td><td className="py-1">{Math.round(u.input_tokens / 1000)}k / {Math.round(u.output_tokens / 1000)}k</td><td className="py-1 text-right">{u.cost_usd.toFixed(3)}</td></tr>
+                  <tr key={u.kind} className="border-b"><td className="py-1">{KIND_LABELS[u.kind] ?? u.kind}</td><td className="py-1">{u.calls}</td><td className="py-1">{Math.round(u.input_tokens / 1000)}k / {Math.round(u.output_tokens / 1000)}k</td><td className="py-1 text-right" title={`$${u.cost_usd.toFixed(3)}`}>{formatRub(usdToRub(u.cost_usd))}</td></tr>
                 ))}</tbody>
               </table>
             )}
