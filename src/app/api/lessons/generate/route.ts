@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { teacherCourse } from "@/lib/auth/access";
 import { insertLessons, listLessons, listMaterials } from "@/lib/db/queries";
-import { generateLessons } from "@/lib/ai/claude";
+import { generateLessons } from "@/lib/ai";
 import { handleRouteError, jsonError } from "@/lib/api";
 
 export const runtime = "nodejs";
@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     const materials = listMaterials(ctx.course.id);
     if (materials.length === 0) return jsonError("Сначала загрузи материалы");
     const existingTitles = listLessons(ctx.course.id).map((l) => l.title);
-    const lessons = await generateLessons(ctx.course, materials, { count, existingTitles });
+    const lessons = await generateLessons({ userId: ctx.user.id, courseId: ctx.course.id }, ctx.course, materials, { count, existingTitles });
     const inserted = insertLessons(ctx.course.id, lessons);
     return NextResponse.json({ ok: true, added: inserted.length });
   } catch (e) {

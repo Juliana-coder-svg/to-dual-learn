@@ -450,3 +450,59 @@ export function listHomeworkChecks(courseId: string): HomeworkCheck[] {
 export function setUserRole(id: string, role: Role): void {
   run("UPDATE users SET role = ? WHERE id = ?", role, id);
 }
+
+// ---------- ai calls (учёт расхода) ----------
+
+export interface AiCallRecord {
+  courseId: string | null;
+  userId: string;
+  kind: string;
+  provider: string;
+  model: string;
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens: number;
+  cacheWriteTokens: number;
+  costUsd: number;
+  durationMs: number;
+}
+
+export function addAiCall(r: AiCallRecord): void {
+  run(
+    `INSERT INTO ai_calls (id, course_id, user_id, kind, provider, model, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens, cost_usd, duration_ms, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    newId(), r.courseId, r.userId, r.kind, r.provider, r.model, r.inputTokens, r.outputTokens, r.cacheReadTokens, r.cacheWriteTokens, r.costUsd, r.durationMs, nowIso(),
+  );
+}
+
+export interface UsageSummary {
+  calls: number;
+  input_tokens: number;
+  output_tokens: number;
+  cache_read_tokens: number;
+  cost_usd: number;
+}
+
+export function courseUsage(courseId: string): UsageSummary {
+  return (
+    one<UsageSummary>(
+      `SELECT COUNT(*) AS calls, COALESCE(SUM(input_tokens),0) AS input_tokens, COALESCE(SUM(output_tokens),0) AS output_tokens,
+              COALESCE(SUM(cache_read_tokens),0) AS cache_read_tokens, COALESCE(SUM(cost_usd),0) AS cost_usd
+       FROM ai_calls WHERE course_id = ?`,
+      courseId,
+    ) ?? { calls: 0, input_tokens: 0, output_tokens: 0, cache_read_tokens: 0, cost_usd: 0 }
+  );
+}
+
+export interface UsageByKind extends UsageSummary {
+  kind: string;
+}
+
+export function courseUsageByKind(courseId: string): UsageByKind[] {
+  return many<UsageByKind>(
+    `SELECT kind, COUNT(*) AS calls, SUM(input_tokens) AS input_tokens, SUM(output_tokens) AS output_tokens,
+            SUM(cache_read_tokens) AS cache_read_tokens, SUM(cost_usd) AS cost_usd
+     FROM ai_calls WHERE course_id = ? GROUP BY kind ORDER BY cost_usd DESC`,
+    courseId,
+  );
+}

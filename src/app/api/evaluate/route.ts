@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { studentCourse } from "@/lib/auth/access";
 import { addSubmission, getLatestSubmission, getLesson, updateUserProgress, upsertFlashcard } from "@/lib/db/queries";
-import { evaluateAnswer } from "@/lib/ai/claude";
+import { evaluateAnswer } from "@/lib/ai";
 import { nextStreak, xpForLesson } from "@/lib/progress/streak";
 import { firstDueAt } from "@/lib/progress/flashcards";
 import { handleRouteError, jsonError } from "@/lib/api";
@@ -20,7 +20,7 @@ export async function POST(req: Request) {
     const answer = String(body.answer ?? "").trim().slice(0, 6000);
     if (answer.length < 10) return jsonError("Напиши ответ хотя бы в одно предложение");
 
-    const feedback = await evaluateAnswer(lesson.content, answer);
+    const feedback = await evaluateAnswer({ userId: ctx.user.id, courseId: lesson.course_id }, lesson.content, answer);
     const firstTime = !getLatestSubmission(lesson.id, ctx.user.id);
     addSubmission({ lessonId: lesson.id, userId: ctx.user.id, answer, feedback });
 

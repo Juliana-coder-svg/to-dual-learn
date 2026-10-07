@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { teacherCourse } from "@/lib/auth/access";
 import { addMaterial } from "@/lib/db/queries";
-import { extractMaterialText } from "@/lib/ai/claude";
+import { extractMaterialText } from "@/lib/ai";
 import { handleRouteError, jsonError } from "@/lib/api";
 
 export const runtime = "nodejs";
@@ -37,7 +37,7 @@ export async function POST(req: Request) {
       if (!kind) return jsonError(`Формат не поддерживается: ${entry.name}. Нужны PDF, TXT или MD.`);
       if (entry.size > MAX_BYTES) return jsonError(`Файл больше 20 МБ: ${entry.name}`);
       const bytes = Buffer.from(await entry.arrayBuffer());
-      const text = await extractMaterialText({ name: entry.name, mime: entry.type, bytes });
+      const text = await extractMaterialText({ userId: ctx.user.id, courseId }, { name: entry.name, mime: entry.type, bytes });
       if (text.trim().length === 0) return jsonError(`Не удалось извлечь текст из ${entry.name}`);
       addMaterial({ courseId, filename: entry.name, kind, contentText: text });
       added++;

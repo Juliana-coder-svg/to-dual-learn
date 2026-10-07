@@ -100,6 +100,23 @@ CREATE TABLE IF NOT EXISTS homework_checks (
   created_at TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS ai_calls (
+  id TEXT PRIMARY KEY,
+  course_id TEXT,
+  user_id TEXT NOT NULL,
+  kind TEXT NOT NULL,
+  provider TEXT NOT NULL,
+  model TEXT NOT NULL,
+  input_tokens INTEGER NOT NULL DEFAULT 0,
+  output_tokens INTEGER NOT NULL DEFAULT 0,
+  cache_read_tokens INTEGER NOT NULL DEFAULT 0,
+  cache_write_tokens INTEGER NOT NULL DEFAULT 0,
+  cost_usd REAL NOT NULL DEFAULT 0,
+  duration_ms INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_ai_calls_course ON ai_calls(course_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_lessons_course ON lessons(course_id, position);
 CREATE INDEX IF NOT EXISTS idx_submissions_lesson_user ON submissions(lesson_id, user_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_flashcards_user_due ON flashcards(user_id, next_due_at);
