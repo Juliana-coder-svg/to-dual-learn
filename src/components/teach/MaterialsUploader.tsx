@@ -72,7 +72,7 @@ export function MaterialsUploader({ courseId }: { courseId: string }) {
       <Card>
         <CardHeader>
           <CardTitle>Вставить текст</CardTitle>
-          <CardDescription>Программа курса, план, фрагмент лекции.</CardDescription>
+          <CardDescription>Программа курса или фрагмент лекции.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={uploadText} className="space-y-3">

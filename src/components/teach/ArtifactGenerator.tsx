@@ -59,7 +59,7 @@ export function ArtifactGenerator({ courseId, disabled }: { courseId: string; di
           </div>
           <div className="space-y-2">
             <Label htmlFor="instructions">Пожелания</Label>
-            <Textarea id="instructions" rows={4} value={instructions} onChange={(e) => setInstructions(e.target.value)} placeholder="Тема, уровень сложности, формат, что обязательно включить" />
+            <Textarea id="instructions" rows={4} value={instructions} onChange={(e) => setInstructions(e.target.value)} placeholder="Тема и что обязательно включить" />
           </div>
           <Button onClick={generate} disabled={busy || disabled} className="w-full">{busy ? "Генерирую…" : "Сгенерировать"}</Button>
           {disabled ? <p className="text-xs text-muted-foreground">Сначала загрузи материалы.</p> : null}

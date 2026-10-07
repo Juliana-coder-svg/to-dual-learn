@@ -46,7 +46,7 @@ export function LessonPlayer({ lesson, previous, nextHref, nextLabel }: Props) {
       setFeedback(data.feedback);
       setAppealOpen(false);
       setObjection("");
-      setAppealNote(before === data.feedback.score ? "Балл не изменился." : `Балл изменён: ${before} → ${data.feedback.score}.`);
+      setAppealNote(before === data.feedback.score ? "Балл не изменился." : `Балл изменен: ${before} → ${data.feedback.score}.`);
       router.refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Ошибка");
@@ -110,7 +110,7 @@ export function LessonPlayer({ lesson, previous, nextHref, nextLabel }: Props) {
             <p className="mt-1 text-lg leading-relaxed">{c.task}</p>
           </div>
           {c.sample ? <blockquote className="whitespace-pre-wrap rounded-md border bg-muted/50 p-4 text-[15px] leading-relaxed">{c.sample}</blockquote> : null}
-          <Textarea rows={7} value={answer} onChange={(e) => setAnswer(e.target.value)} placeholder="Твой ответ. Конкретика важнее объёма." />
+          <Textarea rows={7} value={answer} onChange={(e) => setAnswer(e.target.value)} placeholder="Твой ответ. Лучше коротко и с примером из своей работы." />
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
           <div className="flex gap-3">
             <Button size="lg" onClick={submit} disabled={busy || answer.trim().length < 10}>{busy ? "Ментор читает…" : "Отправить"}</Button>
@@ -160,7 +160,7 @@ export function LessonPlayer({ lesson, previous, nextHref, nextLabel }: Props) {
           </div>
           <div className="flex flex-wrap gap-3">
             <Button nativeButton={false} render={<Link href={nextHref} />} size="lg">{nextLabel}</Button>
-            <Button size="lg" variant="outline" onClick={() => setStep("task")}>Ответить ещё раз</Button>
+            <Button size="lg" variant="outline" onClick={() => setStep("task")}>Ответить еще раз</Button>
           </div>
         </section>
       ) : null}

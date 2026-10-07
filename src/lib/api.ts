@@ -5,7 +5,7 @@ export function jsonError(message: string, status = 400): NextResponse {
   return NextResponse.json({ ok: false, error: message }, { status });
 }
 
-/** Общая обработка ошибок AI-маршрутов: отказ модели — 422, остальное — 500 с текстом. */
+/** Общая обработка ошибок AI-маршрутов: отказ модели - 422, остальное - 500 с текстом. */
 export function handleRouteError(e: unknown): NextResponse {
   if (e instanceof AiRefusedError) return jsonError(e.message, 422);
   const message = e instanceof Error ? e.message : "Неизвестная ошибка";

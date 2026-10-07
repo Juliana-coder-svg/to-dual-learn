@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     }
     const changed = review.notes.filter((n) => n.changed).length;
     const flagged = review.notes.filter((n) => n.flags.length > 0).length;
-    return NextResponse.json({ ok: true, summary: `${review.summary} Изменено уроков: ${changed}, с замечаниями: ${flagged}.` });
+    return NextResponse.json({ ok: true, summary: `${review.summary} Уроков изменено ${changed}, с замечаниями ${flagged}.` });
   } catch (e) {
     return handleRouteError(e);
   }

@@ -37,7 +37,7 @@ export function LessonsGenerator({ courseId, disabled }: { courseId: string; dis
     <Card>
       <CardHeader>
         <CardTitle>Собрать уроки</CardTitle>
-        <CardDescription>Модель прочитает материалы и соберёт последовательность микроуроков с задачами и критериями. Это 1–3 минуты.</CardDescription>
+        <CardDescription>Модель прочитает материалы и соберет из них уроки с задачами и критериями. Это займет 1-3 минуты.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
@@ -48,7 +48,7 @@ export function LessonsGenerator({ courseId, disabled }: { courseId: string; dis
         </div>
         <label className="flex cursor-pointer items-start gap-2 text-sm">
           <input type="checkbox" checked={review} onChange={(e) => setReview(e.target.checked)} className="mt-1" />
-          <span>Проверить ревьюером<span className="block text-xs text-muted-foreground">Второй проход: сверка с материалами и результатами, правка критериев. Удваивает время и расход.</span></span>
+          <span>Проверить ревьюером<span className="block text-xs text-muted-foreground">Второй проход, в котором методист сверяет уроки с материалами и правит критерии. Время и расход удваиваются.</span></span>
         </label>
         <Button onClick={generate} disabled={busy || disabled} className="w-full">{busy ? (review ? "Собираю и проверяю…" : "Собираю…") : "Собрать"}</Button>
         {disabled ? <p className="text-xs text-muted-foreground">Сначала загрузи материалы.</p> : null}

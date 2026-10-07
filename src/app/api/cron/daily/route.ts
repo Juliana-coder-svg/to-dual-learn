@@ -14,7 +14,7 @@ export const runtime = "nodejs";
 export const maxDuration = 300;
 
 /** Письмо «урок дня». Запускается кроном (vercel.json) раз в сутки; защищено CRON_SECRET.
- *  Одному пользователю — не чаще раза в 20 часов, чтобы повторный запуск не дублировал письма.
+ *  Одному пользователю - не чаще раза в 20 часов, чтобы повторный запуск не дублировал письма.
  *  У крона нет пользователя, поэтому запросы идут от service role: RLS не применяется. */
 export async function GET(req: Request) {
   const secret = process.env.CRON_SECRET;
@@ -37,11 +37,11 @@ export async function GET(req: Request) {
       }
       const due = await countDueFlashcards(user.id);
       if (items.length === 0 && due === 0) continue;
-      const html = `<p>${user.name}, на сегодня:</p>
+      const html = `<p>${user.name}, вот что на сегодня.</p>
 <ul>${items.join("")}${due > 0 ? `<li><a href="${site}/learn/review">Повторение: ${due} карт.</a></li>` : ""}</ul>
-<p>Пять минут, и streak ${user.streak > 0 ? `останется ${user.streak}` : "начнётся"}.</p>
+<p>Пять минут, и streak ${user.streak > 0 ? `останется ${user.streak}` : "начнется"}.</p>
 <p style="color:#888;font-size:12px">Отключить письма можно на <a href="${site}/learn">странице курсов</a>.</p>`;
-      const result = await sendMail(user.email, items.length > 0 ? "Урок дня ждёт" : "Пора повторить карточки", html);
+      const result = await sendMail(user.email, items.length > 0 ? "Урок дня ждет" : "Пора повторить карточки", html);
       if (result === "sent") {
         sent++;
         await markDigestSent(user.id);

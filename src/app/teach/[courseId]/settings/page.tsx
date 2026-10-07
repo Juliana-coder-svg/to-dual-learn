@@ -35,14 +35,14 @@ export default async function SettingsPage({ params, searchParams }: { params: P
       <Card>
         <CardHeader>
           <CardTitle>Курс</CardTitle>
-          <CardDescription>Образовательные результаты и тон попадают во все промпты: генерацию, ревью и оценку.</CardDescription>
+          <CardDescription>Образовательные результаты и тон учитываются везде, где работает модель, от сборки уроков до оценки ответов.</CardDescription>
         </CardHeader>
         <CardContent>
           {sp.saved ? <p className="mb-3 text-sm text-primary">Сохранено.</p> : null}
           {sp.error === "title" ? <p className="mb-3 text-sm text-destructive">Нужно название.</p> : null}
           <form action={updateCourseSettingsAction.bind(null, courseId)} className="space-y-4">
             <div className="space-y-2"><Label htmlFor="title">Название</Label><Input id="title" name="title" defaultValue={course.title} required /></div>
-            <div className="space-y-2"><Label htmlFor="description">О чём курс</Label><Textarea id="description" name="description" rows={2} defaultValue={course.description} /></div>
+            <div className="space-y-2"><Label htmlFor="description">О чем курс</Label><Textarea id="description" name="description" rows={2} defaultValue={course.description} /></div>
             <div className="space-y-2"><Label htmlFor="audience">Аудитория</Label><Input id="audience" name="audience" defaultValue={course.audience} /></div>
             <div className="space-y-2">
               <Label htmlFor="outcomes">Образовательные результаты</Label>
@@ -61,7 +61,7 @@ export default async function SettingsPage({ params, searchParams }: { params: P
                 <option value={0}>Без лимита</option>
                 {[1, 2, 3].map((n) => <option key={n} value={n}>{n}</option>)}
               </select>
-              <p className="text-xs text-muted-foreground">Один в день держит интервал повторения. Без лимита студент может пройти всё за вечер.</p>
+              <p className="text-xs text-muted-foreground">Один в день держит интервал повторения. Без лимита студент может пройти все за вечер.</p>
             </div>
             <Button type="submit">Сохранить</Button>
           </form>
@@ -72,7 +72,7 @@ export default async function SettingsPage({ params, searchParams }: { params: P
         <Card>
           <CardHeader>
             <CardTitle>Приглашение</CardTitle>
-            <CardDescription>Ссылка ведёт на вход и сразу записывает на курс.</CardDescription>
+            <CardDescription>Ссылка ведет на вход и сразу записывает на курс.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
             <div>Код: <span className="font-mono font-semibold">{course.join_code}</span></div>
@@ -83,7 +83,7 @@ export default async function SettingsPage({ params, searchParams }: { params: P
         <Card>
           <CardHeader>
             <CardTitle>Образцы оценок</CardTitle>
-            <CardDescription>Покажи ментору, что для тебя «5» и что «2». Образцы попадают в промпт оценки.</CardDescription>
+            <CardDescription>Покажи ментору, что для тебя «5» и что «2». Образцы учитываются при оценке ответов.</CardDescription>
           </CardHeader>
           <CardContent>
             {sp.error === "sample" ? <p className="mb-3 text-sm text-destructive">Нужен ответ длиннее 10 символов и балл от 1 до 5.</p> : null}
@@ -92,7 +92,7 @@ export default async function SettingsPage({ params, searchParams }: { params: P
                 {samples.map((s) => (
                   <li key={s.id} className="rounded-md border p-3 text-sm">
                     <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2"><Badge>{s.score}/5</Badge><span className="text-xs text-muted-foreground">{s.lesson_id ? lessons.find((l) => l.id === s.lesson_id)?.title ?? "Урок удалён" : "Весь курс"}</span></div>
+                      <div className="flex items-center gap-2"><Badge>{s.score}/5</Badge><span className="text-xs text-muted-foreground">{s.lesson_id ? lessons.find((l) => l.id === s.lesson_id)?.title ?? "Урок удален" : "Весь курс"}</span></div>
                       <form action={deleteCalibrationSampleAction.bind(null, courseId, s.id)}><Button type="submit" variant="ghost" size="sm">Удалить</Button></form>
                     </div>
                     <p className="mt-2 whitespace-pre-wrap">{s.answer}</p>

@@ -24,7 +24,7 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
       {course.description ? <p className="mt-1 text-sm text-muted-foreground">{course.description}</p> : null}
       {next && limitReached ? (
         <div className="mt-6 rounded-md border border-dashed p-4">
-          <div className="text-xs text-muted-foreground">На сегодня всё</div>
+          <div className="text-xs text-muted-foreground">На сегодня все</div>
           <div className="font-medium">Следующий урок откроется завтра: {next.title}</div>
           <div className="mt-1 text-sm text-muted-foreground">Пока можно повторить карточки или перечитать фидбек по пройденным урокам.</div>
           <Button nativeButton={false} render={<Link href="/learn/review" />} variant="outline" size="sm" className="mt-3">К повторению</Button>
@@ -40,7 +40,7 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
         </div>
       ) : null}
       <ol className="mt-8 space-y-2">
-        {lessons.length === 0 ? <p className="text-sm text-muted-foreground">Уроки ещё не опубликованы.</p> : null}
+        {lessons.length === 0 ? <p className="text-sm text-muted-foreground">Уроки еще не опубликованы.</p> : null}
         {lessons.map((l) => {
           const sub = done.get(l.id);
           const isNext = next?.id === l.id;

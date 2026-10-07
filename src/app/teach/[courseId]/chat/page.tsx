@@ -17,7 +17,7 @@ export default async function ChatPage({ params }: { params: Promise<{ courseId:
       <div className="flex items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-semibold">Чат по материалам</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Спроси, что есть в материалах, попроси пример, вопросы к семинару, разбор темы. Загружено материалов: {materialsCount}.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Спроси, что есть в материалах, или попроси вопросы к семинару. Загружено материалов: {materialsCount}.</p>
         </div>
         {messages.length > 0 ? (
           <form action={clearChatAction.bind(null, courseId)}>

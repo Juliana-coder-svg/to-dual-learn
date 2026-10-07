@@ -3,7 +3,7 @@ export async function sendMail(to: string, subject: string, html: string): Promi
   const key = process.env.RESEND_API_KEY;
   const from = process.env.MAIL_FROM ?? "To Dual Learn <learn@to-dual.education>";
   if (!key) {
-    console.info(`[mail] пропущено (нет RESEND_API_KEY): ${to} — ${subject}`);
+    console.info(`[mail] пропущено (нет RESEND_API_KEY): ${to} - ${subject}`);
     return "skipped";
   }
   const res = await fetch("https://api.resend.com/emails", {

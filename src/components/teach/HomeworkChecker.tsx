@@ -63,7 +63,7 @@ export function HomeworkChecker({ courseId }: { courseId: string }) {
       <Card>
         <CardHeader>
           <CardTitle>Проверка домашних работ</CardTitle>
-          <CardDescription>Задание, критерии и работы. Модель пройдёт по критериям, поставит балл и напишет фидбек каждому. Сводка по группе — отдельно.</CardDescription>
+          <CardDescription>Нужны задание с критериями и работы студентов. Модель поставит балл по критериям и напишет каждому, что получилось. Сводку по группе покажет отдельно.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={check} className="grid gap-5 lg:grid-cols-2">
@@ -74,7 +74,7 @@ export function HomeworkChecker({ courseId }: { courseId: string }) {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="criteria">Критерии проверки</Label>
-                <Textarea id="criteria" rows={5} required value={criteria} onChange={(e) => setCriteria(e.target.value)} placeholder={"1. Есть обоснование выбора\n2. Приведён пример из практики\n3. …"} />
+                <Textarea id="criteria" rows={5} required value={criteria} onChange={(e) => setCriteria(e.target.value)} placeholder={"1. Есть обоснование выбора\n2. Приведен пример из практики\n3. …"} />
               </div>
             </div>
             <div className="space-y-2">

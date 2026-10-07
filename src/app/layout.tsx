@@ -4,7 +4,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "To Dual Learn",
   description:
-    "Платформа микрообучения: преподаватель загружает материалы, AI собирает уроки, студенты учатся по 5 минут в день.",
+    "Короткие уроки из материалов преподавателя. Студенты учатся по 5 минут в день.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

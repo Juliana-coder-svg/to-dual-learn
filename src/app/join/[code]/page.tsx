@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
 import { enroll, getCourseByJoinCode } from "@/lib/db/queries";
 
-/** Ссылка-приглашение: /join/КОД. Без сессии ведёт на вход и возвращает сюда.
+/** Ссылка-приглашение: /join/КОД. Без сессии ведет на вход и возвращает сюда.
  *  Сессию проверяем первой: поиск курса по коду (RPC) открыт только вошедшим. */
 export default async function JoinPage({ params }: { params: Promise<{ code: string }> }) {
   const { code } = await params;

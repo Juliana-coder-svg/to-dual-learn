@@ -18,7 +18,7 @@ export default async function MaterialsPage({ params }: { params: Promise<{ cour
       <section>
         <h2 className="text-lg font-semibold">Материалы курса</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Программа, методички, учебники, статьи. Всё, что загрузишь, модель будет использовать при генерации уроков, заданий и в чате.
+          Программа курса, методичка или статьи. Все, что загрузишь, модель будет учитывать в уроках и в чате.
         </p>
         {materials.length === 0 ? (
           <p className="mt-6 rounded-md border border-dashed p-6 text-sm text-muted-foreground">Материалов пока нет. Загрузи хотя бы один файл, чтобы собрать уроки.</p>

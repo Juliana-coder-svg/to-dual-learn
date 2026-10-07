@@ -29,7 +29,7 @@ export default async function StudentsPage({ params }: { params: Promise<{ cours
                 <tr key={s.user_id} className="border-b">
                   <td className="py-2 pr-4"><div className="font-medium">{s.name}</div><div className="text-xs text-muted-foreground">{s.email}</div></td>
                   <td className="py-2 pr-4">{s.completed}/{published}</td>
-                  <td className="py-2 pr-4">{s.avg_score != null ? s.avg_score.toFixed(1) : "—"}</td>
+                  <td className="py-2 pr-4">{s.avg_score != null ? s.avg_score.toFixed(1) : "-"}</td>
                   <td className="py-2 pr-4">{s.streak}</td>
                   <td className="py-2">{s.xp}</td>
                 </tr>

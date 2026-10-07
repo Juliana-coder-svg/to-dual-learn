@@ -32,7 +32,7 @@ export default async function CourseLayout({ children, params }: { children: Rea
       </div>
       {isDemoMode() ? (
         <p className="mt-4 rounded-md border border-dashed px-3 py-2 text-xs text-muted-foreground">
-          Демо-режим: ключ модели не задан, AI отвечает заглушками. Добавь ANTHROPIC_API_KEY или OPENAI_COMPAT_API_KEY в .env.local и перезапусти сервер.
+          Демо-режим. Ключ модели не задан, поэтому вместо ответов заглушки. Добавь ANTHROPIC_API_KEY или OPENAI_COMPAT_API_KEY в .env.local и перезапусти сервер.
         </p>
       ) : null}
       <CourseTabs courseId={course.id} />

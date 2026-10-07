@@ -63,7 +63,7 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
                         ) : next ? (
                           <Button nativeButton={false} render={<Link href={`/learn/${c.id}/lesson/${next.id}`} />} size="sm">Урок дня: {next.title}</Button>
                         ) : lessons.length === 0 ? (
-                          <span className="text-sm text-muted-foreground">Преподаватель ещё не опубликовал уроки.</span>
+                          <span className="text-sm text-muted-foreground">Преподаватель еще не опубликовал уроки.</span>
                         ) : (
                           <span className="text-sm text-muted-foreground">Все уроки пройдены. Загляни в повторение.</span>
                         )}
@@ -79,7 +79,7 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
           <Card>
             <CardHeader>
               <CardTitle>Записаться на курс</CardTitle>
-              <CardDescription>Код из шести символов даёт преподаватель.</CardDescription>
+              <CardDescription>Код из шести символов дает преподаватель.</CardDescription>
             </CardHeader>
             <CardContent>
               {sp.error ? <p className="mb-3 text-sm text-destructive">Курс с таким кодом не найден.</p> : null}
@@ -92,7 +92,7 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
           <Card className="mt-4">
             <CardHeader>
               <CardTitle>Письмо с уроком дня</CardTitle>
-              <CardDescription>Каждое утро на {user.email}: какой урок ждёт и сколько карточек на повторение.</CardDescription>
+              <CardDescription>Каждое утро на {user.email} приходит, какой урок ждет и сколько карточек пора повторить.</CardDescription>
             </CardHeader>
             <CardContent>
               <form action={setDailyEmailAction} className="flex items-center justify-between gap-3 text-sm">

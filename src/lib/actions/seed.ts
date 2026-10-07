@@ -19,7 +19,7 @@ const SeedSchema = z.object({
   lessons: z.array(LessonContentSchema),
 });
 
-/** Создаёт готовый курс из content/courses/<slug>.json: материалы, уроки, сразу опубликованные. */
+/** Создает готовый курс из content/courses/<slug>.json: материалы, уроки, сразу опубликованные. */
 export async function createDemoCourseAction(slug: string): Promise<void> {
   const user = await requireUser();
   const file = path.join(process.cwd(), "content", "courses", `${slug.replace(/[^a-z0-9-]/g, "")}.json`);

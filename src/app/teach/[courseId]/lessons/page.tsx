@@ -79,7 +79,7 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
                     {l.content.sample ? <blockquote className="whitespace-pre-wrap border-l-2 pl-3 text-muted-foreground">{l.content.sample}</blockquote> : null}
                     <div><span className="font-medium">Критерии:</span><ul className="mt-1 list-disc pl-5">{l.content.rubricCriteria.map((s, j) => <li key={j}>{s}</li>)}</ul></div>
                     <p><span className="font-medium">Вывод:</span> {l.content.keyTakeaway}</p>
-                    <div><span className="font-medium">Флешкарты:</span><ul className="mt-1 list-disc pl-5">{l.content.flashcards.map((f, j) => <li key={j}>{f.question} — <span className="text-muted-foreground">{f.answer}</span></li>)}</ul></div>
+                    <div><span className="font-medium">Флешкарты:</span><ul className="mt-1 list-disc pl-5">{l.content.flashcards.map((f, j) => <li key={j}>{f.question} - <span className="text-muted-foreground">{f.answer}</span></li>)}</ul></div>
                   </div>
                 </details>
               </li>

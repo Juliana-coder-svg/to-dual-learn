@@ -28,7 +28,7 @@ export default async function TeachPage({ searchParams }: { searchParams: Promis
         <section>
           <h1 className="text-2xl font-semibold tracking-tight">Мои курсы</h1>
           {courses.length === 0 ? (
-            <p className="mt-4 text-sm text-muted-foreground">Пока нет курсов. Создай первый справа: название, пара слов о программе, и дальше загрузишь материалы.</p>
+            <p className="mt-4 text-sm text-muted-foreground">Пока нет курсов. Создай первый справа, потом загрузишь материалы.</p>
           ) : (
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
               {cards.map(({ course: c, lessons, published, materials, students }) => {
@@ -54,7 +54,7 @@ export default async function TeachPage({ searchParams }: { searchParams: Promis
           <Card>
             <CardHeader>
               <CardTitle>Новый курс</CardTitle>
-              <CardDescription>Потом загрузишь материалы и соберёшь уроки.</CardDescription>
+              <CardDescription>Потом загрузишь материалы и соберешь уроки.</CardDescription>
             </CardHeader>
             <CardContent>
               {sp.error === "title" ? <p className="mb-3 text-sm text-destructive">Нужно название.</p> : null}
@@ -65,12 +65,12 @@ export default async function TeachPage({ searchParams }: { searchParams: Promis
                   <Input id="title" name="title" required placeholder="Критическое мышление в эпоху AI" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="description">О чём курс</Label>
+                  <Label htmlFor="description">О чем курс</Label>
                   <Textarea id="description" name="description" rows={3} placeholder="Чему научатся и зачем" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="audience">Аудитория</Label>
-                  <Input id="audience" name="audience" placeholder="Маркетологи и продакты 25–40 лет" />
+                  <Input id="audience" name="audience" placeholder="Маркетологи и продакты 25-40 лет" />
                 </div>
                 <Button type="submit" className="w-full">Создать</Button>
               </form>
@@ -79,7 +79,7 @@ export default async function TeachPage({ searchParams }: { searchParams: Promis
           <Card className="mt-4">
             <CardHeader>
               <CardTitle>Готовый демо-курс</CardTitle>
-              <CardDescription>«Критическое мышление в эпоху AI»: методичка и пять уроков с задачами, сразу опубликованы. Для показа и как образец формата.</CardDescription>
+              <CardDescription>Курс «Критическое мышление в эпоху AI» с методичкой и пятью уроками, уроки сразу опубликованы. Подходит для показа и как образец формата.</CardDescription>
             </CardHeader>
             <CardContent>
               <form action={createDemoCourseAction.bind(null, "critical-thinking-ai")}>

@@ -8,8 +8,8 @@ import { Label } from "@/components/ui/label";
 
 const ERRORS: Record<string, string> = {
   "1": "Проверь почту и имя.",
-  send: "Не удалось отправить письмо. Попробуй ещё раз через минуту.",
-  email: "На этот адрес письмо не уйдёт. Проверь, нет ли опечатки.",
+  send: "Не удалось отправить письмо. Попробуй еще раз через минуту.",
+  email: "На этот адрес письмо не уйдет. Проверь, нет ли опечатки.",
   link: "Ссылка не сработала или устарела. Запроси новую.",
 };
 
@@ -32,7 +32,7 @@ export default async function LoginPage({
         </p>
         <p className="mt-6 text-sm text-muted-foreground">
           Письма нет? Проверь «Спам» или{" "}
-          <Link href={`/login?role=${defaultRole}`} className="underline hover:text-foreground">запроси ссылку ещё раз</Link>.
+          <Link href={`/login?role=${defaultRole}`} className="underline hover:text-foreground">запроси ссылку еще раз</Link>.
         </p>
       </main>
     );
@@ -42,7 +42,7 @@ export default async function LoginPage({
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-16">
       <h1 className="text-2xl font-semibold tracking-tight">Вход</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Без пароля: пришлём на почту ссылку для входа. Профиль создаётся при первом входе.
+        Пароль не нужен, пришлем на почту ссылку для входа. Профиль создается при первом входе.
       </p>
       {sp.error ? <p className="mt-4 text-sm text-destructive">{ERRORS[sp.error] ?? ERRORS["1"]}</p> : null}
       <form action={login} className="mt-8 space-y-5">

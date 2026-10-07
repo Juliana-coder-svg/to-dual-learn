@@ -21,7 +21,7 @@ export default async function EditLessonPage({ params, searchParams }: { params:
     <div className="mx-auto max-w-2xl">
       <Link href={`/teach/${courseId}/lessons`} className="text-sm text-muted-foreground hover:text-foreground">← Уроки</Link>
       <h2 className="mt-1 text-lg font-semibold">Урок {lesson.position}: правка</h2>
-      {sp.error ? <p className="mt-3 text-sm text-destructive">Не удалось сохранить: проверь, что заполнены все поля, есть хотя бы два признака и два критерия.</p> : null}
+      {sp.error ? <p className="mt-3 text-sm text-destructive">Не удалось сохранить. Проверь, что заполнены все поля и есть хотя бы два признака и два критерия.</p> : null}
       {lesson.review?.flags.length ? (
         <div className="mt-3 rounded-md border border-dashed p-3 text-sm">
           <div className="font-medium">Замечания ревьюера</div>

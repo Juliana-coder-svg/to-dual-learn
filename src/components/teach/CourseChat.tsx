@@ -41,7 +41,7 @@ export function CourseChat({ courseId, initial }: { courseId: string; initial: M
   return (
     <div className="flex flex-col gap-4">
       <div className="min-h-64 space-y-4 rounded-md border p-4">
-        {messages.length === 0 ? <p className="text-sm text-muted-foreground">Пока пусто. Например: «Какие темы покрывают материалы?» или «Придумай 3 вопроса для обсуждения по второму разделу».</p> : null}
+        {messages.length === 0 ? <p className="text-sm text-muted-foreground">Пока пусто. Можно спросить «Какие темы покрывают материалы?» или «Придумай 3 вопроса для обсуждения по второму разделу».</p> : null}
         {messages.map((m) => (
           <div key={m.id} className={m.role === "user" ? "ml-auto max-w-[85%] rounded-md bg-muted px-4 py-2 text-sm" : "max-w-[95%]"}>
             {m.role === "user" ? <p className="whitespace-pre-wrap">{m.content}</p> : <Markdown text={m.content} />}
@@ -56,7 +56,7 @@ export function CourseChat({ courseId, initial }: { courseId: string; initial: M
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void send(e); } }}
-          placeholder="Вопрос по материалам… (Enter — отправить, Shift+Enter — перенос)"
+          placeholder="Вопрос по материалам. Enter отправляет, Shift+Enter переносит строку"
         />
         <Button type="submit" disabled={busy || !input.trim()}>Отправить</Button>
       </form>
