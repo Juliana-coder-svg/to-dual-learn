@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { HomeworkResultsView } from "./HomeworkResultsView";
 import type { HomeworkResults } from "@/lib/lessons/types";
+import { csvToWorks } from "@/lib/homework/csv";
 
 const EXAMPLE = `## Иван Петров
 Текст работы Ивана…
@@ -23,6 +24,17 @@ export function HomeworkChecker({ courseId }: { courseId: string }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<HomeworkResults | null>(null);
+
+  async function importCsv(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const text = await file.text();
+    const works = csvToWorks(text);
+    if (!works) { setError("В CSV не нашлось строк. Нужны колонки «имя» и «ответ»."); return; }
+    setWorks(works);
+    setError(null);
+    e.target.value = "";
+  }
 
   async function check(e: React.FormEvent) {
     e.preventDefault();
@@ -68,7 +80,8 @@ export function HomeworkChecker({ courseId }: { courseId: string }) {
             <div className="space-y-2">
               <Label htmlFor="works">Работы студентов</Label>
               <Textarea id="works" rows={12} required value={works} onChange={(e) => setWorks(e.target.value)} placeholder={EXAMPLE} className="font-mono text-xs" />
-              <p className="text-xs text-muted-foreground">Каждая работа начинается со строки <code>## Имя студента</code>.</p>
+              <p className="text-xs text-muted-foreground">Каждая работа начинается со строки <code>## Имя студента</code>. Или загрузи CSV из LMS с колонками «имя» и «ответ»:</p>
+              <input type="file" accept=".csv,text/csv" onChange={importCsv} className="block w-full text-xs text-muted-foreground file:mr-3 file:rounded-md file:border file:bg-background file:px-3 file:py-1 file:text-xs" />
             </div>
             <div className="lg:col-span-2">
               <Button type="submit" disabled={busy}>{busy ? "Проверяю…" : "Проверить"}</Button>

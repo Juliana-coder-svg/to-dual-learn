@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth/session";
-import { countDueFlashcards, latestSubmissionsForCourse, listCoursesForStudent, listLessons } from "@/lib/db/queries";
+import { countDueFlashcards, countLessonsStartedToday, latestSubmissionsForCourse, listCoursesForStudent, listLessons } from "@/lib/db/queries";
 import { joinCourseAction } from "@/lib/actions/courses";
 import { setDailyEmailAction } from "@/lib/actions/auth";
 import { AppShell } from "@/components/shared/AppShell";
@@ -38,6 +38,7 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
                 const done = latestSubmissionsForCourse(user.id, c.id);
                 const completed = lessons.filter((l) => done.has(l.id)).length;
                 const next = lessons.find((l) => !done.has(l.id));
+                const limitReached = c.owner_id !== user.id && c.daily_limit > 0 && countLessonsStartedToday(user.id, c.id) >= c.daily_limit;
                 return (
                   <Card key={c.id}>
                     <CardHeader>
@@ -50,7 +51,9 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
                         <span className="whitespace-nowrap text-muted-foreground">{completed}/{lessons.length}</span>
                       </div>
                       <div className="mt-4">
-                        {next ? (
+                        {next && limitReached ? (
+                          <span className="text-sm text-muted-foreground">Сегодня пройдено. Завтра: {next.title}</span>
+                        ) : next ? (
                           <Button nativeButton={false} render={<Link href={`/learn/${c.id}/lesson/${next.id}`} />} size="sm">Урок дня: {next.title}</Button>
                         ) : lessons.length === 0 ? (
                           <span className="text-sm text-muted-foreground">Преподаватель ещё не опубликовал уроки.</span>

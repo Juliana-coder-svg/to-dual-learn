@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireUser } from "@/lib/auth/session";
 import { listCoursesByOwner, listLessons, listMaterials, listStudentsWithStats } from "@/lib/db/queries";
 import { createCourseAction } from "@/lib/actions/courses";
+import { createDemoCourseAction } from "@/lib/actions/seed";
 import { AppShell } from "@/components/shared/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,7 +53,8 @@ export default async function TeachPage({ searchParams }: { searchParams: Promis
               <CardDescription>Потом загрузишь материалы и соберёшь уроки.</CardDescription>
             </CardHeader>
             <CardContent>
-              {sp.error ? <p className="mb-3 text-sm text-destructive">Нужно название.</p> : null}
+              {sp.error === "title" ? <p className="mb-3 text-sm text-destructive">Нужно название.</p> : null}
+              {sp.error === "seed" ? <p className="mb-3 text-sm text-destructive">Файл демо-курса не найден.</p> : null}
               <form action={createCourseAction} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="title">Название</Label>
@@ -67,6 +69,17 @@ export default async function TeachPage({ searchParams }: { searchParams: Promis
                   <Input id="audience" name="audience" placeholder="Маркетологи и продакты 25–40 лет" />
                 </div>
                 <Button type="submit" className="w-full">Создать</Button>
+              </form>
+            </CardContent>
+          </Card>
+          <Card className="mt-4">
+            <CardHeader>
+              <CardTitle>Готовый демо-курс</CardTitle>
+              <CardDescription>«Критическое мышление в эпоху AI»: методичка и пять уроков с задачами, сразу опубликованы. Для показа и как образец формата.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form action={createDemoCourseAction.bind(null, "critical-thinking-ai")}>
+                <Button type="submit" variant="outline" className="w-full">Добавить демо-курс</Button>
               </form>
             </CardContent>
           </Card>
