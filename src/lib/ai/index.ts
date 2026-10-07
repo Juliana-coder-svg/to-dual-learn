@@ -53,6 +53,9 @@ async function complete(kind: Kind, ctx: CallContext, req: AiRequest): Promise<A
   const provider = getProvider();
   const started = Date.now();
   const result = await provider.complete(req);
+  console.info(
+    `[ai] ${kind} ${result.provider}/${result.model} in=${result.usage.inputTokens} cache_w=${result.usage.cacheWriteTokens} cache_r=${result.usage.cacheReadTokens} out=${result.usage.outputTokens} ${Date.now() - started}ms`,
+  );
   addAiCall({
     courseId: ctx.courseId ?? null,
     userId: ctx.userId,

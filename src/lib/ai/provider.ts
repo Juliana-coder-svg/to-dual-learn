@@ -81,7 +81,8 @@ export function estimateCostUsd(u: AiUsage): number {
 export function resolveProviderName(): ProviderName {
   const forced = process.env.AI_PROVIDER;
   if (forced === "anthropic" || forced === "openai" || forced === "demo") return forced;
-  if (process.env.ANTHROPIC_API_KEY) return "anthropic";
+  // ANTHROPIC_AUTH_TOKEN + ANTHROPIC_BASE_URL — путь через OpenRouter с родным Anthropic Messages API.
+  if (process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN) return "anthropic";
   if (process.env.OPENAI_COMPAT_API_KEY) return "openai";
   return "demo";
 }
