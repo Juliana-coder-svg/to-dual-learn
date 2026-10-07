@@ -1,5 +1,5 @@
 import type { Course, Material } from "@/lib/db/queries";
-import { ARTIFACT_KINDS, type ArtifactKind, type Feedback, type HomeworkResults, type LessonContent } from "@/lib/lessons/types";
+import { ARTIFACT_KINDS, type ArtifactKind, type Feedback, type HomeworkResults, type LessonContent, type LessonReview } from "@/lib/lessons/types";
 
 /** Демо-режим без ANTHROPIC_API_KEY: детерминированные заглушки, чтобы прокликать интерфейс. */
 
@@ -21,8 +21,10 @@ export const demo = {
       sample: i % 2 === 0 ? "Пример текста для разбора: «Согласно исследованию, 87% компаний уже внедрили AI» — без ссылки на источник." : null,
       rubricCriteria: ["Назван конкретный пример", "Объяснено, почему он подходит", "Описан следующий шаг"],
       keyTakeaway: "Если утверждение звучит конкретно, но источника нет — проверь.",
-      flashcardQuestion: `Какая ключевая идея урока ${i + 1}?`,
-      flashcardAnswer: "Одна мысль, которую нужно применить в задаче.",
+      flashcards: [
+        { question: `Какая ключевая идея урока ${i + 1}?`, answer: "Одна мысль, которую нужно применить в задаче." },
+        { question: "Что делать, если утверждение звучит конкретно, но источника нет?", answer: "Считать его гипотезой и проверить первоисточник." },
+      ],
     }));
   },
 
@@ -55,6 +57,14 @@ export const demo = {
         flags: s.answer.trim().length < 20 ? ["Слишком короткая работа"] : [],
       })),
       overview: `${NOTE} Сводка по группе появится в реальном режиме.`,
+    };
+  },
+
+  review(lessons: LessonContent[]): LessonReview {
+    return {
+      lessons,
+      notes: lessons.map((l, i) => ({ title: l.title, changed: false, flags: i === 0 ? [`${NOTE} Пример замечания ревьюера.`] : [] })),
+      summary: `${NOTE} В реальном режиме ревьюер сверит уроки с материалами и образовательными результатами.`,
     };
   },
 

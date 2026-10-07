@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireUser } from "@/lib/auth/session";
 import { countDueFlashcards, latestSubmissionsForCourse, listCoursesForStudent, listLessons } from "@/lib/db/queries";
 import { joinCourseAction } from "@/lib/actions/courses";
+import { setDailyEmailAction } from "@/lib/actions/auth";
 import { AppShell } from "@/components/shared/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -75,6 +76,19 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
               <form action={joinCourseAction} className="flex gap-2">
                 <Input name="code" required placeholder="ABC234" className="font-mono uppercase" maxLength={6} />
                 <Button type="submit">Войти</Button>
+              </form>
+            </CardContent>
+          </Card>
+          <Card className="mt-4">
+            <CardHeader>
+              <CardTitle>Письмо с уроком дня</CardTitle>
+              <CardDescription>Каждое утро на {user.email}: какой урок ждёт и сколько карточек на повторение.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form action={setDailyEmailAction} className="flex items-center justify-between gap-3 text-sm">
+                <span>{user.daily_email ? "Включено" : "Выключено"}</span>
+                <input type="hidden" name="enabled" value={user.daily_email ? "0" : "1"} />
+                <Button type="submit" variant="outline" size="sm">{user.daily_email ? "Выключить" : "Включить"}</Button>
               </form>
             </CardContent>
           </Card>

@@ -26,6 +26,34 @@ export function LessonPlayer({ lesson, previous, nextHref, nextLabel }: Props) {
   const [progress, setProgress] = useState<{ streak: number; xp: number; gained: number } | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [appealOpen, setAppealOpen] = useState(false);
+  const [objection, setObjection] = useState("");
+  const [appealNote, setAppealNote] = useState<string | null>(null);
+
+  async function appeal() {
+    if (objection.trim().length < 10) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/evaluate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lessonId: lesson.id, answer, objection }),
+      });
+      const data = (await res.json()) as { ok?: boolean; error?: string; feedback?: Feedback };
+      if (!res.ok || !data.ok || !data.feedback) throw new Error(data.error ?? "Не удалось пересмотреть оценку");
+      const before = feedback?.score;
+      setFeedback(data.feedback);
+      setAppealOpen(false);
+      setObjection("");
+      setAppealNote(before === data.feedback.score ? "Балл не изменился." : `Балл изменён: ${before} → ${data.feedback.score}.`);
+      router.refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Ошибка");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function submit() {
     setBusy(true);
@@ -112,6 +140,20 @@ export function LessonPlayer({ lesson, previous, nextHref, nextLabel }: Props) {
             <summary className="cursor-pointer text-muted-foreground">Мой ответ</summary>
             <blockquote className="mt-2 whitespace-pre-wrap border-l-2 pl-3">{answer}</blockquote>
           </details>
+          {appealNote ? <p className="text-sm text-muted-foreground">{appealNote}</p> : null}
+          {appealOpen ? (
+            <div className="space-y-2 rounded-md border p-4">
+              <div className="text-sm font-medium">С чем не согласен?</div>
+              <Textarea rows={3} value={objection} onChange={(e) => setObjection(e.target.value)} placeholder="Укажи критерий и где в ответе он выполнен" />
+              {error ? <p className="text-sm text-destructive">{error}</p> : null}
+              <div className="flex gap-2">
+                <Button size="sm" onClick={appeal} disabled={busy || objection.trim().length < 10}>{busy ? "Пересматриваю…" : "Отправить возражение"}</Button>
+                <Button size="sm" variant="ghost" onClick={() => setAppealOpen(false)}>Отмена</Button>
+              </div>
+            </div>
+          ) : (
+            <button type="button" onClick={() => setAppealOpen(true)} className="text-sm text-muted-foreground underline-offset-4 hover:underline">Не согласен с оценкой</button>
+          )}
           <div className="rounded-md border-l-4 border-primary bg-muted/50 p-4">
             <div className="text-xs font-medium uppercase text-primary">Запомнить</div>
             <p className="mt-1">{c.keyTakeaway}</p>

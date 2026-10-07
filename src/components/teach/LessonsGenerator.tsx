@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 export function LessonsGenerator({ courseId, disabled }: { courseId: string; disabled: boolean }) {
   const router = useRouter();
   const [count, setCount] = useState(5);
+  const [review, setReview] = useState(true);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
@@ -19,11 +20,11 @@ export function LessonsGenerator({ courseId, disabled }: { courseId: string; dis
       const res = await fetch("/api/lessons/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ courseId, count }),
+        body: JSON.stringify({ courseId, count, review }),
       });
-      const data = (await res.json()) as { ok?: boolean; error?: string; added?: number };
+      const data = (await res.json()) as { ok?: boolean; error?: string; added?: number; reviewSummary?: string };
       if (!res.ok || !data.ok) throw new Error(data.error ?? "Не удалось собрать уроки");
-      setMsg(`Добавлено уроков: ${data.added}. Проверь и опубликуй.`);
+      setMsg(`Добавлено уроков: ${data.added}. ${data.reviewSummary ?? "Проверь и опубликуй."}`);
       router.refresh();
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "Ошибка");
@@ -45,7 +46,11 @@ export function LessonsGenerator({ courseId, disabled }: { courseId: string; dis
             {[3, 5, 8, 10].map((n) => <option key={n} value={n}>{n}</option>)}
           </select>
         </div>
-        <Button onClick={generate} disabled={busy || disabled} className="w-full">{busy ? "Собираю…" : "Собрать"}</Button>
+        <label className="flex cursor-pointer items-start gap-2 text-sm">
+          <input type="checkbox" checked={review} onChange={(e) => setReview(e.target.checked)} className="mt-1" />
+          <span>Проверить ревьюером<span className="block text-xs text-muted-foreground">Второй проход: сверка с материалами и результатами, правка критериев. Удваивает время и расход.</span></span>
+        </label>
+        <Button onClick={generate} disabled={busy || disabled} className="w-full">{busy ? (review ? "Собираю и проверяю…" : "Собираю…") : "Собрать"}</Button>
         {disabled ? <p className="text-xs text-muted-foreground">Сначала загрузи материалы.</p> : null}
         {msg ? <p className="text-sm text-muted-foreground">{msg}</p> : null}
       </CardContent>

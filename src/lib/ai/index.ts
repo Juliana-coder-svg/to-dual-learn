@@ -3,16 +3,19 @@ import { addAiCall, type Course, type Material } from "@/lib/db/queries";
 import {
   FeedbackSchema,
   HomeworkResultsSchema,
+  LessonReviewSchema,
   LessonsBatchSchema,
   type ArtifactKind,
   type Feedback,
   type HomeworkResults,
   type LessonContent,
+  type LessonReview,
 } from "@/lib/lessons/types";
+import { reviewLessonsPrompt } from "@/lib/prompts/review-lessons";
 import { EXTRACT_MATERIAL_PROMPT } from "@/lib/prompts/extract-material";
 import { generateLessonsPrompt } from "@/lib/prompts/generate-lessons";
 import { generateArtifactPrompt } from "@/lib/prompts/generate-artifact";
-import { evaluatePrompt } from "@/lib/prompts/evaluate";
+import { evaluatePrompt, reevaluatePrompt, type CalibrationSample } from "@/lib/prompts/evaluate";
 import { checkHomeworkPrompt } from "@/lib/prompts/check-homework";
 import { CHAT_PROMPT } from "@/lib/prompts/chat";
 import { demo } from "./demo";
@@ -119,6 +122,8 @@ export async function generateLessons(
       courseTitle: course.title,
       courseDescription: course.description,
       audience: course.audience,
+      outcomes: course.outcomes,
+      tone: course.tone,
       count: opts.count,
       existingTitles: opts.existingTitles,
     }),
@@ -128,6 +133,20 @@ export async function generateLessons(
     effort: "high",
   });
   return result.lessons;
+}
+
+/** Второй проход: методист-ревьюер сверяет уроки с материалами и правит их. */
+export async function reviewLessons(ctx: CallContext, course: Course, materials: Material[], lessons: LessonContent[]): Promise<LessonReview> {
+  if (isDemoMode()) return demo.review(lessons);
+  const result = await completeJson("review", ctx, LessonReviewSchema, {
+    task: reviewLessonsPrompt({ courseTitle: course.title, audience: course.audience, outcomes: course.outcomes, tone: course.tone, lessons }),
+    materials: materialsBlock(materials),
+    messages: [{ role: "user", content: `Проверь ${lessons.length} уроков и верни исправленные.` }],
+    maxTokens: 32000,
+    effort: "high",
+  });
+  if (result.lessons.length !== lessons.length) throw new Error("Ревьюер вернул другое количество уроков. Попробуй ещё раз.");
+  return result;
 }
 
 export async function generateArtifact(
@@ -147,11 +166,37 @@ export async function generateArtifact(
   return result.text;
 }
 
-export async function evaluateAnswer(ctx: CallContext, lesson: LessonContent, answer: string): Promise<Feedback> {
+export async function evaluateAnswer(
+  ctx: CallContext,
+  lesson: LessonContent,
+  answer: string,
+  opts: { tone: Course["tone"]; samples: CalibrationSample[] },
+): Promise<Feedback> {
   if (isDemoMode()) return demo.feedback(lesson, answer);
   return completeJson("evaluate", ctx, FeedbackSchema, {
-    task: evaluatePrompt(lesson, answer),
+    task: evaluatePrompt(lesson, answer, opts),
     messages: [{ role: "user", content: "Оцени ответ по критериям." }],
+    maxTokens: 8000,
+    effort: "medium",
+  });
+}
+
+/** Переоценка после возражения студента. */
+export async function reevaluateAnswer(
+  ctx: CallContext,
+  lesson: LessonContent,
+  answer: string,
+  previous: Feedback,
+  objection: string,
+  opts: { tone: Course["tone"] },
+): Promise<Feedback> {
+  if (isDemoMode()) {
+    const f = demo.feedback(lesson, answer);
+    return { ...f, summary: `Демо-режим: возражение получено («${objection.slice(0, 60)}…»). В реальном режиме ментор пересмотрит оценку.` };
+  }
+  return completeJson("evaluate", ctx, FeedbackSchema, {
+    task: reevaluatePrompt(lesson, answer, previous.summary, previous.score, objection, opts),
+    messages: [{ role: "user", content: "Пересмотри оценку с учётом возражения." }],
     maxTokens: 8000,
     effort: "medium",
   });

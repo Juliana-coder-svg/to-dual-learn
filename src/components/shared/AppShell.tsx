@@ -20,6 +20,7 @@ export function AppShell({ user, children }: { user: User; children: React.React
                 <>
                   <Link href="/learn" className="hover:text-foreground">Учиться</Link>
                   <Link href="/learn/review" className="hover:text-foreground">Повторение</Link>
+                  <Link href="/learn/history" className="hover:text-foreground">История</Link>
                 </>
               )}
             </nav>

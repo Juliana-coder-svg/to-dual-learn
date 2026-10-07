@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ role?: string; error?: string }> }) {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ role?: string; error?: string; next?: string }> }) {
   const user = await getCurrentUser();
   if (user) redirect(homeFor(user));
   const sp = await searchParams;
@@ -19,6 +19,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       </p>
       {sp.error ? <p className="mt-4 text-sm text-destructive">Проверь почту и имя.</p> : null}
       <form action={login} className="mt-8 space-y-5">
+        {sp.next ? <input type="hidden" name="next" value={sp.next} /> : null}
         <div className="space-y-2">
           <Label htmlFor="email">Почта</Label>
           <Input id="email" name="email" type="email" required autoComplete="email" placeholder="you@example.com" />

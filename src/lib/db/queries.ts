@@ -1,11 +1,13 @@
 import { getDb } from "./index";
 import { newId, newJoinCode, nowIso } from "@/lib/utils/ids";
 import {
-  LessonContentSchema,
+  normalizeLessonContent,
   type Feedback,
   type HomeworkResults,
   type LessonContent,
+  type LessonReview,
 } from "@/lib/lessons/types";
+import type { Tone } from "@/lib/prompts/tone";
 
 export type Role = "teacher" | "student";
 
@@ -18,6 +20,8 @@ export interface User {
   streak: number;
   last_lesson_at: string | null;
   xp: number;
+  daily_email: number;
+  last_digest_at: string | null;
 }
 
 export interface Course {
@@ -26,6 +30,9 @@ export interface Course {
   title: string;
   description: string;
   audience: string;
+  outcomes: string;
+  tone: Tone;
+  daily_limit: number;
   join_code: string;
   created_at: string;
 }
@@ -50,11 +57,13 @@ export interface Lesson {
   concept: string;
   content: LessonContent;
   status: LessonStatus;
+  review: LessonReview["notes"][number] | null;
   created_at: string;
 }
 
-interface LessonRow extends Omit<Lesson, "content"> {
+interface LessonRow extends Omit<Lesson, "content" | "review"> {
   content_json: string;
+  review_json: string | null;
 }
 
 export interface Submission {
@@ -64,6 +73,7 @@ export interface Submission {
   answer: string;
   score: number;
   feedback: Feedback;
+  objection: string | null;
   created_at: string;
 }
 
@@ -75,6 +85,7 @@ export interface Flashcard {
   id: string;
   user_id: string;
   lesson_id: string;
+  card_index: number;
   next_due_at: string;
   round: number;
   last_quality: string | null;
@@ -150,6 +161,18 @@ export function upsertUser(input: { email: string; name: string; role: Role }): 
   return getUserById(id)!;
 }
 
+export function setDailyEmail(id: string, enabled: boolean): void {
+  run("UPDATE users SET daily_email = ? WHERE id = ?", enabled ? 1 : 0, id);
+}
+
+export function listUsersForDigest(): User[] {
+  return many<User>("SELECT * FROM users WHERE daily_email = 1");
+}
+
+export function markDigestSent(id: string): void {
+  run("UPDATE users SET last_digest_at = ? WHERE id = ?", nowIso(), id);
+}
+
 export function updateUserProgress(id: string, p: { streak: number; last_lesson_at: string; xp: number }): void {
   run("UPDATE users SET streak = ?, last_lesson_at = ?, xp = ? WHERE id = ?", p.streak, p.last_lesson_at, p.xp, id);
 }
@@ -163,6 +186,16 @@ export function createCourse(input: { ownerId: string; title: string; descriptio
     id, input.ownerId, input.title.trim(), input.description.trim(), input.audience.trim(), newJoinCode(), nowIso(),
   );
   return getCourse(id)!;
+}
+
+export function updateCourseSettings(
+  id: string,
+  p: { title: string; description: string; audience: string; outcomes: string; tone: Tone; daily_limit: number },
+): void {
+  run(
+    "UPDATE courses SET title = ?, description = ?, audience = ?, outcomes = ?, tone = ?, daily_limit = ? WHERE id = ?",
+    p.title.trim(), p.description.trim(), p.audience.trim(), p.outcomes.trim(), p.tone, p.daily_limit, id,
+  );
 }
 
 export function getCourse(id: string): Course | undefined {
@@ -241,8 +274,35 @@ export function deleteMaterial(id: string, courseId: string): void {
 // ---------- lessons ----------
 
 function rowToLesson(r: LessonRow): Lesson {
-  const { content_json, ...rest } = r;
-  return { ...rest, content: LessonContentSchema.parse(JSON.parse(content_json)) };
+  const { content_json, review_json, ...rest } = r;
+  return {
+    ...rest,
+    content: normalizeLessonContent(JSON.parse(content_json)),
+    review: review_json ? (JSON.parse(review_json) as Lesson["review"]) : null,
+  };
+}
+
+export function updateLessonContent(id: string, courseId: string, content: LessonContent): void {
+  run(
+    "UPDATE lessons SET title = ?, concept = ?, content_json = ? WHERE id = ? AND course_id = ?",
+    content.title, content.concept, JSON.stringify(content), id, courseId,
+  );
+}
+
+export function setLessonReview(id: string, courseId: string, note: Lesson["review"]): void {
+  run("UPDATE lessons SET review_json = ? WHERE id = ? AND course_id = ?", note ? JSON.stringify(note) : null, id, courseId);
+}
+
+/** Меняет урок местами с соседом: direction -1 — вверх, +1 — вниз. */
+export function moveLesson(id: string, courseId: string, direction: -1 | 1): void {
+  const lessons = many<{ id: string; position: number }>("SELECT id, position FROM lessons WHERE course_id = ? ORDER BY position", courseId);
+  const idx = lessons.findIndex((l) => l.id === id);
+  const other = lessons[idx + direction];
+  if (idx === -1 || !other) return;
+  const a = lessons[idx];
+  run("UPDATE lessons SET position = ? WHERE id = ?", -1, a.id);
+  run("UPDATE lessons SET position = ? WHERE id = ?", a.position, other.id);
+  run("UPDATE lessons SET position = ? WHERE id = ?", other.position, a.id);
 }
 
 export function insertLessons(courseId: string, lessons: LessonContent[]): Lesson[] {
@@ -291,11 +351,11 @@ function rowToSubmission(r: SubmissionRow): Submission {
   return { ...rest, feedback: JSON.parse(feedback_json) as Feedback };
 }
 
-export function addSubmission(input: { lessonId: string; userId: string; answer: string; feedback: Feedback }): Submission {
+export function addSubmission(input: { lessonId: string; userId: string; answer: string; feedback: Feedback; objection?: string }): Submission {
   const id = newId();
   run(
-    "INSERT INTO submissions (id, lesson_id, user_id, answer, score, feedback_json, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-    id, input.lessonId, input.userId, input.answer, input.feedback.score, JSON.stringify(input.feedback), nowIso(),
+    "INSERT INTO submissions (id, lesson_id, user_id, answer, score, feedback_json, objection, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+    id, input.lessonId, input.userId, input.answer, input.feedback.score, JSON.stringify(input.feedback), input.objection ?? null, nowIso(),
   );
   return rowToSubmission(one<SubmissionRow>("SELECT * FROM submissions WHERE id = ?", id)!);
 }
@@ -321,6 +381,38 @@ export function latestSubmissionsForCourse(userId: string, courseId: string): Ma
   return map;
 }
 
+/** Сколько уроков курса студент начал сегодня (первая сдача за день). Для лимита «один урок в день». */
+export function countLessonsStartedToday(userId: string, courseId: string, now = new Date()): number {
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+  return (
+    one<{ n: number }>(
+      `SELECT COUNT(*) AS n FROM (
+         SELECT s.lesson_id, MIN(s.created_at) AS first_at FROM submissions s
+         WHERE s.user_id = ? AND s.lesson_id IN (SELECT id FROM lessons WHERE course_id = ?)
+         GROUP BY s.lesson_id
+       ) WHERE first_at >= ?`,
+      userId, courseId, start,
+    )?.n ?? 0
+  );
+}
+
+export interface SubmissionHistoryItem extends Submission {
+  lesson_title: string;
+  lesson_position: number;
+  course_id: string;
+  course_title: string;
+}
+
+export function listUserSubmissions(userId: string): SubmissionHistoryItem[] {
+  const rows = many<SubmissionRow & { lesson_title: string; lesson_position: number; course_id: string; course_title: string }>(
+    `SELECT s.*, l.title AS lesson_title, l.position AS lesson_position, c.id AS course_id, c.title AS course_title
+     FROM submissions s JOIN lessons l ON l.id = s.lesson_id JOIN courses c ON c.id = l.course_id
+     WHERE s.user_id = ? ORDER BY s.created_at DESC LIMIT 200`,
+    userId,
+  );
+  return rows.map((r) => ({ ...rowToSubmission(r), lesson_title: r.lesson_title, lesson_position: r.lesson_position, course_id: r.course_id, course_title: r.course_title }));
+}
+
 export interface SubmissionWithContext extends Submission {
   student_name: string;
   lesson_title: string;
@@ -339,12 +431,14 @@ export function listSubmissionsByCourse(courseId: string): SubmissionWithContext
 
 // ---------- flashcards ----------
 
-export function upsertFlashcard(userId: string, lessonId: string, nextDueAt: string): void {
-  run(
-    `INSERT INTO flashcards (id, user_id, lesson_id, next_due_at, round, created_at) VALUES (?, ?, ?, ?, 0, ?)
-     ON CONFLICT(user_id, lesson_id) DO NOTHING`,
-    newId(), userId, lessonId, nextDueAt, nowIso(),
-  );
+export function upsertFlashcards(userId: string, lessonId: string, cardCount: number, nextDueAt: string): void {
+  for (let i = 0; i < cardCount; i++) {
+    run(
+      `INSERT INTO flashcards (id, user_id, lesson_id, card_index, next_due_at, round, created_at) VALUES (?, ?, ?, ?, ?, 0, ?)
+       ON CONFLICT(user_id, lesson_id, card_index) DO NOTHING`,
+      newId(), userId, lessonId, i, nextDueAt, nowIso(),
+    );
+  }
 }
 
 export interface DueFlashcard extends Flashcard {
@@ -354,8 +448,8 @@ export interface DueFlashcard extends Flashcard {
 
 export function listDueFlashcards(userId: string, now = nowIso()): DueFlashcard[] {
   const rows = many<Flashcard & LessonRow & { fc_id: string; course_title: string; lesson_created_at: string }>(
-    `SELECT f.id AS fc_id, f.user_id, f.lesson_id, f.next_due_at, f.round, f.last_quality, f.created_at,
-            l.id, l.course_id, l.position, l.title, l.concept, l.content_json, l.status, l.created_at AS lesson_created_at,
+    `SELECT f.id AS fc_id, f.user_id, f.lesson_id, f.card_index, f.next_due_at, f.round, f.last_quality, f.created_at,
+            l.id, l.course_id, l.position, l.title, l.concept, l.content_json, l.status, l.review_json, l.created_at AS lesson_created_at,
             c.title AS course_title
      FROM flashcards f JOIN lessons l ON l.id = f.lesson_id JOIN courses c ON c.id = l.course_id
      WHERE f.user_id = ? AND f.next_due_at <= ? ORDER BY f.next_due_at`,
@@ -365,6 +459,7 @@ export function listDueFlashcards(userId: string, now = nowIso()): DueFlashcard[
     id: r.fc_id,
     user_id: r.user_id,
     lesson_id: r.lesson_id,
+    card_index: r.card_index,
     next_due_at: r.next_due_at,
     round: r.round,
     last_quality: r.last_quality,
@@ -372,7 +467,7 @@ export function listDueFlashcards(userId: string, now = nowIso()): DueFlashcard[
     course_title: r.course_title,
     lesson: rowToLesson({
       id: r.id, course_id: r.course_id, position: r.position, title: r.title, concept: r.concept,
-      content_json: r.content_json, status: r.status, created_at: r.lesson_created_at,
+      content_json: r.content_json, status: r.status, review_json: r.review_json, created_at: r.lesson_created_at,
     }),
   }));
 }
@@ -505,4 +600,37 @@ export function courseUsageByKind(courseId: string): UsageByKind[] {
      FROM ai_calls WHERE course_id = ? GROUP BY kind ORDER BY cost_usd DESC`,
     courseId,
   );
+}
+
+// ---------- calibration samples ----------
+
+export interface CalibrationSampleRow {
+  id: string;
+  course_id: string;
+  lesson_id: string | null;
+  answer: string;
+  score: number;
+  comment: string;
+  created_at: string;
+}
+
+export function addCalibrationSample(input: { courseId: string; lessonId: string | null; answer: string; score: number; comment: string }): void {
+  run(
+    "INSERT INTO calibration_samples (id, course_id, lesson_id, answer, score, comment, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+    newId(), input.courseId, input.lessonId, input.answer.trim(), input.score, input.comment.trim(), nowIso(),
+  );
+}
+
+export function listCalibrationSamples(courseId: string, lessonId?: string): CalibrationSampleRow[] {
+  if (lessonId) {
+    return many<CalibrationSampleRow>(
+      "SELECT * FROM calibration_samples WHERE course_id = ? AND (lesson_id = ? OR lesson_id IS NULL) ORDER BY lesson_id IS NULL, created_at LIMIT 6",
+      courseId, lessonId,
+    );
+  }
+  return many<CalibrationSampleRow>("SELECT * FROM calibration_samples WHERE course_id = ? ORDER BY created_at", courseId);
+}
+
+export function deleteCalibrationSample(id: string, courseId: string): void {
+  run("DELETE FROM calibration_samples WHERE id = ? AND course_id = ?", id, courseId);
 }

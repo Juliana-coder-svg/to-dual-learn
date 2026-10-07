@@ -11,6 +11,7 @@ const TABS = [
   { href: "/chat", label: "Чат" },
   { href: "/homework", label: "Проверка ДЗ" },
   { href: "/students", label: "Студенты" },
+  { href: "/settings", label: "Настройки" },
 ];
 
 export function CourseTabs({ courseId }: { courseId: string }) {
