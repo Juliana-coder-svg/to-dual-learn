@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth/session";
-import { countDueFlashcards, latestSubmissionsForCourse, listCoursesForStudent, listLessons } from "@/lib/db/queries";
+import { countDueFlashcards, countLessonsStartedToday, latestSubmissionsForCourse, listCoursesForStudent, listLessons } from "@/lib/db/queries";
 import { joinCourseAction } from "@/lib/actions/courses";
+import { setDailyEmailAction } from "@/lib/actions/auth";
 import { AppShell } from "@/components/shared/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,13 +15,15 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
   const [courses, due] = await Promise.all([listCoursesForStudent(user.id), countDueFlashcards(user.id)]);
   const cards = await Promise.all(
     courses.map(async (c) => {
-      const [lessons, done] = await Promise.all([
+      const [lessons, done, startedToday] = await Promise.all([
         listLessons(c.id, { publishedOnly: true }),
         latestSubmissionsForCourse(user.id, c.id),
+        c.owner_id !== user.id && c.daily_limit > 0 ? countLessonsStartedToday(user.id, c.id) : Promise.resolve(0),
       ]);
       const completed = lessons.filter((l) => done.has(l.id)).length;
       const next = lessons.find((l) => !done.has(l.id));
-      return { course: c, lessons, completed, next };
+      const limitReached = c.owner_id !== user.id && c.daily_limit > 0 && startedToday >= c.daily_limit;
+      return { course: c, lessons, completed, next, limitReached };
     }),
   );
 
@@ -42,7 +45,7 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
             <p className="mt-4 text-sm text-muted-foreground">Пока нет курсов. Введи код от преподавателя справа.</p>
           ) : (
             <div className="mt-6 space-y-4">
-              {cards.map(({ course: c, lessons, completed, next }) => {
+              {cards.map(({ course: c, lessons, completed, next, limitReached }) => {
                 return (
                   <Card key={c.id}>
                     <CardHeader>
@@ -55,7 +58,9 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
                         <span className="whitespace-nowrap text-muted-foreground">{completed}/{lessons.length}</span>
                       </div>
                       <div className="mt-4">
-                        {next ? (
+                        {next && limitReached ? (
+                          <span className="text-sm text-muted-foreground">Сегодня пройдено. Завтра: {next.title}</span>
+                        ) : next ? (
                           <Button nativeButton={false} render={<Link href={`/learn/${c.id}/lesson/${next.id}`} />} size="sm">Урок дня: {next.title}</Button>
                         ) : lessons.length === 0 ? (
                           <span className="text-sm text-muted-foreground">Преподаватель ещё не опубликовал уроки.</span>
@@ -81,6 +86,19 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
               <form action={joinCourseAction} className="flex gap-2">
                 <Input name="code" required placeholder="ABC234" className="font-mono uppercase" maxLength={6} />
                 <Button type="submit">Войти</Button>
+              </form>
+            </CardContent>
+          </Card>
+          <Card className="mt-4">
+            <CardHeader>
+              <CardTitle>Письмо с уроком дня</CardTitle>
+              <CardDescription>Каждое утро на {user.email}: какой урок ждёт и сколько карточек на повторение.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form action={setDailyEmailAction} className="flex items-center justify-between gap-3 text-sm">
+                <span>{user.daily_email ? "Включено" : "Выключено"}</span>
+                <input type="hidden" name="enabled" value={user.daily_email ? "0" : "1"} />
+                <Button type="submit" variant="outline" size="sm">{user.daily_email ? "Выключить" : "Включить"}</Button>
               </form>
             </CardContent>
           </Card>

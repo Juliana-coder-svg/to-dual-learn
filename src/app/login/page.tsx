@@ -15,7 +15,7 @@ const ERRORS: Record<string, string> = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ role?: string; error?: string; sent?: string }>;
+  searchParams: Promise<{ role?: string; error?: string; sent?: string; next?: string }>;
 }) {
   const user = await getCurrentUser();
   if (user) redirect(homeFor(user));
@@ -45,6 +45,7 @@ export default async function LoginPage({
       </p>
       {sp.error ? <p className="mt-4 text-sm text-destructive">{ERRORS[sp.error] ?? ERRORS["1"]}</p> : null}
       <form action={login} className="mt-8 space-y-5">
+        {sp.next ? <input type="hidden" name="next" value={sp.next} /> : null}
         <div className="space-y-2">
           <Label htmlFor="email">Почта</Label>
           <Input id="email" name="email" type="email" required autoComplete="email" placeholder="you@example.com" />

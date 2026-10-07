@@ -3,7 +3,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getSupabase } from "@/lib/supabase/server";
-import { setUserRole, type Role } from "@/lib/db/queries";
+import { setDailyEmail, setUserRole, type Role } from "@/lib/db/queries";
 import { homeFor, requireUser } from "@/lib/auth/session";
 import { setLoginPrefs } from "@/lib/auth/login-prefs";
 
@@ -30,6 +30,8 @@ export async function login(formData: FormData): Promise<void> {
   const name = String(formData.get("name") ?? "").trim();
   const role = parseRole(formData.get("role"));
   if (!email.includes("@") || name.length < 2) redirect("/login?error=1");
+  const next = String(formData.get("next") ?? "");
+  const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : "";
 
   const supabase = await getSupabase();
   const { error } = await supabase.auth.signInWithOtp({
@@ -43,7 +45,7 @@ export async function login(formData: FormData): Promise<void> {
     console.error("[auth] signInWithOtp", error.message);
     redirect(`/login?error=send&role=${role}`);
   }
-  await setLoginPrefs({ name, role });
+  await setLoginPrefs({ name, role, next: safeNext });
   redirect(`/login?sent=1&role=${role}`);
 }
 
@@ -58,4 +60,10 @@ export async function switchRole(): Promise<void> {
   const role: Role = user.role === "teacher" ? "student" : "teacher";
   await setUserRole(user.id, role);
   redirect(homeFor({ ...user, role }));
+}
+
+export async function setDailyEmailAction(formData: FormData): Promise<void> {
+  const user = await requireUser();
+  await setDailyEmail(user.id, formData.get("enabled") === "1");
+  redirect("/learn");
 }

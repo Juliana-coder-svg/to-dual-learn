@@ -40,7 +40,7 @@ export async function GET(req: Request): Promise<NextResponse> {
   if (prefs) {
     const patch = { role: prefs.role, ...(prefs.name ? { name: prefs.name } : {}) };
     await updateProfile(user.id, patch);
-    return NextResponse.redirect(new URL(homeFor({ ...user, ...patch }), url.origin));
+    return NextResponse.redirect(new URL(prefs.next ?? homeFor({ ...user, ...patch }), url.origin));
   }
   return NextResponse.redirect(new URL(homeFor(user), url.origin));
 }

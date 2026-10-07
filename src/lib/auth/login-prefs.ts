@@ -11,6 +11,8 @@ const MAX_AGE_SEC = 60 * 30;
 export interface LoginPrefs {
   name: string;
   role: Role;
+  /** Куда вернуть после входа (например, /join/КОД). Только относительный путь. */
+  next?: string;
 }
 
 export async function setLoginPrefs(prefs: LoginPrefs): Promise<void> {
@@ -24,10 +26,11 @@ export async function takeLoginPrefs(): Promise<LoginPrefs | null> {
   if (!raw) return null;
   store.delete(COOKIE);
   try {
-    const parsed = JSON.parse(raw) as { name?: unknown; role?: unknown };
+    const parsed = JSON.parse(raw) as { name?: unknown; role?: unknown; next?: unknown };
     const name = typeof parsed.name === "string" ? parsed.name.trim() : "";
     const role: Role = parsed.role === "teacher" ? "teacher" : "student";
-    return name.length >= 2 ? { name, role } : { name: "", role };
+    const next = typeof parsed.next === "string" && parsed.next.startsWith("/") && !parsed.next.startsWith("//") ? parsed.next : undefined;
+    return { name: name.length >= 2 ? name : "", role, next };
   } catch {
     return null;
   }

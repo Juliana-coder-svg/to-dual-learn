@@ -1,6 +1,8 @@
 import type { PostgrestMaybeSingleResponse, PostgrestSingleResponse } from "@supabase/supabase-js";
 import { getSupabase } from "@/lib/supabase/server";
 import type {
+  AiCallRow,
+  CalibrationSampleRow,
   ChatMessageRow,
   CourseRow,
   FlashcardRow,
@@ -14,18 +16,23 @@ import type {
   Role,
   StudentStatsRow,
   SubmissionRow,
+  Tone,
+  UsageByKindRow,
+  UsageSummaryRow,
 } from "@/lib/supabase/types";
 import { newJoinCode, nowIso } from "@/lib/utils/ids";
 import {
-  LessonContentSchema,
+  normalizeLessonContent,
   type Feedback,
   type HomeworkResults,
   type LessonContent,
+  type LessonReviewNote,
 } from "@/lib/lessons/types";
 
 /** Все запросы идут от имени текущего пользователя (cookie-сессия Supabase):
  *  RLS из supabase/migrations/0001_init.sql решает, какие строки видны и что можно менять.
- *  Проверки в src/lib/auth/access.ts остаются как второй слой. */
+ *  Проверки в src/lib/auth/access.ts остаются как второй слой.
+ *  Фоновые задачи без пользователя (крон) оборачивают вызовы в runAsService(). */
 
 export type { Role, LessonStatus } from "@/lib/supabase/types";
 
@@ -35,9 +42,11 @@ export type Material = MaterialRow;
 export type Flashcard = FlashcardRow;
 export type Generation = GenerationRow;
 export type ChatMessage = ChatMessageRow;
+export type { CalibrationSampleRow };
 
-export interface Lesson extends Omit<LessonRow, "content"> {
+export interface Lesson extends Omit<LessonRow, "content" | "review"> {
   content: LessonContent;
+  review: LessonReviewNote | null;
 }
 
 export interface Submission extends Omit<SubmissionRow, "feedback"> {
@@ -75,13 +84,29 @@ export async function updateProfile(id: string, p: { name?: string; role?: Role 
   check(await sb.from("profiles").update(p).eq("id", id), "profile update");
 }
 
+export async function setUserRole(id: string, role: Role): Promise<void> {
+  await updateProfile(id, { role });
+}
+
+export async function setDailyEmail(id: string, enabled: boolean): Promise<void> {
+  const sb = await getSupabase();
+  check(await sb.from("profiles").update({ daily_email: enabled }).eq("id", id), "daily email");
+}
+
+/** Только внутри runAsService: обычному пользователю RLS отдаст лишь его профиль. */
+export async function listUsersForDigest(): Promise<User[]> {
+  const sb = await getSupabase();
+  return unwrap(await sb.from("profiles").select("*").eq("daily_email", true), "digest users");
+}
+
+export async function markDigestSent(id: string): Promise<void> {
+  const sb = await getSupabase();
+  check(await sb.from("profiles").update({ last_digest_at: nowIso() }).eq("id", id), "digest sent");
+}
+
 export async function updateUserProgress(id: string, p: { streak: number; last_lesson_at: string; xp: number }): Promise<void> {
   const sb = await getSupabase();
   check(await sb.from("profiles").update(p).eq("id", id), "progress update");
-}
-
-export async function setUserRole(id: string, role: Role): Promise<void> {
-  await updateProfile(id, { role });
 }
 
 // ---------- courses ----------
@@ -101,6 +126,27 @@ export async function createCourse(input: { ownerId: string; title: string; desc
       .select("*")
       .single(),
     "course insert",
+  );
+}
+
+export async function updateCourseSettings(
+  id: string,
+  p: { title: string; description: string; audience: string; outcomes: string; tone: Tone; daily_limit: number },
+): Promise<void> {
+  const sb = await getSupabase();
+  check(
+    await sb
+      .from("courses")
+      .update({
+        title: p.title.trim(),
+        description: p.description.trim(),
+        audience: p.audience.trim(),
+        outcomes: p.outcomes.trim(),
+        tone: p.tone,
+        daily_limit: p.daily_limit,
+      })
+      .eq("id", id),
+    "course settings",
   );
 }
 
@@ -205,8 +251,49 @@ function rowToLesson(r: LessonRow): Lesson {
     concept: r.concept,
     status: r.status,
     created_at: r.created_at,
-    content: LessonContentSchema.parse(r.content),
+    content: normalizeLessonContent(r.content),
+    review: r.review ? (r.review as unknown as LessonReviewNote) : null,
   };
+}
+
+export async function updateLessonContent(id: string, courseId: string, content: LessonContent): Promise<void> {
+  const sb = await getSupabase();
+  check(
+    await sb
+      .from("lessons")
+      .update({ title: content.title, concept: content.concept, content: content as unknown as Json })
+      .eq("id", id)
+      .eq("course_id", courseId),
+    "lesson content",
+  );
+}
+
+export async function setLessonReview(id: string, courseId: string, note: LessonReviewNote | null): Promise<void> {
+  const sb = await getSupabase();
+  check(
+    await sb
+      .from("lessons")
+      .update({ review: note ? (note as unknown as Json) : null })
+      .eq("id", id)
+      .eq("course_id", courseId),
+    "lesson review",
+  );
+}
+
+/** Меняет урок местами с соседом: direction -1 — вверх, +1 — вниз. */
+export async function moveLesson(id: string, courseId: string, direction: -1 | 1): Promise<void> {
+  const sb = await getSupabase();
+  const lessons = unwrap(
+    await sb.from("lessons").select("id, position").eq("course_id", courseId).order("position"),
+    "lesson positions",
+  );
+  const idx = lessons.findIndex((l) => l.id === id);
+  const other = lessons[idx + direction];
+  if (idx === -1 || !other) return;
+  const a = lessons[idx];
+  check(await sb.from("lessons").update({ position: -1 }).eq("id", a.id), "move lesson");
+  check(await sb.from("lessons").update({ position: a.position }).eq("id", other.id), "move lesson");
+  check(await sb.from("lessons").update({ position: other.position }).eq("id", a.id), "move lesson");
 }
 
 export async function insertLessons(courseId: string, lessons: LessonContent[]): Promise<Lesson[]> {
@@ -267,12 +354,13 @@ function rowToSubmission(r: SubmissionRow): Submission {
     user_id: r.user_id,
     answer: r.answer,
     score: r.score,
+    objection: r.objection,
     created_at: r.created_at,
     feedback: r.feedback as unknown as Feedback,
   };
 }
 
-export async function addSubmission(input: { lessonId: string; userId: string; answer: string; feedback: Feedback }): Promise<Submission> {
+export async function addSubmission(input: { lessonId: string; userId: string; answer: string; feedback: Feedback; objection?: string }): Promise<Submission> {
   const sb = await getSupabase();
   const row = unwrap(
     await sb
@@ -283,6 +371,7 @@ export async function addSubmission(input: { lessonId: string; userId: string; a
         answer: input.answer,
         score: input.feedback.score,
         feedback: input.feedback as unknown as Json,
+        objection: input.objection ?? null,
       })
       .select("*")
       .single(),
@@ -325,6 +414,44 @@ export async function latestSubmissionsForCourse(userId: string, courseId: strin
   return map;
 }
 
+/** Сколько уроков курса студент начал сегодня (первая сдача за день). Для лимита «один урок в день». */
+export async function countLessonsStartedToday(userId: string, courseId: string, now = new Date()): Promise<number> {
+  const sb = await getSupabase();
+  const since = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+  return unwrap(await sb.rpc("count_lessons_started_today", { u: userId, c: courseId, since }), "lessons started today");
+}
+
+export interface SubmissionHistoryItem extends Submission {
+  lesson_title: string;
+  lesson_position: number;
+  course_id: string;
+  course_title: string;
+}
+
+export async function listUserSubmissions(userId: string): Promise<SubmissionHistoryItem[]> {
+  const sb = await getSupabase();
+  const rows = unwrap(
+    await sb
+      .from("submissions")
+      .select("*, lesson:lessons!inner(title, position, course_id, course:courses(title))")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(200)
+      .overrideTypes<
+        Array<SubmissionRow & { lesson: { title: string; position: number; course_id: string; course: { title: string } | null } }>,
+        { merge: false }
+      >(),
+    "user submissions",
+  );
+  return rows.map((r) => ({
+    ...rowToSubmission(r),
+    lesson_title: r.lesson.title,
+    lesson_position: r.lesson.position,
+    course_id: r.lesson.course_id,
+    course_title: r.lesson.course?.title ?? "",
+  }));
+}
+
 export interface SubmissionWithContext extends Submission {
   student_name: string;
   lesson_title: string;
@@ -356,13 +483,13 @@ export async function listSubmissionsByCourse(courseId: string): Promise<Submiss
 
 // ---------- flashcards ----------
 
-export async function upsertFlashcard(userId: string, lessonId: string, nextDueAt: string): Promise<void> {
+export async function upsertFlashcards(userId: string, lessonId: string, cardCount: number, nextDueAt: string): Promise<void> {
+  if (cardCount <= 0) return;
   const sb = await getSupabase();
+  const rows = Array.from({ length: cardCount }, (_, i) => ({ user_id: userId, lesson_id: lessonId, card_index: i, next_due_at: nextDueAt }));
   check(
-    await sb
-      .from("flashcards")
-      .upsert({ user_id: userId, lesson_id: lessonId, next_due_at: nextDueAt }, { onConflict: "user_id,lesson_id", ignoreDuplicates: true }),
-    "flashcard upsert",
+    await sb.from("flashcards").upsert(rows, { onConflict: "user_id,lesson_id,card_index", ignoreDuplicates: true }),
+    "flashcards upsert",
   );
 }
 
@@ -390,6 +517,7 @@ export async function listDueFlashcards(userId: string, now = nowIso()): Promise
       id: r.id,
       user_id: r.user_id,
       lesson_id: r.lesson_id,
+      card_index: r.card_index,
       next_due_at: r.next_due_at,
       round: r.round,
       last_quality: r.last_quality,
@@ -509,4 +637,93 @@ export async function listHomeworkChecks(courseId: string): Promise<HomeworkChec
     "homework checks",
   );
   return rows.map(rowToHomework);
+}
+
+// ---------- ai calls (учёт расхода) ----------
+
+export interface AiCallRecord {
+  courseId: string | null;
+  userId: string;
+  kind: string;
+  provider: string;
+  model: string;
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens: number;
+  cacheWriteTokens: number;
+  costUsd: number;
+  durationMs: number;
+}
+
+export async function addAiCall(r: AiCallRecord): Promise<void> {
+  const sb = await getSupabase();
+  const row: Omit<AiCallRow, "id" | "created_at"> = {
+    course_id: r.courseId,
+    user_id: r.userId,
+    kind: r.kind,
+    provider: r.provider,
+    model: r.model,
+    input_tokens: r.inputTokens,
+    output_tokens: r.outputTokens,
+    cache_read_tokens: r.cacheReadTokens,
+    cache_write_tokens: r.cacheWriteTokens,
+    cost_usd: r.costUsd,
+    duration_ms: r.durationMs,
+  };
+  check(await sb.from("ai_calls").insert(row), "ai call insert");
+}
+
+export type UsageSummary = UsageSummaryRow;
+export type UsageByKind = UsageByKindRow;
+
+const EMPTY_USAGE: UsageSummary = { calls: 0, input_tokens: 0, output_tokens: 0, cache_read_tokens: 0, cost_usd: 0 };
+
+export async function courseUsage(courseId: string): Promise<UsageSummary> {
+  const sb = await getSupabase();
+  const rows = unwrap(await sb.rpc("course_usage", { c: courseId }), "course usage");
+  return rows[0] ?? EMPTY_USAGE;
+}
+
+export async function courseUsageByKind(courseId: string): Promise<UsageByKind[]> {
+  const sb = await getSupabase();
+  return unwrap(await sb.rpc("course_usage_by_kind", { c: courseId }), "course usage by kind");
+}
+
+// ---------- calibration samples ----------
+
+export async function addCalibrationSample(input: { courseId: string; lessonId: string | null; answer: string; score: number; comment: string }): Promise<void> {
+  const sb = await getSupabase();
+  check(
+    await sb.from("calibration_samples").insert({
+      course_id: input.courseId,
+      lesson_id: input.lessonId,
+      answer: input.answer.trim(),
+      score: input.score,
+      comment: input.comment.trim(),
+    }),
+    "calibration insert",
+  );
+}
+
+/** С lessonId: образцы для этого урока и общие по курсу (общие в конце), не больше шести. */
+export async function listCalibrationSamples(courseId: string, lessonId?: string): Promise<CalibrationSampleRow[]> {
+  const sb = await getSupabase();
+  if (lessonId) {
+    const rows = unwrap(
+      await sb
+        .from("calibration_samples")
+        .select("*")
+        .eq("course_id", courseId)
+        .or(`lesson_id.eq.${lessonId},lesson_id.is.null`)
+        .order("created_at"),
+      "calibration samples",
+    );
+    return [...rows.filter((r) => r.lesson_id !== null), ...rows.filter((r) => r.lesson_id === null)].slice(0, 6);
+  }
+  return unwrap(await sb.from("calibration_samples").select("*").eq("course_id", courseId).order("created_at"), "calibration samples");
+}
+
+export async function deleteCalibrationSample(id: string, courseId: string): Promise<void> {
+  const sb = await getSupabase();
+  check(await sb.from("calibration_samples").delete().eq("id", id).eq("course_id", courseId), "calibration delete");
 }

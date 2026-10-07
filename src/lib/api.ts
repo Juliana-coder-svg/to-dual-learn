@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { AiRefusedError } from "@/lib/ai/claude";
+import { AiRefusedError } from "@/lib/ai";
 
 export function jsonError(message: string, status = 400): NextResponse {
   return NextResponse.json({ ok: false, error: message }, { status });

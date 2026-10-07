@@ -12,10 +12,35 @@ export const LessonContentSchema = z.object({
   sample: z.string().nullable().describe("Текст/кейс для разбора в задаче, если нужен; иначе null"),
   rubricCriteria: z.array(z.string()).describe("3–4 критерия хорошего ответа"),
   keyTakeaway: z.string().describe("Одна фраза, которую человек уносит с собой"),
-  flashcardQuestion: z.string().describe("Вопрос для повторения через несколько дней"),
-  flashcardAnswer: z.string().describe("Короткий ответ на вопрос флешкарты"),
+  flashcards: z
+    .array(z.object({ question: z.string(), answer: z.string().describe("Короткий ответ, 1–2 предложения") }))
+    .describe("2–3 карточки для повторения: на узнавание идеи, на применение, на типичную ошибку"),
 });
 export type LessonContent = z.infer<typeof LessonContentSchema>;
+
+/** Уроки, сохранённые до перехода на массив карточек, приводим к новому формату при чтении. */
+export function normalizeLessonContent(raw: unknown): LessonContent {
+  const r = raw as Record<string, unknown>;
+  if (r && !Array.isArray(r.flashcards) && typeof r.flashcardQuestion === "string") {
+    const { flashcardQuestion, flashcardAnswer, ...rest } = r;
+    return LessonContentSchema.parse({ ...rest, flashcards: [{ question: flashcardQuestion, answer: String(flashcardAnswer ?? "") }] });
+  }
+  return LessonContentSchema.parse(raw);
+}
+
+export const LessonReviewSchema = z.object({
+  lessons: z.array(LessonContentSchema).describe("Уроки после правок ревьюера, в том же порядке и количестве"),
+  notes: z.array(
+    z.object({
+      title: z.string().describe("Название урока из входа"),
+      changed: z.boolean(),
+      flags: z.array(z.string()).describe("Что было не так: нет опоры на материалы, задача не выполнима за 5 минут, критерий не проверяем, повтор темы и т.п. Пусто, если всё в порядке"),
+    }),
+  ),
+  summary: z.string().describe("2–3 предложения для преподавателя: что поправлено и что стоит проверить руками"),
+});
+export type LessonReview = z.infer<typeof LessonReviewSchema>;
+export type LessonReviewNote = LessonReview["notes"][number];
 
 export const LessonsBatchSchema = z.object({
   lessons: z.array(LessonContentSchema),
