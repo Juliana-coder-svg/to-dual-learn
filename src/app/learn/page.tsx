@@ -6,7 +6,6 @@ import { AppShell } from "@/components/shared/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { plural } from "@/lib/utils/format";
 
 export default async function LearnPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
@@ -46,7 +45,7 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
                     </CardHeader>
                     <CardContent>
                       <div className="flex items-center gap-3 text-sm">
-                        <Progress value={lessons.length ? (completed / lessons.length) * 100 : 0} className="h-2" />
+                        <div className="h-2 w-full overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width: `${lessons.length ? Math.round((completed / lessons.length) * 100) : 0}%` }} /></div>
                         <span className="whitespace-nowrap text-muted-foreground">{completed}/{lessons.length}</span>
                       </div>
                       <div className="mt-4">
