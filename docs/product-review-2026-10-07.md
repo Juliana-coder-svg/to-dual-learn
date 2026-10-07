@@ -143,3 +143,18 @@
 - Микрообучение и интервалы: [метаанализ микрообучения](https://www.arist.co/post/2025-meta-analysis-microlearning-improves-job-behavior-50-percent/blogrelixir), [Cepeda et al. 2006](https://www.yorku.ca/ncepeda/publications/KWWR2019.pdf)
 - L&D и AI: [Synthesia, AI in L&D 2026](https://www.synthesia.io/reports/ai-in-learning-and-development-report-2026), [Devlin Peck](https://www.devlinpeck.com/content/ai-in-corporate-training-statistics)
 - Сколково: [правила 2026](https://vnesenie-v-reestr.ru/news/rezident-skolkovo-2026-aktual-nye-trebovaniya-l-goty-i-kak-poluchit-status), [приоритеты 2026](https://vnesenie-v-reestr.ru/news/skolkovo-2026-prioritety-rezidentov-ii-importozameschenie-industrialnye-razrabotki)
+
+## Статус внедрения (вечер 7 октября)
+
+Сделано в тот же день, коммиты c1e62c6 … 16f5b16:
+
+- Провайдер-слой: Anthropic напрямую или любой OpenAI-совместимый эндпоинт (OpenRouter, GigaChat, Qwen в контуре). Учёт токенов и стоимости по каждому вызову, расход в шапке курса и в настройках.
+- Настройки курса: образовательные результаты, тон «ты/вы», лимит новых уроков в день, образцы оценок для калибровки ментора.
+- Редактор уроков, перестановка, второй проход «методист-ревьюер» с заметками, 2–3 флешкарты на урок.
+- Студент: лимит урока в день, возражение на оценку с переоценкой, история ответов, ссылка-приглашение `/join/КОД`, подписка на письмо «урок дня».
+- Демо-курс «Критическое мышление в эпоху AI» одной кнопкой: методичка и пять уроков.
+- Проверка ДЗ: импорт CSV из LMS, выгрузка результатов в CSV.
+- Cron-маршрут письма «урок дня» через Resend (без ключа только логирует).
+- Страница технологии для Сколково: docs/skolkovo-technology.md.
+
+Не сделано, по причинам: экспорт в .docx и .pptx требует новой зависимости и обсуждения; мультитенантность и SSO — отдельный этап после Supabase; retrieval по материалам — пока не нужен на объёмах одного курса; сократический режим ментора — следующий шаг после прогона на реальной модели.
