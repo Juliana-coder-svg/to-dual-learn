@@ -13,7 +13,13 @@ import { plural } from "@/lib/utils/format";
 export default async function TeachPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const user = await requireUser();
   const sp = await searchParams;
-  const courses = listCoursesByOwner(user.id);
+  const courses = await listCoursesByOwner(user.id);
+  const cards = await Promise.all(
+    courses.map(async (c) => {
+      const [lessons, materials, students] = await Promise.all([listLessons(c.id), listMaterials(c.id), listStudentsWithStats(c.id)]);
+      return { course: c, lessons, published: lessons.filter((l) => l.status === "published").length, materials: materials.length, students: students.length };
+    }),
+  );
 
   return (
     <AppShell user={user}>
@@ -24,9 +30,7 @@ export default async function TeachPage({ searchParams }: { searchParams: Promis
             <p className="mt-4 text-sm text-muted-foreground">Пока нет курсов. Создай первый справа: название, пара слов о программе, и дальше загрузишь материалы.</p>
           ) : (
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              {courses.map((c) => {
-                const lessons = listLessons(c.id);
-                const published = lessons.filter((l) => l.status === "published").length;
+              {cards.map(({ course: c, lessons, published, materials, students }) => {
                 return (
                   <Link key={c.id} href={`/teach/${c.id}`} className="block">
                     <Card className="h-full transition-colors hover:border-primary">
@@ -35,7 +39,7 @@ export default async function TeachPage({ searchParams }: { searchParams: Promis
                         <CardDescription>{c.description || "Без описания"}</CardDescription>
                       </CardHeader>
                       <CardContent className="text-sm text-muted-foreground">
-                        {plural(listMaterials(c.id).length, "материал", "материала", "материалов")} · {published}/{lessons.length} уроков опубликовано · {plural(listStudentsWithStats(c.id).length, "студент", "студента", "студентов")}
+                        {plural(materials, "материал", "материала", "материалов")} · {published}/{lessons.length} уроков опубликовано · {plural(students, "студент", "студента", "студентов")}
                         <div className="mt-2 font-mono text-xs">Код: {c.join_code}</div>
                       </CardContent>
                     </Card>

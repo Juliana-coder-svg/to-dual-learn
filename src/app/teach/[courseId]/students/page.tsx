@@ -8,9 +8,9 @@ export default async function StudentsPage({ params }: { params: Promise<{ cours
   const { courseId } = await params;
   const ctx = await teacherCourse(courseId);
   if (!ctx) notFound();
-  const students = listStudentsWithStats(courseId);
-  const published = listLessons(courseId, { publishedOnly: true }).length;
-  const submissions = listSubmissionsByCourse(courseId).slice(0, 30);
+  const students = await listStudentsWithStats(courseId);
+  const published = (await listLessons(courseId, { publishedOnly: true })).length;
+  const submissions = (await listSubmissionsByCourse(courseId)).slice(0, 30);
 
   return (
     <div className="space-y-10">

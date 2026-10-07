@@ -9,11 +9,11 @@ export default async function LessonPage({ params }: { params: Promise<{ courseI
   const { courseId, lessonId } = await params;
   const ctx = await studentCourse(courseId);
   if (!ctx) notFound();
-  const lesson = getLesson(lessonId);
+  const lesson = await getLesson(lessonId);
   if (!lesson || lesson.course_id !== courseId) notFound();
   if (lesson.status !== "published" && ctx.course.owner_id !== ctx.user.id) notFound();
-  const previous = getLatestSubmission(lesson.id, ctx.user.id);
-  const published = listLessons(courseId, { publishedOnly: true });
+  const previous = await getLatestSubmission(lesson.id, ctx.user.id);
+  const published = await listLessons(courseId, { publishedOnly: true });
   const idx = published.findIndex((l) => l.id === lesson.id);
   const nextLesson = idx >= 0 ? published[idx + 1] : undefined;
 

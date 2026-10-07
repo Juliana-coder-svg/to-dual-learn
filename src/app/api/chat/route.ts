@@ -14,11 +14,11 @@ export async function POST(req: Request) {
     if (!ctx) return jsonError("Нет доступа к курсу", 403);
     const question = String(body.message ?? "").trim().slice(0, 8000);
     if (!question) return jsonError("Пустой вопрос");
-    const history = listChatMessages(ctx.course.id, ctx.user.id, 20).map((m) => ({ role: m.role, content: m.content }));
-    const materials = listMaterials(ctx.course.id);
+    const history = (await listChatMessages(ctx.course.id, ctx.user.id, 20)).map((m) => ({ role: m.role, content: m.content }));
+    const materials = await listMaterials(ctx.course.id);
     const reply = await chatWithMaterials(materials, history, question);
-    addChatMessage({ courseId: ctx.course.id, userId: ctx.user.id, role: "user", content: question });
-    const saved = addChatMessage({ courseId: ctx.course.id, userId: ctx.user.id, role: "assistant", content: reply });
+    await addChatMessage({ courseId: ctx.course.id, userId: ctx.user.id, role: "user", content: question });
+    const saved = await addChatMessage({ courseId: ctx.course.id, userId: ctx.user.id, role: "assistant", content: reply });
     return NextResponse.json({ ok: true, reply, id: saved.id });
   } catch (e) {
     return handleRouteError(e);

@@ -9,7 +9,7 @@ export default async function HomeworkPage({ params }: { params: Promise<{ cours
   const { courseId } = await params;
   const ctx = await teacherCourse(courseId);
   if (!ctx) notFound();
-  const history = listHomeworkChecks(courseId);
+  const history = await listHomeworkChecks(courseId);
 
   return (
     <div className="space-y-8">

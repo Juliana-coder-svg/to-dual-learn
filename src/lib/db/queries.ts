@@ -1,5 +1,21 @@
-import { getDb } from "./index";
-import { newId, newJoinCode, nowIso } from "@/lib/utils/ids";
+import type { PostgrestMaybeSingleResponse, PostgrestSingleResponse } from "@supabase/supabase-js";
+import { getSupabase } from "@/lib/supabase/server";
+import type {
+  ChatMessageRow,
+  CourseRow,
+  FlashcardRow,
+  GenerationRow,
+  HomeworkCheckRow,
+  Json,
+  LessonRow,
+  LessonStatus,
+  MaterialRow,
+  ProfileRow,
+  Role,
+  StudentStatsRow,
+  SubmissionRow,
+} from "@/lib/supabase/types";
+import { newJoinCode, nowIso } from "@/lib/utils/ids";
 import {
   LessonContentSchema,
   type Feedback,
@@ -7,314 +23,302 @@ import {
   type LessonContent,
 } from "@/lib/lessons/types";
 
-export type Role = "teacher" | "student";
+/** Все запросы идут от имени текущего пользователя (cookie-сессия Supabase):
+ *  RLS из supabase/migrations/0001_init.sql решает, какие строки видны и что можно менять.
+ *  Проверки в src/lib/auth/access.ts остаются как второй слой. */
 
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: Role;
-  created_at: string;
-  streak: number;
-  last_lesson_at: string | null;
-  xp: number;
-}
+export type { Role, LessonStatus } from "@/lib/supabase/types";
 
-export interface Course {
-  id: string;
-  owner_id: string;
-  title: string;
-  description: string;
-  audience: string;
-  join_code: string;
-  created_at: string;
-}
+export type User = ProfileRow;
+export type Course = CourseRow;
+export type Material = MaterialRow;
+export type Flashcard = FlashcardRow;
+export type Generation = GenerationRow;
+export type ChatMessage = ChatMessageRow;
 
-export interface Material {
-  id: string;
-  course_id: string;
-  filename: string;
-  kind: string;
-  content_text: string;
-  char_count: number;
-  created_at: string;
-}
-
-export type LessonStatus = "draft" | "published";
-
-export interface Lesson {
-  id: string;
-  course_id: string;
-  position: number;
-  title: string;
-  concept: string;
+export interface Lesson extends Omit<LessonRow, "content"> {
   content: LessonContent;
-  status: LessonStatus;
-  created_at: string;
 }
 
-interface LessonRow extends Omit<Lesson, "content"> {
-  content_json: string;
-}
-
-export interface Submission {
-  id: string;
-  lesson_id: string;
-  user_id: string;
-  answer: string;
-  score: number;
+export interface Submission extends Omit<SubmissionRow, "feedback"> {
   feedback: Feedback;
-  created_at: string;
 }
 
-interface SubmissionRow extends Omit<Submission, "feedback"> {
-  feedback_json: string;
-}
-
-export interface Flashcard {
-  id: string;
-  user_id: string;
-  lesson_id: string;
-  next_due_at: string;
-  round: number;
-  last_quality: string | null;
-  created_at: string;
-}
-
-export interface Generation {
-  id: string;
-  course_id: string;
-  user_id: string;
-  kind: string;
-  prompt: string;
-  output: string;
-  created_at: string;
-}
-
-export interface ChatMessage {
-  id: string;
-  course_id: string;
-  user_id: string;
-  role: "user" | "assistant";
-  content: string;
-  created_at: string;
-}
-
-export interface HomeworkCheck {
-  id: string;
-  course_id: string;
-  user_id: string;
-  task: string;
-  criteria: string;
+export interface HomeworkCheck extends Omit<HomeworkCheckRow, "results"> {
   results: HomeworkResults;
-  created_at: string;
 }
 
-interface HomeworkCheckRow extends Omit<HomeworkCheck, "results"> {
-  results_json: string;
+/** Ошибка PostgREST превращается в исключение: route handlers отдадут её через handleRouteError. */
+function unwrap<T>(res: PostgrestSingleResponse<T>, what: string): T {
+  if (res.error) throw new Error(`${what}: ${res.error.message}`);
+  return res.data;
 }
 
-// node:sqlite возвращает Record<string, SQLOutputValue>; наши таблицы типизированы вручную выше.
-function one<T>(sql: string, ...params: (string | number | null)[]): T | undefined {
-  return getDb().prepare(sql).get(...params) as unknown as T | undefined;
+function unwrapMaybe<T>(res: PostgrestMaybeSingleResponse<T>, what: string): T | undefined {
+  if (res.error) throw new Error(`${what}: ${res.error.message}`);
+  return res.data ?? undefined;
 }
-function many<T>(sql: string, ...params: (string | number | null)[]): T[] {
-  return getDb().prepare(sql).all(...params) as unknown as T[];
-}
-function run(sql: string, ...params: (string | number | null)[]): void {
-  getDb().prepare(sql).run(...params);
+
+function check(res: { error: { message: string } | null }, what: string): void {
+  if (res.error) throw new Error(`${what}: ${res.error.message}`);
 }
 
 // ---------- users ----------
 
-export function getUserById(id: string): User | undefined {
-  return one<User>("SELECT * FROM users WHERE id = ?", id);
+export async function getUserById(id: string): Promise<User | undefined> {
+  const sb = await getSupabase();
+  return unwrapMaybe(await sb.from("profiles").select("*").eq("id", id).maybeSingle(), "profile");
 }
 
-export function getUserByEmail(email: string): User | undefined {
-  return one<User>("SELECT * FROM users WHERE email = ?", email.trim().toLowerCase());
+export async function updateProfile(id: string, p: { name?: string; role?: Role }): Promise<void> {
+  const sb = await getSupabase();
+  check(await sb.from("profiles").update(p).eq("id", id), "profile update");
 }
 
-export function upsertUser(input: { email: string; name: string; role: Role }): User {
-  const email = input.email.trim().toLowerCase();
-  const existing = getUserByEmail(email);
-  if (existing) {
-    run("UPDATE users SET name = ?, role = ? WHERE id = ?", input.name.trim(), input.role, existing.id);
-    return getUserById(existing.id)!;
-  }
-  const id = newId();
-  run(
-    "INSERT INTO users (id, email, name, role, created_at) VALUES (?, ?, ?, ?, ?)",
-    id, email, input.name.trim(), input.role, nowIso(),
-  );
-  return getUserById(id)!;
+export async function updateUserProgress(id: string, p: { streak: number; last_lesson_at: string; xp: number }): Promise<void> {
+  const sb = await getSupabase();
+  check(await sb.from("profiles").update(p).eq("id", id), "progress update");
 }
 
-export function updateUserProgress(id: string, p: { streak: number; last_lesson_at: string; xp: number }): void {
-  run("UPDATE users SET streak = ?, last_lesson_at = ?, xp = ? WHERE id = ?", p.streak, p.last_lesson_at, p.xp, id);
+export async function setUserRole(id: string, role: Role): Promise<void> {
+  await updateProfile(id, { role });
 }
 
 // ---------- courses ----------
 
-export function createCourse(input: { ownerId: string; title: string; description: string; audience: string }): Course {
-  const id = newId();
-  run(
-    "INSERT INTO courses (id, owner_id, title, description, audience, join_code, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-    id, input.ownerId, input.title.trim(), input.description.trim(), input.audience.trim(), newJoinCode(), nowIso(),
-  );
-  return getCourse(id)!;
-}
-
-export function getCourse(id: string): Course | undefined {
-  return one<Course>("SELECT * FROM courses WHERE id = ?", id);
-}
-
-export function getCourseByJoinCode(code: string): Course | undefined {
-  return one<Course>("SELECT * FROM courses WHERE join_code = ?", code.trim().toUpperCase());
-}
-
-export function listCoursesByOwner(ownerId: string): Course[] {
-  return many<Course>("SELECT * FROM courses WHERE owner_id = ? ORDER BY created_at DESC", ownerId);
-}
-
-export function listCoursesForStudent(userId: string): Course[] {
-  return many<Course>(
-    `SELECT c.* FROM courses c JOIN enrollments e ON e.course_id = c.id
-     WHERE e.user_id = ? ORDER BY e.joined_at DESC`,
-    userId,
+export async function createCourse(input: { ownerId: string; title: string; description: string; audience: string }): Promise<Course> {
+  const sb = await getSupabase();
+  return unwrap(
+    await sb
+      .from("courses")
+      .insert({
+        owner_id: input.ownerId,
+        title: input.title.trim(),
+        description: input.description.trim(),
+        audience: input.audience.trim(),
+        join_code: newJoinCode(),
+      })
+      .select("*")
+      .single(),
+    "course insert",
   );
 }
 
-export function enroll(userId: string, courseId: string): void {
-  run("INSERT OR IGNORE INTO enrollments (user_id, course_id, joined_at) VALUES (?, ?, ?)", userId, courseId, nowIso());
+export async function getCourse(id: string): Promise<Course | undefined> {
+  const sb = await getSupabase();
+  return unwrapMaybe(await sb.from("courses").select("*").eq("id", id).maybeSingle(), "course");
 }
 
-export function isEnrolled(userId: string, courseId: string): boolean {
-  return Boolean(one("SELECT 1 AS x FROM enrollments WHERE user_id = ? AND course_id = ?", userId, courseId));
+/** Через RPC: до записи на курс RLS не даёт прочитать его напрямую. */
+export async function getCourseByJoinCode(code: string): Promise<Course | undefined> {
+  const sb = await getSupabase();
+  const rows = unwrap(await sb.rpc("course_by_join_code", { code: code.trim().toUpperCase() }), "course by code");
+  return rows[0];
 }
 
-export interface StudentStats {
-  user_id: string;
-  name: string;
-  email: string;
-  streak: number;
-  xp: number;
-  completed: number;
-  avg_score: number | null;
-  joined_at: string;
-}
-
-export function listStudentsWithStats(courseId: string): StudentStats[] {
-  return many<StudentStats>(
-    `SELECT u.id AS user_id, u.name, u.email, u.streak, u.xp, e.joined_at,
-            COUNT(DISTINCT s.lesson_id) AS completed,
-            AVG(s.score) AS avg_score
-     FROM enrollments e
-     JOIN users u ON u.id = e.user_id
-     LEFT JOIN submissions s ON s.user_id = u.id
-       AND s.lesson_id IN (SELECT id FROM lessons WHERE course_id = ?)
-     WHERE e.course_id = ?
-     GROUP BY u.id ORDER BY e.joined_at`,
-    courseId, courseId,
+export async function listCoursesByOwner(ownerId: string): Promise<Course[]> {
+  const sb = await getSupabase();
+  return unwrap(
+    await sb.from("courses").select("*").eq("owner_id", ownerId).order("created_at", { ascending: false }),
+    "courses by owner",
   );
+}
+
+export async function listCoursesForStudent(userId: string): Promise<Course[]> {
+  const sb = await getSupabase();
+  const rows = unwrap(
+    await sb
+      .from("enrollments")
+      .select("joined_at, course:courses(*)")
+      .eq("user_id", userId)
+      .order("joined_at", { ascending: false })
+      .overrideTypes<Array<{ joined_at: string; course: CourseRow | null }>, { merge: false }>(),
+    "courses for student",
+  );
+  return rows.flatMap((r) => (r.course ? [r.course] : []));
+}
+
+export async function enroll(userId: string, courseId: string): Promise<void> {
+  const sb = await getSupabase();
+  check(
+    await sb
+      .from("enrollments")
+      .upsert({ user_id: userId, course_id: courseId }, { onConflict: "user_id,course_id", ignoreDuplicates: true }),
+    "enroll",
+  );
+}
+
+export async function isEnrolled(userId: string, courseId: string): Promise<boolean> {
+  const sb = await getSupabase();
+  const row = unwrapMaybe(
+    await sb.from("enrollments").select("course_id").eq("user_id", userId).eq("course_id", courseId).maybeSingle(),
+    "enrollment",
+  );
+  return Boolean(row);
+}
+
+export type StudentStats = StudentStatsRow;
+
+export async function listStudentsWithStats(courseId: string): Promise<StudentStats[]> {
+  const sb = await getSupabase();
+  return unwrap(await sb.rpc("course_students_stats", { c: courseId }), "students stats");
 }
 
 // ---------- materials ----------
 
-export function addMaterial(input: { courseId: string; filename: string; kind: string; contentText: string }): Material {
-  const id = newId();
-  run(
-    "INSERT INTO materials (id, course_id, filename, kind, content_text, char_count, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-    id, input.courseId, input.filename, input.kind, input.contentText, input.contentText.length, nowIso(),
+export async function addMaterial(input: { courseId: string; filename: string; kind: string; contentText: string }): Promise<Material> {
+  const sb = await getSupabase();
+  return unwrap(
+    await sb
+      .from("materials")
+      .insert({
+        course_id: input.courseId,
+        filename: input.filename,
+        kind: input.kind,
+        content_text: input.contentText,
+        char_count: input.contentText.length,
+      })
+      .select("*")
+      .single(),
+    "material insert",
   );
-  return one<Material>("SELECT * FROM materials WHERE id = ?", id)!;
 }
 
-export function listMaterials(courseId: string): Material[] {
-  return many<Material>("SELECT * FROM materials WHERE course_id = ? ORDER BY created_at", courseId);
+export async function listMaterials(courseId: string): Promise<Material[]> {
+  const sb = await getSupabase();
+  return unwrap(await sb.from("materials").select("*").eq("course_id", courseId).order("created_at"), "materials");
 }
 
-export function deleteMaterial(id: string, courseId: string): void {
-  run("DELETE FROM materials WHERE id = ? AND course_id = ?", id, courseId);
+export async function deleteMaterial(id: string, courseId: string): Promise<void> {
+  const sb = await getSupabase();
+  check(await sb.from("materials").delete().eq("id", id).eq("course_id", courseId), "material delete");
 }
 
 // ---------- lessons ----------
 
 function rowToLesson(r: LessonRow): Lesson {
-  const { content_json, ...rest } = r;
-  return { ...rest, content: LessonContentSchema.parse(JSON.parse(content_json)) };
+  return {
+    id: r.id,
+    course_id: r.course_id,
+    position: r.position,
+    title: r.title,
+    concept: r.concept,
+    status: r.status,
+    created_at: r.created_at,
+    content: LessonContentSchema.parse(r.content),
+  };
 }
 
-export function insertLessons(courseId: string, lessons: LessonContent[]): Lesson[] {
-  const max = one<{ m: number | null }>("SELECT MAX(position) AS m FROM lessons WHERE course_id = ?", courseId);
-  let position = (max?.m ?? 0) + 1;
-  const ids: string[] = [];
-  for (const content of lessons) {
-    const id = newId();
-    run(
-      "INSERT INTO lessons (id, course_id, position, title, concept, content_json, status, created_at) VALUES (?, ?, ?, ?, ?, ?, 'draft', ?)",
-      id, courseId, position++, content.title, content.concept, JSON.stringify(content), nowIso(),
-    );
-    ids.push(id);
-  }
-  return ids.map((id) => getLesson(id)!);
+export async function insertLessons(courseId: string, lessons: LessonContent[]): Promise<Lesson[]> {
+  const sb = await getSupabase();
+  // Отдельная переменная: при inline-передаче tsc выводит для этой цепочки never.
+  const lastRes = await sb.from("lessons").select("position").eq("course_id", courseId).order("position", { ascending: false }).limit(1).maybeSingle();
+  const last = unwrapMaybe(lastRes, "max position");
+  let position = (last?.position ?? 0) + 1;
+  const rows = lessons.map((content) => ({
+    course_id: courseId,
+    position: position++,
+    title: content.title,
+    concept: content.concept,
+    content: content as unknown as Json,
+    status: "draft" as const,
+  }));
+  if (rows.length === 0) return [];
+  const inserted = unwrap(await sb.from("lessons").insert(rows).select("*").order("position"), "lessons insert");
+  return inserted.map(rowToLesson);
 }
 
-export function listLessons(courseId: string, opts: { publishedOnly?: boolean } = {}): Lesson[] {
-  const rows = opts.publishedOnly
-    ? many<LessonRow>("SELECT * FROM lessons WHERE course_id = ? AND status = 'published' ORDER BY position", courseId)
-    : many<LessonRow>("SELECT * FROM lessons WHERE course_id = ? ORDER BY position", courseId);
+export async function listLessons(courseId: string, opts: { publishedOnly?: boolean } = {}): Promise<Lesson[]> {
+  const sb = await getSupabase();
+  let q = sb.from("lessons").select("*").eq("course_id", courseId);
+  if (opts.publishedOnly) q = q.eq("status", "published");
+  const rows = unwrap(await q.order("position"), "lessons");
   return rows.map(rowToLesson);
 }
 
-export function getLesson(id: string): Lesson | undefined {
-  const r = one<LessonRow>("SELECT * FROM lessons WHERE id = ?", id);
+export async function getLesson(id: string): Promise<Lesson | undefined> {
+  const sb = await getSupabase();
+  const r = unwrapMaybe(await sb.from("lessons").select("*").eq("id", id).maybeSingle(), "lesson");
   return r ? rowToLesson(r) : undefined;
 }
 
-export function setLessonStatus(id: string, courseId: string, status: LessonStatus): void {
-  run("UPDATE lessons SET status = ? WHERE id = ? AND course_id = ?", status, id, courseId);
+export async function setLessonStatus(id: string, courseId: string, status: LessonStatus): Promise<void> {
+  const sb = await getSupabase();
+  check(await sb.from("lessons").update({ status }).eq("id", id).eq("course_id", courseId), "lesson status");
 }
 
-export function setAllLessonsStatus(courseId: string, status: LessonStatus): void {
-  run("UPDATE lessons SET status = ? WHERE course_id = ?", status, courseId);
+export async function setAllLessonsStatus(courseId: string, status: LessonStatus): Promise<void> {
+  const sb = await getSupabase();
+  check(await sb.from("lessons").update({ status }).eq("course_id", courseId), "lessons status");
 }
 
-export function deleteLesson(id: string, courseId: string): void {
-  run("DELETE FROM lessons WHERE id = ? AND course_id = ?", id, courseId);
+export async function deleteLesson(id: string, courseId: string): Promise<void> {
+  const sb = await getSupabase();
+  check(await sb.from("lessons").delete().eq("id", id).eq("course_id", courseId), "lesson delete");
 }
 
 // ---------- submissions ----------
 
+/** Собирает Submission по известным полям: вложенные embed-объекты PostgREST в результат не попадают. */
 function rowToSubmission(r: SubmissionRow): Submission {
-  const { feedback_json, ...rest } = r;
-  return { ...rest, feedback: JSON.parse(feedback_json) as Feedback };
+  return {
+    id: r.id,
+    lesson_id: r.lesson_id,
+    user_id: r.user_id,
+    answer: r.answer,
+    score: r.score,
+    created_at: r.created_at,
+    feedback: r.feedback as unknown as Feedback,
+  };
 }
 
-export function addSubmission(input: { lessonId: string; userId: string; answer: string; feedback: Feedback }): Submission {
-  const id = newId();
-  run(
-    "INSERT INTO submissions (id, lesson_id, user_id, answer, score, feedback_json, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-    id, input.lessonId, input.userId, input.answer, input.feedback.score, JSON.stringify(input.feedback), nowIso(),
+export async function addSubmission(input: { lessonId: string; userId: string; answer: string; feedback: Feedback }): Promise<Submission> {
+  const sb = await getSupabase();
+  const row = unwrap(
+    await sb
+      .from("submissions")
+      .insert({
+        lesson_id: input.lessonId,
+        user_id: input.userId,
+        answer: input.answer,
+        score: input.feedback.score,
+        feedback: input.feedback as unknown as Json,
+      })
+      .select("*")
+      .single(),
+    "submission insert",
   );
-  return rowToSubmission(one<SubmissionRow>("SELECT * FROM submissions WHERE id = ?", id)!);
+  return rowToSubmission(row);
 }
 
-export function getLatestSubmission(lessonId: string, userId: string): Submission | undefined {
-  const r = one<SubmissionRow>(
-    "SELECT * FROM submissions WHERE lesson_id = ? AND user_id = ? ORDER BY created_at DESC LIMIT 1",
-    lessonId, userId,
+export async function getLatestSubmission(lessonId: string, userId: string): Promise<Submission | undefined> {
+  const sb = await getSupabase();
+  const r = unwrapMaybe(
+    await sb
+      .from("submissions")
+      .select("*")
+      .eq("lesson_id", lessonId)
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    "latest submission",
   );
   return r ? rowToSubmission(r) : undefined;
 }
 
 /** Последний ответ студента на каждый урок курса: lesson_id → submission. */
-export function latestSubmissionsForCourse(userId: string, courseId: string): Map<string, Submission> {
-  const rows = many<SubmissionRow>(
-    `SELECT s.* FROM submissions s
-     WHERE s.user_id = ? AND s.lesson_id IN (SELECT id FROM lessons WHERE course_id = ?)
-     ORDER BY s.created_at DESC`,
-    userId, courseId,
+export async function latestSubmissionsForCourse(userId: string, courseId: string): Promise<Map<string, Submission>> {
+  const sb = await getSupabase();
+  const rows = unwrap(
+    await sb
+      .from("submissions")
+      .select("*, lessons!inner(course_id)")
+      .eq("user_id", userId)
+      .eq("lessons.course_id", courseId)
+      .order("created_at", { ascending: false })
+      .overrideTypes<Array<SubmissionRow & { lessons: { course_id: string } }>, { merge: false }>(),
+    "submissions for course",
   );
   const map = new Map<string, Submission>();
   for (const r of rows) if (!map.has(r.lesson_id)) map.set(r.lesson_id, rowToSubmission(r));
@@ -327,23 +331,38 @@ export interface SubmissionWithContext extends Submission {
   lesson_position: number;
 }
 
-export function listSubmissionsByCourse(courseId: string): SubmissionWithContext[] {
-  const rows = many<SubmissionRow & { student_name: string; lesson_title: string; lesson_position: number }>(
-    `SELECT s.*, u.name AS student_name, l.title AS lesson_title, l.position AS lesson_position
-     FROM submissions s JOIN users u ON u.id = s.user_id JOIN lessons l ON l.id = s.lesson_id
-     WHERE l.course_id = ? ORDER BY s.created_at DESC LIMIT 200`,
-    courseId,
+export async function listSubmissionsByCourse(courseId: string): Promise<SubmissionWithContext[]> {
+  const sb = await getSupabase();
+  const rows = unwrap(
+    await sb
+      .from("submissions")
+      .select("*, student:profiles(name), lesson:lessons!inner(title, position, course_id)")
+      .eq("lesson.course_id", courseId)
+      .order("created_at", { ascending: false })
+      .limit(200)
+      .overrideTypes<
+        Array<SubmissionRow & { student: { name: string } | null; lesson: { title: string; position: number; course_id: string } }>,
+        { merge: false }
+      >(),
+    "submissions by course",
   );
-  return rows.map((r) => ({ ...rowToSubmission(r), student_name: r.student_name, lesson_title: r.lesson_title, lesson_position: r.lesson_position }));
+  return rows.map((r) => ({
+    ...rowToSubmission(r),
+    student_name: r.student?.name ?? "",
+    lesson_title: r.lesson.title,
+    lesson_position: r.lesson.position,
+  }));
 }
 
 // ---------- flashcards ----------
 
-export function upsertFlashcard(userId: string, lessonId: string, nextDueAt: string): void {
-  run(
-    `INSERT INTO flashcards (id, user_id, lesson_id, next_due_at, round, created_at) VALUES (?, ?, ?, ?, 0, ?)
-     ON CONFLICT(user_id, lesson_id) DO NOTHING`,
-    newId(), userId, lessonId, nextDueAt, nowIso(),
+export async function upsertFlashcard(userId: string, lessonId: string, nextDueAt: string): Promise<void> {
+  const sb = await getSupabase();
+  check(
+    await sb
+      .from("flashcards")
+      .upsert({ user_id: userId, lesson_id: lessonId, next_due_at: nextDueAt }, { onConflict: "user_id,lesson_id", ignoreDuplicates: true }),
+    "flashcard upsert",
   );
 }
 
@@ -352,101 +371,142 @@ export interface DueFlashcard extends Flashcard {
   course_title: string;
 }
 
-export function listDueFlashcards(userId: string, now = nowIso()): DueFlashcard[] {
-  const rows = many<Flashcard & LessonRow & { fc_id: string; course_title: string; lesson_created_at: string }>(
-    `SELECT f.id AS fc_id, f.user_id, f.lesson_id, f.next_due_at, f.round, f.last_quality, f.created_at,
-            l.id, l.course_id, l.position, l.title, l.concept, l.content_json, l.status, l.created_at AS lesson_created_at,
-            c.title AS course_title
-     FROM flashcards f JOIN lessons l ON l.id = f.lesson_id JOIN courses c ON c.id = l.course_id
-     WHERE f.user_id = ? AND f.next_due_at <= ? ORDER BY f.next_due_at`,
-    userId, now,
+export async function listDueFlashcards(userId: string, now = nowIso()): Promise<DueFlashcard[]> {
+  const sb = await getSupabase();
+  const rows = unwrap(
+    await sb
+      .from("flashcards")
+      .select("*, lesson:lessons(*, course:courses(title))")
+      .eq("user_id", userId)
+      .lte("next_due_at", now)
+      .order("next_due_at")
+      .overrideTypes<Array<FlashcardRow & { lesson: (LessonRow & { course: { title: string } | null }) | null }>, { merge: false }>(),
+    "due flashcards",
   );
-  return rows.map((r) => ({
-    id: r.fc_id,
-    user_id: r.user_id,
-    lesson_id: r.lesson_id,
-    next_due_at: r.next_due_at,
-    round: r.round,
-    last_quality: r.last_quality,
-    created_at: r.created_at,
-    course_title: r.course_title,
-    lesson: rowToLesson({
-      id: r.id, course_id: r.course_id, position: r.position, title: r.title, concept: r.concept,
-      content_json: r.content_json, status: r.status, created_at: r.lesson_created_at,
-    }),
-  }));
+  // Урок, снятый с публикации, RLS скроет — такую карточку не показываем.
+  return rows.flatMap((r) => {
+    if (!r.lesson) return [];
+    return [{
+      id: r.id,
+      user_id: r.user_id,
+      lesson_id: r.lesson_id,
+      next_due_at: r.next_due_at,
+      round: r.round,
+      last_quality: r.last_quality,
+      created_at: r.created_at,
+      lesson: rowToLesson(r.lesson),
+      course_title: r.lesson.course?.title ?? "",
+    }];
+  });
 }
 
-export function countDueFlashcards(userId: string, now = nowIso()): number {
-  return one<{ n: number }>("SELECT COUNT(*) AS n FROM flashcards WHERE user_id = ? AND next_due_at <= ?", userId, now)?.n ?? 0;
+export async function countDueFlashcards(userId: string, now = nowIso()): Promise<number> {
+  const sb = await getSupabase();
+  const res = await sb.from("flashcards").select("id", { count: "exact", head: true }).eq("user_id", userId).lte("next_due_at", now);
+  check(res, "due count");
+  return res.count ?? 0;
 }
 
-export function getFlashcard(id: string, userId: string): Flashcard | undefined {
-  return one<Flashcard>("SELECT * FROM flashcards WHERE id = ? AND user_id = ?", id, userId);
+export async function getFlashcard(id: string, userId: string): Promise<Flashcard | undefined> {
+  const sb = await getSupabase();
+  return unwrapMaybe(await sb.from("flashcards").select("*").eq("id", id).eq("user_id", userId).maybeSingle(), "flashcard");
 }
 
-export function updateFlashcard(id: string, p: { nextDueAt: string; round: number; quality: string }): void {
-  run("UPDATE flashcards SET next_due_at = ?, round = ?, last_quality = ? WHERE id = ?", p.nextDueAt, p.round, p.quality, id);
+export async function updateFlashcard(id: string, p: { nextDueAt: string; round: number; quality: string }): Promise<void> {
+  const sb = await getSupabase();
+  check(
+    await sb.from("flashcards").update({ next_due_at: p.nextDueAt, round: p.round, last_quality: p.quality }).eq("id", id),
+    "flashcard update",
+  );
 }
 
 // ---------- generations ----------
 
-export function addGeneration(input: { courseId: string; userId: string; kind: string; prompt: string; output: string }): Generation {
-  const id = newId();
-  run(
-    "INSERT INTO generations (id, course_id, user_id, kind, prompt, output, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-    id, input.courseId, input.userId, input.kind, input.prompt, input.output, nowIso(),
+export async function addGeneration(input: { courseId: string; userId: string; kind: string; prompt: string; output: string }): Promise<Generation> {
+  const sb = await getSupabase();
+  return unwrap(
+    await sb
+      .from("generations")
+      .insert({ course_id: input.courseId, user_id: input.userId, kind: input.kind, prompt: input.prompt, output: input.output })
+      .select("*")
+      .single(),
+    "generation insert",
   );
-  return one<Generation>("SELECT * FROM generations WHERE id = ?", id)!;
 }
 
-export function listGenerations(courseId: string): Generation[] {
-  return many<Generation>("SELECT * FROM generations WHERE course_id = ? ORDER BY created_at DESC LIMIT 50", courseId);
+export async function listGenerations(courseId: string): Promise<Generation[]> {
+  const sb = await getSupabase();
+  return unwrap(
+    await sb.from("generations").select("*").eq("course_id", courseId).order("created_at", { ascending: false }).limit(50),
+    "generations",
+  );
 }
 
 // ---------- chat ----------
 
-export function addChatMessage(input: { courseId: string; userId: string; role: "user" | "assistant"; content: string }): ChatMessage {
-  const id = newId();
-  run(
-    "INSERT INTO chat_messages (id, course_id, user_id, role, content, created_at) VALUES (?, ?, ?, ?, ?, ?)",
-    id, input.courseId, input.userId, input.role, input.content, nowIso(),
-  );
-  return one<ChatMessage>("SELECT * FROM chat_messages WHERE id = ?", id)!;
-}
-
-export function listChatMessages(courseId: string, userId: string, limit = 40): ChatMessage[] {
-  return many<ChatMessage>(
-    `SELECT * FROM (SELECT * FROM chat_messages WHERE course_id = ? AND user_id = ? ORDER BY created_at DESC LIMIT ?)
-     ORDER BY created_at ASC`,
-    courseId, userId, limit,
+export async function addChatMessage(input: { courseId: string; userId: string; role: "user" | "assistant"; content: string }): Promise<ChatMessage> {
+  const sb = await getSupabase();
+  return unwrap(
+    await sb
+      .from("chat_messages")
+      .insert({ course_id: input.courseId, user_id: input.userId, role: input.role, content: input.content })
+      .select("*")
+      .single(),
+    "chat insert",
   );
 }
 
-export function clearChat(courseId: string, userId: string): void {
-  run("DELETE FROM chat_messages WHERE course_id = ? AND user_id = ?", courseId, userId);
+export async function listChatMessages(courseId: string, userId: string, limit = 40): Promise<ChatMessage[]> {
+  const sb = await getSupabase();
+  const rows = unwrap(
+    await sb
+      .from("chat_messages")
+      .select("*")
+      .eq("course_id", courseId)
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(limit),
+    "chat messages",
+  );
+  return rows.reverse();
+}
+
+export async function clearChat(courseId: string, userId: string): Promise<void> {
+  const sb = await getSupabase();
+  check(await sb.from("chat_messages").delete().eq("course_id", courseId).eq("user_id", userId), "chat clear");
 }
 
 // ---------- homework ----------
 
 function rowToHomework(r: HomeworkCheckRow): HomeworkCheck {
-  const { results_json, ...rest } = r;
-  return { ...rest, results: JSON.parse(results_json) as HomeworkResults };
+  const { results, ...rest } = r;
+  return { ...rest, results: results as unknown as HomeworkResults };
 }
 
-export function addHomeworkCheck(input: { courseId: string; userId: string; task: string; criteria: string; results: HomeworkResults }): HomeworkCheck {
-  const id = newId();
-  run(
-    "INSERT INTO homework_checks (id, course_id, user_id, task, criteria, results_json, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-    id, input.courseId, input.userId, input.task, input.criteria, JSON.stringify(input.results), nowIso(),
+export async function addHomeworkCheck(input: { courseId: string; userId: string; task: string; criteria: string; results: HomeworkResults }): Promise<HomeworkCheck> {
+  const sb = await getSupabase();
+  const row = unwrap(
+    await sb
+      .from("homework_checks")
+      .insert({
+        course_id: input.courseId,
+        user_id: input.userId,
+        task: input.task,
+        criteria: input.criteria,
+        results: input.results as unknown as Json,
+      })
+      .select("*")
+      .single(),
+    "homework insert",
   );
-  return rowToHomework(one<HomeworkCheckRow>("SELECT * FROM homework_checks WHERE id = ?", id)!);
+  return rowToHomework(row);
 }
 
-export function listHomeworkChecks(courseId: string): HomeworkCheck[] {
-  return many<HomeworkCheckRow>("SELECT * FROM homework_checks WHERE course_id = ? ORDER BY created_at DESC LIMIT 20", courseId).map(rowToHomework);
-}
-
-export function setUserRole(id: string, role: Role): void {
-  run("UPDATE users SET role = ? WHERE id = ?", role, id);
+export async function listHomeworkChecks(courseId: string): Promise<HomeworkCheck[]> {
+  const sb = await getSupabase();
+  const rows = unwrap(
+    await sb.from("homework_checks").select("*").eq("course_id", courseId).order("created_at", { ascending: false }).limit(20),
+    "homework checks",
+  );
+  return rows.map(rowToHomework);
 }

@@ -9,8 +9,8 @@ export default async function ChatPage({ params }: { params: Promise<{ courseId:
   const { courseId } = await params;
   const ctx = await teacherCourse(courseId);
   if (!ctx) notFound();
-  const messages = listChatMessages(courseId, ctx.user.id);
-  const materialsCount = listMaterials(courseId).length;
+  const messages = await listChatMessages(courseId, ctx.user.id);
+  const materialsCount = (await listMaterials(courseId)).length;
 
   return (
     <div>

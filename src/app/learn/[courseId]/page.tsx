@@ -11,8 +11,8 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
   const ctx = await studentCourse(courseId);
   if (!ctx) notFound();
   const { user, course } = ctx;
-  const lessons = listLessons(courseId, { publishedOnly: true });
-  const done = latestSubmissionsForCourse(user.id, courseId);
+  const lessons = await listLessons(courseId, { publishedOnly: true });
+  const done = await latestSubmissionsForCourse(user.id, courseId);
   const next = lessons.find((l) => !done.has(l.id));
 
   return (

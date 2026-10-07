@@ -10,7 +10,7 @@ export default async function MaterialsPage({ params }: { params: Promise<{ cour
   const { courseId } = await params;
   const ctx = await teacherCourse(courseId);
   if (!ctx) notFound();
-  const materials = listMaterials(courseId);
+  const materials = await listMaterials(courseId);
   const totalChars = materials.reduce((s, m) => s + m.char_count, 0);
 
   return (

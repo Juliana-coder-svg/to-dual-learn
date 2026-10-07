@@ -10,8 +10,8 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
   const { courseId } = await params;
   const ctx = await teacherCourse(courseId);
   if (!ctx) notFound();
-  const lessons = listLessons(courseId);
-  const hasMaterials = listMaterials(courseId).length > 0;
+  const lessons = await listLessons(courseId);
+  const hasMaterials = (await listMaterials(courseId)).length > 0;
   const drafts = lessons.filter((l) => l.status === "draft").length;
 
   return (

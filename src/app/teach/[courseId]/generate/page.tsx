@@ -10,8 +10,8 @@ export default async function GeneratePage({ params }: { params: Promise<{ cours
   const { courseId } = await params;
   const ctx = await teacherCourse(courseId);
   if (!ctx) notFound();
-  const history = listGenerations(courseId);
-  const hasMaterials = listMaterials(courseId).length > 0;
+  const history = await listGenerations(courseId);
+  const hasMaterials = (await listMaterials(courseId)).length > 0;
 
   return (
     <div className="space-y-8">

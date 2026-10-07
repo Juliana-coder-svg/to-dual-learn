@@ -19,8 +19,8 @@ export async function POST(req: Request) {
     if (!task || !criteria) return jsonError("Нужны задание и критерии");
     if (submissions.length === 0) return jsonError("Нет работ для проверки");
     if (submissions.length > 40) return jsonError("За раз можно проверить до 40 работ");
-    const results = await checkHomework(listMaterials(ctx.course.id), { task, criteria, submissions });
-    addHomeworkCheck({ courseId: ctx.course.id, userId: ctx.user.id, task, criteria, results });
+    const results = await checkHomework(await listMaterials(ctx.course.id), { task, criteria, submissions });
+    await addHomeworkCheck({ courseId: ctx.course.id, userId: ctx.user.id, task, criteria, results });
     return NextResponse.json({ ok: true, results });
   } catch (e) {
     return handleRouteError(e);

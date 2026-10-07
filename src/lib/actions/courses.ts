@@ -19,7 +19,7 @@ export async function createCourseAction(formData: FormData): Promise<void> {
   const user = await requireUser();
   const title = String(formData.get("title") ?? "").trim();
   if (title.length < 2) redirect("/teach?error=title");
-  const course = createCourse({
+  const course = await createCourse({
     ownerId: user.id,
     title,
     description: String(formData.get("description") ?? ""),
@@ -31,7 +31,7 @@ export async function createCourseAction(formData: FormData): Promise<void> {
 export async function deleteMaterialAction(courseId: string, materialId: string): Promise<void> {
   const ctx = await teacherCourse(courseId);
   if (!ctx) return;
-  deleteMaterial(materialId, courseId);
+  await deleteMaterial(materialId, courseId);
   revalidatePath(`/teach/${courseId}`);
 }
 
@@ -42,36 +42,36 @@ export async function setLessonStatusAction(
 ): Promise<void> {
   const ctx = await teacherCourse(courseId);
   if (!ctx) return;
-  setLessonStatus(lessonId, courseId, status);
+  await setLessonStatus(lessonId, courseId, status);
   revalidatePath(`/teach/${courseId}/lessons`);
 }
 
 export async function publishAllAction(courseId: string): Promise<void> {
   const ctx = await teacherCourse(courseId);
   if (!ctx) return;
-  setAllLessonsStatus(courseId, "published");
+  await setAllLessonsStatus(courseId, "published");
   revalidatePath(`/teach/${courseId}/lessons`);
 }
 
 export async function deleteLessonAction(courseId: string, lessonId: string): Promise<void> {
   const ctx = await teacherCourse(courseId);
   if (!ctx) return;
-  deleteLesson(lessonId, courseId);
+  await deleteLesson(lessonId, courseId);
   revalidatePath(`/teach/${courseId}/lessons`);
 }
 
 export async function clearChatAction(courseId: string): Promise<void> {
   const ctx = await teacherCourse(courseId);
   if (!ctx) return;
-  clearChat(courseId, ctx.user.id);
+  await clearChat(courseId, ctx.user.id);
   revalidatePath(`/teach/${courseId}/chat`);
 }
 
 export async function joinCourseAction(formData: FormData): Promise<void> {
   const user = await requireUser();
   const code = String(formData.get("code") ?? "").trim().toUpperCase();
-  const course = getCourseByJoinCode(code);
+  const course = await getCourseByJoinCode(code);
   if (!course) redirect("/learn?error=code");
-  enroll(user.id, course.id);
+  await enroll(user.id, course.id);
   redirect(`/learn/${course.id}`);
 }

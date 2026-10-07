@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     let added = 0;
     const pasted = form.get("text");
     if (typeof pasted === "string" && pasted.trim().length > 0) {
-      addMaterial({ courseId, filename: String(form.get("title") ?? "Текст"), kind: "txt", contentText: pasted.trim() });
+      await addMaterial({ courseId, filename: String(form.get("title") ?? "Текст"), kind: "txt", contentText: pasted.trim() });
       added++;
     }
 
@@ -39,7 +39,7 @@ export async function POST(req: Request) {
       const bytes = Buffer.from(await entry.arrayBuffer());
       const text = await extractMaterialText({ name: entry.name, mime: entry.type, bytes });
       if (text.trim().length === 0) return jsonError(`Не удалось извлечь текст из ${entry.name}`);
-      addMaterial({ courseId, filename: entry.name, kind, contentText: text });
+      await addMaterial({ courseId, filename: entry.name, kind, contentText: text });
       added++;
     }
     if (added === 0) return jsonError("Нечего загружать");

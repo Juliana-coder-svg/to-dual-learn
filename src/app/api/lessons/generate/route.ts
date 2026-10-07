@@ -13,11 +13,11 @@ export async function POST(req: Request) {
     const ctx = await teacherCourse(String(body.courseId ?? ""));
     if (!ctx) return jsonError("Нет доступа к курсу", 403);
     const count = Math.min(10, Math.max(1, Number(body.count) || 5));
-    const materials = listMaterials(ctx.course.id);
+    const materials = await listMaterials(ctx.course.id);
     if (materials.length === 0) return jsonError("Сначала загрузи материалы");
-    const existingTitles = listLessons(ctx.course.id).map((l) => l.title);
+    const existingTitles = (await listLessons(ctx.course.id)).map((l) => l.title);
     const lessons = await generateLessons(ctx.course, materials, { count, existingTitles });
-    const inserted = insertLessons(ctx.course.id, lessons);
+    const inserted = await insertLessons(ctx.course.id, lessons);
     return NextResponse.json({ ok: true, added: inserted.length });
   } catch (e) {
     return handleRouteError(e);

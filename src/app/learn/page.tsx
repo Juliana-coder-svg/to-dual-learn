@@ -11,8 +11,18 @@ import { plural } from "@/lib/utils/format";
 export default async function LearnPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const user = await requireUser();
   const sp = await searchParams;
-  const courses = listCoursesForStudent(user.id);
-  const due = countDueFlashcards(user.id);
+  const [courses, due] = await Promise.all([listCoursesForStudent(user.id), countDueFlashcards(user.id)]);
+  const cards = await Promise.all(
+    courses.map(async (c) => {
+      const [lessons, done] = await Promise.all([
+        listLessons(c.id, { publishedOnly: true }),
+        latestSubmissionsForCourse(user.id, c.id),
+      ]);
+      const completed = lessons.filter((l) => done.has(l.id)).length;
+      const next = lessons.find((l) => !done.has(l.id));
+      return { course: c, lessons, completed, next };
+    }),
+  );
 
   return (
     <AppShell user={user}>
@@ -32,11 +42,7 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
             <p className="mt-4 text-sm text-muted-foreground">Пока нет курсов. Введи код от преподавателя справа.</p>
           ) : (
             <div className="mt-6 space-y-4">
-              {courses.map((c) => {
-                const lessons = listLessons(c.id, { publishedOnly: true });
-                const done = latestSubmissionsForCourse(user.id, c.id);
-                const completed = lessons.filter((l) => done.has(l.id)).length;
-                const next = lessons.find((l) => !done.has(l.id));
+              {cards.map(({ course: c, lessons, completed, next }) => {
                 return (
                   <Card key={c.id}>
                     <CardHeader>

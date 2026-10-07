@@ -5,7 +5,7 @@ import { FlashcardReview } from "@/components/learn/FlashcardReview";
 
 export default async function ReviewPage() {
   const user = await requireUser();
-  const due = listDueFlashcards(user.id);
+  const due = await listDueFlashcards(user.id);
 
   return (
     <AppShell user={user}>

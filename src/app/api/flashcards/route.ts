@@ -13,12 +13,12 @@ export async function POST(req: Request) {
     const user = await getCurrentUser();
     if (!user) return jsonError("Нужно войти", 401);
     const body = (await req.json()) as { id?: string; quality?: string };
-    const card = getFlashcard(String(body.id ?? ""), user.id);
+    const card = await getFlashcard(String(body.id ?? ""), user.id);
     if (!card) return jsonError("Карточка не найдена", 404);
     const quality = body.quality as RecallQuality;
     if (!QUALITIES.includes(quality)) return jsonError("Неизвестная оценка");
     const next = nextReview(card.round, quality);
-    updateFlashcard(card.id, { nextDueAt: next.nextDueAt, round: next.round, quality });
+    await updateFlashcard(card.id, { nextDueAt: next.nextDueAt, round: next.round, quality });
     return NextResponse.json({ ok: true, nextDueAt: next.nextDueAt });
   } catch (e) {
     return handleRouteError(e);
