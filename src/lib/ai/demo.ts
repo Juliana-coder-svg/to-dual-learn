@@ -1,5 +1,5 @@
 import type { Course, Material } from "@/lib/db/queries";
-import { ARTIFACT_KINDS, type ArtifactKind, type Feedback, type HomeworkResults, type LessonContent, type LessonReview } from "@/lib/lessons/types";
+import { ARTIFACT_KINDS, type ArtifactKind, type ClarifyingQuestions, type Feedback, type HomeworkResults, type LessonContent, type LessonReview } from "@/lib/lessons/types";
 
 /** Пробный режим без ключа модели: предсказуемые примеры ответов, чтобы прокликать интерфейс. */
 
@@ -57,6 +57,16 @@ export const demo = {
         flags: s.answer.trim().length < 20 ? ["Слишком короткая работа"] : [],
       })),
       overview: `${NOTE} Сводка по группе появится с подключённой моделью.`,
+    };
+  },
+
+  questions(): ClarifyingQuestions {
+    return {
+      questions: [
+        { question: "Что в материалах главное, а что можно оставить за рамками уроков?", why: "Чтобы не тратить уроки на фон" },
+        { question: "Какие ошибки студенты делают чаще всего по этой теме?", why: "Из них получаются задачи и карточки" },
+        { question: `${NOTE} Есть ли пример из вашей практики, который можно разобрать в уроке?`, why: "Пример из практики запоминается лучше выдуманного" },
+      ],
     };
   },
 

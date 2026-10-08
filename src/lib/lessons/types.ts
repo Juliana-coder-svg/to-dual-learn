@@ -77,6 +77,11 @@ export const HomeworkResultsSchema = z.object({
 });
 export type HomeworkResults = z.infer<typeof HomeworkResultsSchema>;
 
+export const ClarifyingQuestionsSchema = z.object({
+  questions: z.array(z.object({ question: z.string(), why: z.string().describe("Одна фраза: зачем этот ответ нужен для уроков") })),
+});
+export type ClarifyingQuestions = z.infer<typeof ClarifyingQuestionsSchema>;
+
 export const ARTIFACT_KINDS = {
   assignment: "Задание для студентов",
   quiz: "Проверочный тест",

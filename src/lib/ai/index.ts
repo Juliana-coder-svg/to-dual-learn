@@ -3,6 +3,7 @@ import { addAiCall, type Course, type Material } from "@/lib/db/queries";
 import {
   FeedbackSchema,
   HomeworkResultsSchema,
+  ClarifyingQuestionsSchema,
   LessonReviewSchema,
   LessonsBatchSchema,
   type ArtifactKind,
@@ -10,8 +11,10 @@ import {
   type HomeworkResults,
   type LessonContent,
   type LessonReview,
+  type ClarifyingQuestions,
 } from "@/lib/lessons/types";
 import { reviewLessonsPrompt } from "@/lib/prompts/review-lessons";
+import { clarifyCoursePrompt } from "@/lib/prompts/clarify-course";
 import { EXTRACT_MATERIAL_PROMPT } from "@/lib/prompts/extract-material";
 import { generateLessonsPrompt } from "@/lib/prompts/generate-lessons";
 import { generateArtifactPrompt } from "@/lib/prompts/generate-artifact";
@@ -137,6 +140,19 @@ export async function generateLessons(
     effort: "high",
   });
   return result.lessons;
+}
+
+/** Режим «вместе с преподавателем»: вопросы перед сборкой уроков. */
+export async function clarifyingQuestions(ctx: CallContext, course: Course, materials: Material[]): Promise<ClarifyingQuestions> {
+  if (isDemoMode()) return demo.questions();
+  const result = await completeJson("review", ctx, ClarifyingQuestionsSchema, {
+    task: clarifyCoursePrompt({ courseTitle: course.title, description: course.description, audience: course.audience, outcomes: course.outcomes }),
+    materials: materialsBlock(materials),
+    messages: [{ role: "user", content: "Задай вопросы преподавателю перед сборкой уроков." }],
+    maxTokens: 4000,
+    effort: "medium",
+  });
+  return { questions: result.questions.slice(0, 5) };
 }
 
 /** Второй проход: методист-ревьюер сверяет уроки с материалами и правит их. */
