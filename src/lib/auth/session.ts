@@ -21,6 +21,13 @@ export const getCurrentUser = cache(async (): Promise<User | null> => {
   return (await getUserById(id)) ?? null;
 });
 
+/** Id пользователя без похода за профилем: чтобы страница могла грузить профиль и данные параллельно. */
+export async function requireUserId(): Promise<string> {
+  const id = await getCurrentUserId();
+  if (!id) redirect("/login");
+  return id;
+}
+
 export async function requireUser(): Promise<User> {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
