@@ -1,13 +1,13 @@
 import Link from "next/link";
-import { requireUser } from "@/lib/auth/session";
+import { requireUser, requireUserId } from "@/lib/auth/session";
 import { listUserSubmissions } from "@/lib/db/queries";
 import { AppShell } from "@/components/shared/AppShell";
 import { Badge } from "@/components/ui/badge";
 import { formatDateTime } from "@/lib/utils/format";
 
 export default async function HistoryPage() {
-  const user = await requireUser();
-  const items = await listUserSubmissions(user.id);
+  const userId = await requireUserId();
+  const [user, items] = await Promise.all([requireUser(), listUserSubmissions(userId)]);
 
   return (
     <AppShell user={user}>

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { teacherCourse } from "@/lib/auth/access";
-import { courseUsageByKind, listCalibrationSamples, listLessons } from "@/lib/db/queries";
+import { courseUsageByKind, listCalibrationSamples, listLessonSummaries } from "@/lib/db/queries";
 import { addCalibrationSampleAction, deleteCalibrationSampleAction, updateCourseSettingsAction } from "@/lib/actions/courses";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,13 +22,15 @@ const KIND_LABELS: Record<string, string> = {
 
 export default async function SettingsPage({ params, searchParams }: { params: Promise<{ courseId: string }>; searchParams: Promise<{ saved?: string; error?: string }> }) {
   const { courseId } = await params;
-  const sp = await searchParams;
-  const ctx = await teacherCourse(courseId);
+  const [sp, ctx, lessons, samples, usage] = await Promise.all([
+    searchParams,
+    teacherCourse(courseId),
+    listLessonSummaries(courseId),
+    listCalibrationSamples(courseId),
+    courseUsageByKind(courseId),
+  ]);
   if (!ctx) notFound();
   const { course } = ctx;
-  const lessons = await listLessons(courseId);
-  const samples = await listCalibrationSamples(courseId);
-  const usage = await courseUsageByKind(courseId);
   const site = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
   return (

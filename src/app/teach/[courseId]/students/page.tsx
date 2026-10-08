@@ -1,16 +1,20 @@
 import { notFound } from "next/navigation";
 import { teacherCourse } from "@/lib/auth/access";
-import { listLessons, listStudentsWithStats, listSubmissionsByCourse } from "@/lib/db/queries";
+import { listLessonSummaries, listStudentsWithStats, listSubmissionsByCourse } from "@/lib/db/queries";
 import { formatDateTime } from "@/lib/utils/format";
 import { Badge } from "@/components/ui/badge";
 
 export default async function StudentsPage({ params }: { params: Promise<{ courseId: string }> }) {
   const { courseId } = await params;
-  const ctx = await teacherCourse(courseId);
+  const [ctx, students, publishedLessons, allSubmissions] = await Promise.all([
+    teacherCourse(courseId),
+    listStudentsWithStats(courseId),
+    listLessonSummaries(courseId, { publishedOnly: true }),
+    listSubmissionsByCourse(courseId),
+  ]);
   if (!ctx) notFound();
-  const students = await listStudentsWithStats(courseId);
-  const published = (await listLessons(courseId, { publishedOnly: true })).length;
-  const submissions = (await listSubmissionsByCourse(courseId)).slice(0, 30);
+  const published = publishedLessons.length;
+  const submissions = allSubmissions.slice(0, 30);
 
   return (
     <div className="space-y-10">

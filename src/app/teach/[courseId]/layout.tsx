@@ -9,10 +9,10 @@ import { formatRub, usdToRub } from "@/lib/utils/money";
 
 export default async function CourseLayout({ children, params }: { children: React.ReactNode; params: Promise<{ courseId: string }> }) {
   const { courseId } = await params;
-  const ctx = await teacherCourse(courseId);
+  // Расход считает RPC с проверкой владельца, поэтому его можно запрашивать параллельно с проверкой доступа.
+  const [ctx, usage] = await Promise.all([teacherCourse(courseId), courseUsage(courseId)]);
   if (!ctx) notFound();
   const { user, course } = ctx;
-  const usage = await courseUsage(course.id);
 
   return (
     <AppShell user={user}>

@@ -1,21 +1,26 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { studentCourse } from "@/lib/auth/access";
-import { countLessonsStartedToday, latestSubmissionsForCourse, listLessons } from "@/lib/db/queries";
+import { requireUserId } from "@/lib/auth/session";
+import { courseProgress, listLessonSummaries } from "@/lib/db/queries";
 import { AppShell } from "@/components/shared/AppShell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 export default async function CoursePage({ params }: { params: Promise<{ courseId: string }> }) {
   const { courseId } = await params;
-  const ctx = await studentCourse(courseId);
+  const userId = await requireUserId();
+  const [ctx, lessons, progress] = await Promise.all([
+    studentCourse(courseId),
+    listLessonSummaries(courseId, { publishedOnly: true }),
+    courseProgress(userId, courseId),
+  ]);
   if (!ctx) notFound();
   const { user, course } = ctx;
-  const lessons = await listLessons(courseId, { publishedOnly: true });
-  const done = await latestSubmissionsForCourse(user.id, courseId);
+  const done = progress.latest;
   const next = lessons.find((l) => !done.has(l.id));
   const isOwner = course.owner_id === user.id;
-  const limitReached = !isOwner && course.daily_limit > 0 && await countLessonsStartedToday(user.id, courseId) >= course.daily_limit;
+  const limitReached = !isOwner && course.daily_limit > 0 && progress.startedToday >= course.daily_limit;
 
   return (
     <AppShell user={user}>
