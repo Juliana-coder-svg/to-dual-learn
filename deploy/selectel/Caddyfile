@@ -1,0 +1,20 @@
+# HTTPS-сертификаты Caddy выпускает сам (Let's Encrypt). Для этого DNS-записи APP_DOMAIN и API_DOMAIN
+# должны указывать на IP виртуальной машины, а порты 80 и 443 быть открыты.
+
+{$APP_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy app:3000
+}
+
+# API Supabase. Наружу отдаём только вход и REST. Studio (панель базы с доступом к SQL), storage и всё остальное
+# отдают 404: панель открываем только через SSH-туннель. SUPABASE_GATEWAY — имя шлюза в сети Supabase,
+# см. docker compose ps в /opt/supabase (в текущем шаблоне api-gw:8000, раньше kong:8000).
+{$API_DOMAIN} {
+	@public path /auth/v1/* /rest/v1/*
+	handle @public {
+		reverse_proxy {$SUPABASE_GATEWAY}
+	}
+	handle {
+		respond "Not found" 404
+	}
+}
