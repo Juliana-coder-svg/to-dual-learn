@@ -8,13 +8,13 @@ export const LessonContentSchema = z.object({
   intro: z.string().describe("2–3 предложения: зачем это нужно, с опорой на материалы курса"),
   keyIdea: z.string().describe("Ключевая мысль урока, 2–4 предложения"),
   signals: z.array(z.string()).describe("3–5 коротких признаков/правил, которые надо запомнить"),
-  task: z.string().describe("Практическая задача с открытым ответом, выполнимая за 3 минуты"),
+  task: z.string().describe("Практическая задача с открытым ответом на новом материале, выполнимая за 3–5 минут"),
   sample: z.string().nullable().describe("Текст/кейс для разбора в задаче, если нужен; иначе null"),
   rubricCriteria: z.array(z.string()).describe("3–4 критерия хорошего ответа"),
   keyTakeaway: z.string().describe("Одна фраза, которую человек уносит с собой"),
   flashcards: z
     .array(z.object({ question: z.string(), answer: z.string().describe("Короткий ответ, 1–2 предложения") }))
-    .describe("2–3 карточки для повторения: на узнавание идеи, на применение, на типичную ошибку"),
+    .describe("2–3 карточки для повторения на припоминание, не на узнавание: на признаки или шаги приёма, на применение к новой ситуации, на типичную ошибку"),
 });
 export type LessonContent = z.infer<typeof LessonContentSchema>;
 
