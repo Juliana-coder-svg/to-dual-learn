@@ -1,8 +1,11 @@
 import { notFound } from "next/navigation";
 import { teacherCourse } from "@/lib/auth/access";
 import { listLessonSummaries, listStudentsWithStats, listSubmissionsByCourse } from "@/lib/db/queries";
-import { formatDateTime } from "@/lib/utils/format";
+import { formatDateTime, plural } from "@/lib/utils/format";
 import { Badge } from "@/components/ui/badge";
+import { SectionHeader } from "@/components/shared/PageHeader";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { AiNote } from "@/components/shared/AiNote";
 
 export default async function StudentsPage({ params }: { params: Promise<{ courseId: string }> }) {
   const { courseId } = await params;
@@ -23,43 +26,64 @@ export default async function StudentsPage({ params }: { params: Promise<{ cours
   return (
     <div className="space-y-10">
       <section>
-        <h2 className="text-lg font-semibold">Студенты</h2>
-        <p className="mt-1 text-sm text-muted-foreground">Записываются по коду <span className="font-mono font-semibold">{ctx.course.join_code}</span>. Опубликовано уроков: {published}.</p>
+        <SectionHeader
+          title="Студенты"
+          description={<>Записываются по коду <span className="font-mono font-semibold tracking-wider text-foreground">{ctx.course.join_code}</span>. Опубликовано уроков: {published}.</>}
+        />
         {students.length === 0 ? (
-          <p className="mt-6 rounded-md border border-dashed p-6 text-sm text-muted-foreground">Пока никто не записался. Отправьте студентам код курса или ссылку из настроек.</p>
+          <EmptyState className="mt-6" title="Пока никто не записался" description="Отправьте студентам код курса или ссылку-приглашение из настроек." />
         ) : (
-          <table className="mt-6 w-full text-sm">
-            <thead className="text-left text-xs text-muted-foreground">
-              <tr className="border-b"><th className="py-2 pr-4 font-medium">Студент</th><th className="py-2 pr-4 font-medium">Пройдено</th><th className="py-2 pr-4 font-medium">Средний балл</th><th className="py-2 pr-4 font-medium">Дней подряд</th><th className="py-2 font-medium">Баллы</th></tr>
-            </thead>
-            <tbody>
-              {students.map((s) => (
-                <tr key={s.user_id} className="border-b">
-                  <td className="py-2 pr-4"><div className="font-medium">{s.name}</div><div className="text-xs text-muted-foreground">{s.email}</div></td>
-                  <td className="py-2 pr-4">{s.completed}/{published}</td>
-                  <td className="py-2 pr-4">{s.avg_score != null ? s.avg_score.toFixed(1) : "-"}</td>
-                  <td className="py-2 pr-4">{s.streak}</td>
-                  <td className="py-2">{s.xp}</td>
+          <div className="mt-6 overflow-x-auto rounded-lg border">
+            <table className="data-table min-w-[560px]">
+              <thead>
+                <tr>
+                  <th className="pl-4">Студент</th>
+                  <th>Пройдено</th>
+                  <th>Средний балл</th>
+                  <th>Дней подряд</th>
+                  <th className="pr-4 text-right">Баллы</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {students.map((s) => (
+                  <tr key={s.user_id}>
+                    <td className="pl-4"><div className="font-medium">{s.name}</div><div className="type-caption text-muted-foreground">{s.email}</div></td>
+                    <td>
+                      <div className="flex items-center gap-2">
+                        <span className="h-1.5 w-16 overflow-hidden rounded-full bg-muted"><span className="block h-full rounded-full bg-primary" style={{ width: `${published ? Math.round((s.completed / published) * 100) : 0}%` }} /></span>
+                        <span>{s.completed}/{published}</span>
+                      </div>
+                    </td>
+                    <td>{s.avg_score != null ? s.avg_score.toFixed(1) : <span className="text-muted-foreground">—</span>}</td>
+                    <td>{s.streak}</td>
+                    <td className="pr-4 text-right font-medium">{s.xp}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </section>
       {submissions.length > 0 ? (
         <section>
-          <h2 className="text-lg font-semibold">Последние ответы</h2>
-          <ul className="mt-4 space-y-3">
+          <SectionHeader title="Последние ответы" description={`${plural(submissions.length, "ответ", "ответа", "ответов")}, новые сверху.`} />
+          <ul className="mt-4 divide-y rounded-lg border">
             {submissions.map((s) => (
-              <li key={s.id} className="rounded-md border p-4 text-sm">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div><span className="font-medium">{s.student_name}</span> <span className="text-muted-foreground">· Урок {s.lesson_position}: {s.lesson_title} · {formatDateTime(s.created_at)}</span></div>
+              <li key={s.id} className="p-4 text-sm">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="font-medium">{s.student_name}</div>
+                    <div className="type-caption text-muted-foreground">Урок {s.lesson_position}: {s.lesson_title} · {formatDateTime(s.created_at)}</div>
+                  </div>
                   <Badge>{s.score}/5</Badge>
                 </div>
-                <details className="mt-2">
-                  <summary className="cursor-pointer text-muted-foreground">Ответ и разбор</summary>
-                  <blockquote className="mt-2 whitespace-pre-wrap border-l-2 pl-3">{s.answer}</blockquote>
-                  <p className="mt-2 text-muted-foreground">{s.feedback.summary}</p>
+                <details className="group mt-2">
+                  <summary className="inline-flex min-h-6 cursor-pointer list-none items-center gap-1 text-muted-foreground hover:text-foreground [&::-webkit-details-marker]:hidden">
+                    <span aria-hidden className="transition-transform group-open:rotate-90">›</span> Ответ и разбор
+                  </summary>
+                  <blockquote className="mt-3 whitespace-pre-wrap border-l-2 pl-3 type-body">{s.answer}</blockquote>
+                  <p className="mt-3 text-muted-foreground">{s.feedback.summary}</p>
+                  <AiNote kind="feedback" className="mt-2" />
                 </details>
               </li>
             ))}

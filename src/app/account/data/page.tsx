@@ -4,6 +4,8 @@ import { listConsents, listOwnedCoursesWithStudents } from "@/lib/db/queries";
 import { deleteAccountAction, setMarketingConsentAction } from "@/lib/actions/account";
 import { CONSENT_VERSION } from "@/lib/legal/versions";
 import { AppShell } from "@/components/shared/AppShell";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { Notice } from "@/components/shared/Notice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,17 +34,32 @@ export default async function MyDataPage({ searchParams }: { searchParams: Promi
   const marketingOn = consents.some((c) => c.kind === "marketing" && c.withdrawn_at === null && c.version === CONSENT_VERSION.marketing);
 
   return (
-    <AppShell user={user} requireConsent={false}>
-      <div className="mx-auto max-w-2xl space-y-6">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Мои данные</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+    <AppShell user={user} requireConsent={false} width="narrow">
+      <PageHeader
+        title="Мои данные"
+        description={
+          <>
             Мы храним вашу почту, имя, роль, ответы на задачи с разборами, карточки для повторения и записи на курсы.
             Если вы преподаватель, ещё храним материалы, уроки, документы, вопросы по материалам и проверки работ. Подробнее в{" "}
-            <Link href="/legal/privacy" className="underline hover:text-foreground">Политике</Link>.
-          </p>
-        </div>
-        {sp.error ? <p className="text-sm text-destructive">{ERRORS[sp.error] ?? ERRORS.delete}</p> : null}
+            <Link href="/legal/privacy" className="underline underline-offset-4 hover:text-foreground">Политике</Link>.
+          </>
+        }
+      />
+      <div className="mt-8 space-y-6">
+        {sp.error ? <Notice kind="error">{ERRORS[sp.error] ?? ERRORS.delete}</Notice> : null}
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Профиль</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <dl className="grid gap-3 text-sm sm:grid-cols-3">
+              <div><dt className="type-caption text-muted-foreground">Имя</dt><dd className="mt-0.5 font-medium">{user.name}</dd></div>
+              <div><dt className="type-caption text-muted-foreground">Почта</dt><dd className="mt-0.5 break-all font-medium">{user.email}</dd></div>
+              <div><dt className="type-caption text-muted-foreground">Роль</dt><dd className="mt-0.5 font-medium">{user.role === "teacher" ? "Преподаватель" : "Студент"}</dd></div>
+            </dl>
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>
@@ -57,28 +74,31 @@ export default async function MyDataPage({ searchParams }: { searchParams: Promi
         <Card>
           <CardHeader>
             <CardTitle>Согласия</CardTitle>
-            <CardDescription>Что вы приняли и когда. Тексты: <Link href="/legal/consent" className="underline hover:text-foreground">Согласие</Link>, <Link href="/legal/terms" className="underline hover:text-foreground">Соглашение</Link>.</CardDescription>
+            <CardDescription>Что вы приняли и когда. Тексты: <Link href="/legal/consent" className="underline underline-offset-4 hover:text-foreground">Согласие</Link>, <Link href="/legal/terms" className="underline underline-offset-4 hover:text-foreground">Соглашение</Link>.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {consents.length === 0 ? <p className="text-sm text-muted-foreground">Записей о согласии нет.</p> : (
-              <ul className="space-y-1 text-sm">
+              <ul className="divide-y text-sm">
                 {consents.map((c) => (
-                  <li key={c.id} className="flex flex-wrap justify-between gap-2">
+                  <li key={c.id} className="flex flex-wrap justify-between gap-2 py-2 first:pt-0">
                     <span>{KIND_LABELS[c.kind]} <span className="text-muted-foreground">· версия {c.version}</span></span>
-                    <span className="text-muted-foreground">{c.withdrawn_at ? `отозвано ${formatDateTime(c.withdrawn_at)}` : `принято ${formatDateTime(c.accepted_at)}`}</span>
+                    <span className={c.withdrawn_at ? "text-muted-foreground" : "text-foreground"}>{c.withdrawn_at ? `отозвано ${formatDateTime(c.withdrawn_at)}` : `принято ${formatDateTime(c.accepted_at)}`}</span>
                   </li>
                 ))}
               </ul>
             )}
-            <form action={setMarketingConsentAction} className="flex items-center justify-between gap-3 border-t pt-4 text-sm">
-              <span>Письма о программах To Dual: {marketingOn ? "включены" : "выключены"}</span>
+            <form action={setMarketingConsentAction} className="flex flex-wrap items-center justify-between gap-3 border-t pt-4 text-sm">
+              <span className="flex items-center gap-2">
+                <span aria-hidden className={`size-2 rounded-full ${marketingOn ? "bg-primary" : "bg-border"}`} />
+                Письма о программах To Dual: {marketingOn ? "включены" : "выключены"}
+              </span>
               <input type="hidden" name="enabled" value={marketingOn ? "0" : "1"} />
               <Button type="submit" variant="outline" size="sm">{marketingOn ? "Отозвать согласие" : "Дать согласие"}</Button>
             </form>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-destructive/40">
           <CardHeader>
             <CardTitle>Удалить аккаунт</CardTitle>
             <CardDescription>
@@ -97,7 +117,7 @@ export default async function MyDataPage({ searchParams }: { searchParams: Promi
                 <p className="text-muted-foreground">Отчислить студентов или передать курс другому преподавателю в интерфейсе пока нельзя. Напишите нам, решим вручную.</p>
               </div>
             ) : (
-              <form action={deleteAccountAction} className="space-y-3">
+              <form action={deleteAccountAction} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="confirm">Для подтверждения введите вашу почту: {user.email}</Label>
                   <Input id="confirm" name="confirm" type="email" required autoComplete="off" placeholder={user.email} />

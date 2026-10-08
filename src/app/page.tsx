@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser, homeFor } from "@/lib/auth/session";
 import { Button } from "@/components/ui/button";
+import { PublicShell } from "@/components/shared/PublicShell";
 
 interface Step {
   title: string;
@@ -77,11 +78,45 @@ const FINDINGS: Finding[] = [
   },
 ];
 
-function EntryButtons() {
+const TEAM = ["НИУ ВШЭ", "Яндекс", "ВТБ", "Сколково"];
+
+function EntryButtons({ size = "lg" }: { size?: "lg" | "default" }) {
   return (
     <div className="flex flex-wrap gap-3">
-      <Button nativeButton={false} render={<Link href="/login?role=teacher" />} size="lg">Я преподаватель</Button>
-      <Button nativeButton={false} render={<Link href="/login?role=student" />} size="lg" variant="outline">Я студент</Button>
+      <Button nativeButton={false} render={<Link href="/login?role=teacher" />} size={size}>Я преподаватель</Button>
+      <Button nativeButton={false} render={<Link href="/login?role=student" />} size={size} variant="outline">Я студент</Button>
+    </div>
+  );
+}
+
+/** Статичный набросок экрана урока: показывает формат, не обещая больше, чем есть. Собран из тех же токенов, что и продукт. */
+function LessonSketch() {
+  return (
+    <div aria-hidden className="rounded-lg border bg-card p-5 text-sm">
+      <div className="flex items-center justify-between">
+        <span className="eyebrow">Урок 2 · шаг 2 из 3</span>
+        <span className="flex gap-1">
+          <span className="h-1.5 w-7 rounded-full bg-primary" />
+          <span className="h-1.5 w-7 rounded-full bg-primary" />
+          <span className="h-1.5 w-7 rounded-full bg-muted" />
+        </span>
+      </div>
+      <p className="mt-3 type-heading">Первая цифра решает</p>
+      <p className="mt-1 text-muted-foreground">Заметить эффект якоря после подсказки модели</p>
+      <div className="mt-5">
+        <p className="eyebrow">Задача</p>
+        <p className="mt-1 type-body">
+          Модель оценила рынок в 48 млрд рублей. Через час коллега назвал 12 млрд. Какие две проверки вы сделаете до того, как вставить цифру в презентацию?
+        </p>
+      </div>
+      <div className="mt-4 rounded-lg border border-input bg-background px-3 py-2 text-muted-foreground/80">
+        Первая проверка: откуда модель взяла…
+        <span className="ml-px inline-block h-4 w-px translate-y-0.5 bg-foreground" />
+      </div>
+      <div className="mt-4 flex items-center justify-between gap-3">
+        <span className="inline-flex h-9 items-center rounded-lg bg-primary px-4 font-medium text-primary-foreground">Отправить на разбор</span>
+        <span className="type-caption text-muted-foreground">около 5 минут</span>
+      </div>
     </div>
   );
 }
@@ -91,100 +126,104 @@ export default async function Home() {
   if (user) redirect(homeFor(user));
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="border-b">
-        <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-3">
-          <span className="whitespace-nowrap text-base font-semibold tracking-tight"><span className="text-primary">To Dual</span> Learn</span>
-          <Button nativeButton={false} render={<Link href="/login" />} size="sm">Войти</Button>
-        </div>
-      </header>
-
-      <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-16">
-        <section>
-          <h1 className="text-4xl font-semibold leading-tight tracking-tight">
+    <PublicShell width="wide" action={<Button nativeButton={false} render={<Link href="/login" />} size="sm" variant="outline">Войти</Button>}>
+      <section className="grid items-center gap-10 py-14 md:grid-cols-[1.1fr_1fr] md:gap-14 md:py-24">
+        <div>
+          <p className="eyebrow text-primary-strong">Микрообучение по вашим материалам</p>
+          <h1 className="mt-4 text-balance type-title md:type-display">
             Студенты практикуются по вашим материалам по&nbsp;пять минут в&nbsp;день
           </h1>
-          <p className="mt-6 text-lg text-muted-foreground">
+          <p className="mt-5 max-w-xl text-lg leading-relaxed text-muted-foreground">
             Загрузите программу, методичку или конспект лекции. To Dual Learn соберёт из них короткие уроки с задачей
             и разберёт ответы студентов по критериям. Через день, неделю и месяц пройденное вернётся карточками.
           </p>
-          <div className="mt-10">
+          <div className="mt-8">
             <EntryButtons />
             <p className="mt-3 text-sm text-muted-foreground">Бесплатно. Пароль не нужен: войдите по почте и имени.</p>
           </div>
-        </section>
+        </div>
+        <LessonSketch />
+      </section>
 
-        <section className="mt-20">
-          <h2 className="text-2xl font-semibold tracking-tight">Как это работает</h2>
-          <ol className="mt-6 space-y-4">
-            {STEPS.map((step, i) => (
-              <li key={step.title} className="flex gap-4 rounded-lg border p-5">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-primary text-sm font-medium text-primary">
-                  {i + 1}
-                </span>
-                <div>
-                  <h3 className="font-medium">{step.title}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">{step.text}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </section>
+      <section className="border-t py-14 md:py-20">
+        <h2 className="type-heading md:type-title">Как это работает</h2>
+        <ol className="mt-8 grid gap-8 md:grid-cols-3 md:gap-6">
+          {STEPS.map((step, i) => (
+            <li key={step.title} className="border-t-2 border-primary pt-4">
+              <span className="type-title tabular-nums text-primary-strong">{String(i + 1).padStart(2, "0")}</span>
+              <h3 className="mt-3 text-base font-semibold">{step.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{step.text}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
 
-        <section className="mt-20">
-          <h2 className="text-2xl font-semibold tracking-tight">Для кого</h2>
-          <div className="mt-6 space-y-6">
-            {SEGMENTS.map((segment) => (
-              <div key={segment.title} className="border-l-2 border-primary pl-4">
-                <h3 className="font-medium">{segment.title}</h3>
-                <p className="mt-1 text-sm text-muted-foreground">{segment.text}</p>
-              </div>
-            ))}
-          </div>
-        </section>
+      <section className="border-t py-14 md:py-20">
+        <h2 className="type-heading md:type-title">Для кого</h2>
+        <div className="mt-8 grid gap-4 md:grid-cols-3">
+          {SEGMENTS.map((segment) => (
+            <div key={segment.title} className="rounded-lg border p-5">
+              <h3 className="text-base font-semibold">{segment.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{segment.text}</p>
+            </div>
+          ))}
+        </div>
+      </section>
 
-        <section className="mt-20">
-          <h2 className="text-2xl font-semibold tracking-tight">Что говорят исследования</h2>
+      <section className="border-t py-14 md:py-20">
+        <div className="max-w-2xl">
+          <h2 className="type-heading md:type-title">Что говорят исследования</h2>
           <p className="mt-2 text-sm text-muted-foreground">
             Это чужие исследования, а не результаты нашего продукта. Свои цифры опубликуем после первых пилотов.
           </p>
-          <ul className="mt-6 space-y-4">
-            {FINDINGS.map((finding) => (
-              <li key={finding.title} className="rounded-lg border p-5">
-                <h3 className="font-medium">{finding.title}</h3>
-                <p className="mt-1 text-sm text-muted-foreground">{finding.text}</p>
-                <a
-                  href={finding.href}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-3 inline-block text-sm text-primary underline underline-offset-4 hover:no-underline"
-                >
-                  {finding.source}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </section>
+        </div>
+        <ul className="mt-8 grid gap-4 md:grid-cols-2">
+          {FINDINGS.map((finding) => (
+            <li key={finding.title} className="flex flex-col rounded-lg border p-5">
+              <h3 className="text-base font-semibold">{finding.title}</h3>
+              <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">{finding.text}</p>
+              <a
+                href={finding.href}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-4 inline-block text-sm text-primary-strong underline decoration-primary/40 underline-offset-4 hover:decoration-primary"
+              >
+                {finding.source}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
 
-        <section className="mt-20 border-t pt-10">
-          <h2 className="text-2xl font-semibold tracking-tight">Кто делает</h2>
-          <p className="mt-4 text-muted-foreground">
-            Команда To Dual Education. Мы преподаём в НИУ ВШЭ, в магистратуре ИИМУП «AI в маркетинге и продакт-менеджменте»,
-            и ведём программы по ИИ для Яндекса, ВТБ и Сколково.
-          </p>
-        </section>
+      <section className="border-t py-14 md:py-20">
+        <div className="grid gap-6 md:grid-cols-[1fr_1fr] md:gap-14">
+          <h2 className="type-heading md:type-title">Кто делает</h2>
+          <div>
+            <p className="type-body text-muted-foreground">
+              Команда To Dual Education. Мы преподаём в НИУ ВШЭ, в магистратуре ИИМУП «AI в маркетинге и продакт-менеджменте»,
+              и ведём программы по ИИ для Яндекса, ВТБ и Сколково.
+            </p>
+            <ul className="mt-5 flex flex-wrap gap-2">
+              {TEAM.map((t) => (
+                <li key={t} className="rounded-full border px-3 py-1 text-sm">{t}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
 
-        <section className="mt-20 rounded-lg border p-6">
-          <h2 className="text-2xl font-semibold tracking-tight">Попробуйте на своём материале</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
+      <section className="mb-14 rounded-lg bg-primary-soft p-6 md:mb-20 md:p-10">
+        <div className="max-w-2xl">
+          <h2 className="type-heading md:type-title">Попробуйте на своём материале</h2>
+          <p className="mt-2 type-body text-muted-foreground">
             Преподаватель собирает курс и даёт студентам ссылку. Студент входит по ссылке или по коду курса.
           </p>
           <div className="mt-6">
             <EntryButtons />
             <p className="mt-3 text-sm text-muted-foreground">Бесплатно. Пароль не нужен: войдите по почте и имени.</p>
           </div>
-        </section>
-      </main>
-    </div>
+        </div>
+      </section>
+    </PublicShell>
   );
 }

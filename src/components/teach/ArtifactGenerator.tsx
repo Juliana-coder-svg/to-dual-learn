@@ -7,7 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Markdown } from "@/components/shared/Markdown";
-import { AI_LABELS, AiNote } from "@/components/shared/AiNote";
+import { AiNote } from "@/components/shared/AiNote";
+import { Notice } from "@/components/shared/Notice";
 import { ARTIFACT_KINDS, type ArtifactKind } from "@/lib/lessons/types";
 
 export function ArtifactGenerator({ courseId, disabled }: { courseId: string; disabled: boolean }) {
@@ -17,6 +18,7 @@ export function ArtifactGenerator({ courseId, disabled }: { courseId: string; di
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   async function generate() {
     setBusy(true);
@@ -39,6 +41,13 @@ export function ArtifactGenerator({ courseId, disabled }: { courseId: string; di
     }
   }
 
+  async function copy() {
+    if (!result) return;
+    await navigator.clipboard.writeText(result);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
   return (
     <div className="grid gap-6 lg:grid-cols-[340px_1fr]">
       <Card>
@@ -46,38 +55,40 @@ export function ArtifactGenerator({ courseId, disabled }: { courseId: string; di
           <CardTitle>Что собрать</CardTitle>
           <CardDescription>По материалам курса. Результат можно скопировать в документ или презентацию.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label>Тип</Label>
-            <div className="grid gap-1">
+        <CardContent className="space-y-5">
+          <fieldset className="space-y-2">
+            <legend className="text-sm font-medium">Тип</legend>
+            <div className="grid gap-1.5">
               {(Object.keys(ARTIFACT_KINDS) as ArtifactKind[]).map((k) => (
-                <label key={k} className="flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm has-[:checked]:border-primary">
+                <label key={k} className="flex cursor-pointer items-center gap-3 rounded-lg border border-input px-3 py-2 text-sm transition-colors hover:border-foreground/40 has-[:checked]:border-primary has-[:checked]:bg-primary-soft">
                   <input type="radio" name="kind" value={k} checked={kind === k} onChange={() => setKind(k)} />
                   {ARTIFACT_KINDS[k]}
                 </label>
               ))}
             </div>
-          </div>
+          </fieldset>
           <div className="space-y-2">
             <Label htmlFor="instructions">Пожелания</Label>
             <Textarea id="instructions" rows={4} value={instructions} onChange={(e) => setInstructions(e.target.value)} placeholder="Тема и что обязательно включить" />
           </div>
           <Button onClick={generate} disabled={busy || disabled} className="w-full">{busy ? "Собираю…" : "Собрать"}</Button>
-          {disabled ? <p className="text-xs text-muted-foreground">Сначала загрузите материалы.</p> : null}
-          {error ? <p className="text-sm text-destructive">{error}</p> : null}
+          {disabled ? <p className="type-caption text-muted-foreground">Сначала загрузите материалы.</p> : null}
+          {error ? <Notice kind="error">{error}</Notice> : null}
         </CardContent>
       </Card>
-      <div className="min-h-40 rounded-md border p-5">
+      <div className={`min-h-60 rounded-lg border p-5 ${result ? "" : "flex items-center justify-center"}`}>
         {result ? (
           <>
-            <div className="mb-3 flex items-center justify-between gap-3">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b pb-4">
               <AiNote kind="artifact" />
-              <Button variant="outline" size="sm" onClick={() => navigator.clipboard.writeText(`${result}\n\n${AI_LABELS.artifact}`)}>Скопировать</Button>
+              <Button variant="outline" size="sm" onClick={copy}>{copied ? "Скопировано" : "Скопировать"}</Button>
             </div>
             <Markdown text={result} />
           </>
         ) : (
-          <p className="text-sm text-muted-foreground">{busy ? "ИИ читает материалы и собирает документ…" : "Здесь появится результат."}</p>
+          <p className="max-w-xs text-center text-sm text-muted-foreground" role="status">
+            {busy ? "ИИ читает материалы и собирает документ…" : "Здесь появится результат: выберите тип слева и нажмите «Собрать»."}
+          </p>
         )}
       </div>
     </div>

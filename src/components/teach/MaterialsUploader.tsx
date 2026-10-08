@@ -7,12 +7,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Notice } from "@/components/shared/Notice";
 
 export function MaterialsUploader({ courseId }: { courseId: string }) {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
-  const [msg, setMsg] = useState<string | null>(null);
+  const [msg, setMsg] = useState<{ text: string; kind: "success" | "error" } | null>(null);
   const [pasteTitle, setPasteTitle] = useState("");
   const [pasteText, setPasteText] = useState("");
 
@@ -23,13 +24,13 @@ export function MaterialsUploader({ courseId }: { courseId: string }) {
       const res = await fetch("/api/materials", { method: "POST", body: form });
       const data = (await res.json()) as { ok?: boolean; error?: string; added?: number };
       if (!res.ok || !data.ok) throw new Error(data.error ?? "Не удалось загрузить");
-      setMsg(`Добавлено: ${data.added}`);
+      setMsg({ text: `Добавлено: ${data.added}`, kind: "success" });
       if (fileRef.current) fileRef.current.value = "";
       setPasteText("");
       setPasteTitle("");
       router.refresh();
     } catch (e) {
-      setMsg(e instanceof Error ? e.message : "Ошибка");
+      setMsg({ text: e instanceof Error ? e.message : "Ошибка", kind: "error" });
     } finally {
       setBusy(false);
     }
@@ -47,7 +48,7 @@ export function MaterialsUploader({ courseId }: { courseId: string }) {
 
   async function uploadText(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (pasteText.trim().length < 20) { setMsg("Текст слишком короткий"); return; }
+    if (pasteText.trim().length < 20) { setMsg({ text: "Текст слишком короткий", kind: "error" }); return; }
     const form = new FormData();
     form.set("courseId", courseId);
     form.set("title", pasteTitle.trim() || "Вставленный текст");
@@ -60,11 +61,11 @@ export function MaterialsUploader({ courseId }: { courseId: string }) {
       <Card>
         <CardHeader>
           <CardTitle>Загрузить файлы</CardTitle>
-          <CardDescription>PDF, TXT или MD. Текст из PDF извлекает ИИ, это занимает до минуты. Не загружайте материалы с персональными данными студентов и коллег.</CardDescription>
+          <CardDescription>PDF, TXT или MD. Текст из PDF извлекает ИИ, это занимает до минуты.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={uploadFiles} className="space-y-3">
-            <Input ref={fileRef} type="file" multiple accept=".pdf,.txt,.md,text/plain,text/markdown,application/pdf" />
+            <Input ref={fileRef} type="file" multiple accept=".pdf,.txt,.md,text/plain,text/markdown,application/pdf" aria-label="Файлы материалов" className="h-auto py-1.5" />
             <Button type="submit" disabled={busy} className="w-full">{busy ? "Загружаю…" : "Загрузить"}</Button>
           </form>
         </CardContent>
@@ -76,16 +77,19 @@ export function MaterialsUploader({ courseId }: { courseId: string }) {
         </CardHeader>
         <CardContent>
           <form onSubmit={uploadText} className="space-y-3">
-            <div className="space-y-1">
+            <div className="space-y-2">
               <Label htmlFor="paste-title">Название</Label>
               <Input id="paste-title" value={pasteTitle} onChange={(e) => setPasteTitle(e.target.value)} placeholder="Программа курса" />
             </div>
-            <Textarea rows={6} value={pasteText} onChange={(e) => setPasteText(e.target.value)} placeholder="Вставьте текст…" />
+            <div className="space-y-2">
+              <Label htmlFor="paste-text">Текст</Label>
+              <Textarea id="paste-text" rows={6} value={pasteText} onChange={(e) => setPasteText(e.target.value)} placeholder="Вставьте текст…" />
+            </div>
             <Button type="submit" variant="outline" disabled={busy} className="w-full">Добавить текст</Button>
           </form>
         </CardContent>
       </Card>
-      {msg ? <p className="text-sm text-muted-foreground">{msg}</p> : null}
+      {msg ? <Notice kind={msg.kind}>{msg.text}</Notice> : null}
     </div>
   );
 }
