@@ -41,7 +41,7 @@ export async function GET(req: Request) {
 <ul>${items.join("")}${due > 0 ? `<li><a href="${site}/learn/review">Повторить карточки: ${due}</a></li>` : ""}</ul>
 <p>Пять минут, и серия ${user.streak > 0 ? `дойдёт до ${user.streak + 1}` : "начнётся"}.</p>
 <p style="color:#888;font-size:12px">Отключить письма можно на <a href="${site}/learn">странице курсов</a>.</p>`;
-    const result = await sendMail(user.email, items.length > 0 ? "Урок дня ждёт" : "Пора повторить карточки", html);
+    const result = await sendMail(user.email, items.length > 0 ? "Ваш урок на сегодня" : "Пора повторить карточки", html);
     if (result === "sent") { sent++; await markDigestSent(user.id); } else skipped++;
   }
   return NextResponse.json({ ok: true, sent, skipped });

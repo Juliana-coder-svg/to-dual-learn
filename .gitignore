@@ -47,3 +47,6 @@ next-env.d.ts
 # example env is safe to commit
 !.env.example
 .next-*
+
+# deploy: секреты сервера
+/deploy/selectel/.env

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { teacherCourse } from "@/lib/auth/access";
-import { listLessons, listMaterials } from "@/lib/db/queries";
+import { countMaterials, listLessons } from "@/lib/db/queries";
 import { deleteLessonAction, moveLessonAction, publishAllAction, setLessonStatusAction } from "@/lib/actions/courses";
 import { LessonsGenerator } from "@/components/teach/LessonsGenerator";
 import { ReviewButton } from "@/components/teach/ReviewButton";
@@ -10,10 +10,9 @@ import { Badge } from "@/components/ui/badge";
 
 export default async function LessonsPage({ params }: { params: Promise<{ courseId: string }> }) {
   const { courseId } = await params;
-  const ctx = await teacherCourse(courseId);
+  const [ctx, lessons, materialsCount] = await Promise.all([teacherCourse(courseId), listLessons(courseId), countMaterials(courseId)]);
   if (!ctx) notFound();
-  const lessons = await listLessons(courseId);
-  const hasMaterials = (await listMaterials(courseId)).length > 0;
+  const hasMaterials = materialsCount > 0;
   const drafts = lessons.filter((l) => l.status === "draft").length;
 
   return (
@@ -62,7 +61,7 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
                     <form action={moveLessonAction.bind(null, courseId, l.id, 1)}><Button type="submit" variant="ghost" size="sm" disabled={i === lessons.length - 1} aria-label="Ниже">↓</Button></form>
                     <Button nativeButton={false} render={<Link href={`/teach/${courseId}/lessons/${l.id}/edit`} />} variant="outline" size="sm">Править</Button>
                     <form action={setLessonStatusAction.bind(null, courseId, l.id, l.status === "published" ? "draft" : "published")}>
-                      <Button type="submit" variant="outline" size="sm">{l.status === "published" ? "Снять" : "Опубликовать"}</Button>
+                      <Button type="submit" variant="outline" size="sm">{l.status === "published" ? "Снять с публикации" : "Опубликовать"}</Button>
                     </form>
                     <form action={deleteLessonAction.bind(null, courseId, l.id)}>
                       <Button type="submit" variant="ghost" size="sm">Удалить</Button>

@@ -8,12 +8,28 @@ import type { Database } from "./types";
 
 export type SupabaseServerClient = SupabaseClient<Database>;
 
+/** Трассировка запросов к Supabase: при SUPABASE_TRACE=1 каждый вызов пишется в консоль сервера
+ *  с порядковым номером внутри одного рендера и временем ответа. Нужна для замеров, в проде выключена. */
+function tracedFetch(label: string): typeof fetch | undefined {
+  if (!process.env.SUPABASE_TRACE) return undefined;
+  let n = 0;
+  return async (input, init) => {
+    const started = performance.now();
+    const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+    const res = await fetch(input, init);
+    const path = url.replace(/^https?:\/\/[^/]+/, "").slice(0, 120);
+    console.log(`[sb:${label}] #${++n} ${init?.method ?? "GET"} ${path} ${Math.round(performance.now() - started)}ms`);
+    return res;
+  };
+}
+
 /** Клиент от имени пользователя из cookie-сессии. Доступ к строкам проверяет RLS.
  *  Один клиент на запрос: React cache() переживает вызовы из разных функций одного рендера. */
 const getUserSupabase = cache(async (): Promise<SupabaseServerClient> => {
   const cookieStore = await cookies();
   const { url, anonKey } = supabaseEnv();
   return createServerClient<Database>(url, anonKey, {
+    global: { fetch: tracedFetch("user") },
     cookies: {
       getAll() {
         return cookieStore.getAll();
@@ -37,7 +53,10 @@ export function createServiceClient(): SupabaseServerClient {
   const { url } = supabaseEnv();
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!key) throw new Error("Не задан SUPABASE_SERVICE_ROLE_KEY.");
-  return createClient<Database>(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+  return createClient<Database>(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: { fetch: tracedFetch("service") },
+  });
 }
 
 /** Выполняет fn так, что все запросы из src/lib/db/queries.ts внутри идут от service role.

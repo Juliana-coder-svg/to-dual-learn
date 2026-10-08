@@ -1,13 +1,13 @@
 import Link from "next/link";
-import { requireUser } from "@/lib/auth/session";
+import { requireUser, requireUserId } from "@/lib/auth/session";
 import { listUserSubmissions } from "@/lib/db/queries";
 import { AppShell } from "@/components/shared/AppShell";
 import { Badge } from "@/components/ui/badge";
 import { formatDateTime } from "@/lib/utils/format";
 
 export default async function HistoryPage() {
-  const user = await requireUser();
-  const items = await listUserSubmissions(user.id);
+  const userId = await requireUserId();
+  const [user, items] = await Promise.all([requireUser(), listUserSubmissions(userId)]);
 
   return (
     <AppShell user={user}>
@@ -15,7 +15,7 @@ export default async function HistoryPage() {
         <h1 className="text-2xl font-semibold tracking-tight">Мои ответы</h1>
         <p className="mt-1 text-sm text-muted-foreground">Все ответы и разбор наставника. Пересмотры после возражений отмечены.</p>
         {items.length === 0 ? (
-          <p className="mt-6 rounded-md border border-dashed p-6 text-sm text-muted-foreground">Пока пусто. <Link href="/learn" className="text-primary">К урокам</Link></p>
+          <p className="mt-6 rounded-md border border-dashed p-6 text-sm text-muted-foreground">Ответов пока нет. <Link href="/learn" className="text-primary">К урокам</Link></p>
         ) : (
           <ul className="mt-6 space-y-3">
             {items.map((s) => (

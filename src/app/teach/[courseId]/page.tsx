@@ -8,9 +8,8 @@ import { formatChars, formatDate } from "@/lib/utils/format";
 
 export default async function MaterialsPage({ params }: { params: Promise<{ courseId: string }> }) {
   const { courseId } = await params;
-  const ctx = await teacherCourse(courseId);
+  const [ctx, materials] = await Promise.all([teacherCourse(courseId), listMaterials(courseId)]);
   if (!ctx) notFound();
-  const materials = await listMaterials(courseId);
   const totalChars = materials.reduce((s, m) => s + m.char_count, 0);
 
   return (
@@ -44,7 +43,7 @@ export default async function MaterialsPage({ params }: { params: Promise<{ cour
           </ul>
         )}
         {materials.length > 0 ? (
-          <p className="mt-3 text-xs text-muted-foreground">Всего {formatChars(totalChars)} (~{Math.max(1, Math.round(totalChars / 3.5 / 1000))} тыс. токенов, в них считается расход на ИИ). Материалы кэшируются, повторные запросы выходят дешевле.</p>
+          <p className="mt-3 text-xs text-muted-foreground">Всего {formatChars(totalChars)} (~{Math.max(1, Math.round(totalChars / 3.5 / 1000))} тыс. токенов, по ним считается расход на ИИ). Повторные запросы выходят дешевле: материалы берутся из кэша.</p>
         ) : null}
       </section>
       <aside>

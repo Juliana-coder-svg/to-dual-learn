@@ -6,13 +6,15 @@ import { CourseTabs } from "@/components/teach/CourseTabs";
 import { isDemoMode, providerLabel } from "@/lib/ai";
 import { courseUsage } from "@/lib/db/queries";
 import { formatRub, usdToRub } from "@/lib/utils/money";
+import { isUuid } from "@/lib/utils/ids";
 
 export default async function CourseLayout({ children, params }: { children: React.ReactNode; params: Promise<{ courseId: string }> }) {
   const { courseId } = await params;
-  const ctx = await teacherCourse(courseId);
+  if (!isUuid(courseId)) notFound();
+  // Расход считает RPC с проверкой владельца, поэтому его можно запрашивать параллельно с проверкой доступа.
+  const [ctx, usage] = await Promise.all([teacherCourse(courseId), courseUsage(courseId)]);
   if (!ctx) notFound();
   const { user, course } = ctx;
-  const usage = await courseUsage(course.id);
 
   return (
     <AppShell user={user}>
@@ -33,7 +35,7 @@ export default async function CourseLayout({ children, params }: { children: Rea
       </div>
       {isDemoMode() ? (
         <p className="mt-4 rounded-md border border-dashed px-3 py-2 text-xs text-muted-foreground">
-          Пробный режим: ключ модели не задан, вместо ответов ИИ показываются примеры. Добавьте ключ в .env.local и перезапустите сервер.
+          Пробный режим: ключ модели не задан, поэтому вместо ответов ИИ сервис показывает примеры. Добавьте ключ в .env.local и перезапустите сервер.
         </p>
       ) : null}
       <CourseTabs courseId={course.id} />

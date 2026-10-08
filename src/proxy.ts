@@ -29,7 +29,11 @@ export async function proxy(request: NextRequest) {
     },
   });
   // Сам вызов нужен ради побочного эффекта: при протухшем токене клиент обновит его через setAll.
-  await supabase.auth.getUser();
+  // getClaims проверяет подпись JWT локально (ключи ES256 из JWKS кэшируются на 10 минут),
+  // поэтому на живом токене сеть не нужна; getUser ходил бы в Auth на каждый запрос (~350 мс).
+  const started = performance.now();
+  await supabase.auth.getClaims();
+  if (process.env.SUPABASE_TRACE) console.log(`[proxy] ${pathname} getClaims ${Math.round(performance.now() - started)}ms`);
   return response;
 }
 

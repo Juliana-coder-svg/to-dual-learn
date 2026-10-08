@@ -7,11 +7,11 @@ export const LessonContentSchema = z.object({
   concept: z.string().describe("Одна фраза: какой навык отрабатывает урок"),
   intro: z.string().describe("2–3 предложения: зачем это нужно, с опорой на материалы курса"),
   keyIdea: z.string().describe("Ключевая мысль урока, 2–4 предложения"),
-  signals: z.array(z.string()).describe("3–5 коротких признаков/правил, которые надо запомнить"),
+  signals: z.array(z.string()).describe("3–5 коротких признаков или правил, которые стоит запомнить"),
   task: z.string().describe("Практическая задача с открытым ответом на новом материале, выполнимая за 3–5 минут"),
-  sample: z.string().nullable().describe("Текст/кейс для разбора в задаче, если нужен; иначе null"),
+  sample: z.string().nullable().describe("Текст или пример для разбора в задаче, если нужен; иначе null"),
   rubricCriteria: z.array(z.string()).describe("3–4 критерия хорошего ответа"),
-  keyTakeaway: z.string().describe("Одна фраза, которую человек уносит с собой"),
+  keyTakeaway: z.string().describe("Одна фраза, которую студент уносит с собой"),
   flashcards: z
     .array(z.object({ question: z.string(), answer: z.string().describe("Короткий ответ, 1–2 предложения") }))
     .describe("2–3 карточки для повторения на припоминание, не на узнавание: на признаки или шаги приёма, на применение к новой ситуации, на типичную ошибку"),
@@ -34,7 +34,7 @@ export const LessonReviewSchema = z.object({
     z.object({
       title: z.string().describe("Название урока из входа"),
       changed: z.boolean(),
-      flags: z.array(z.string()).describe("Что было не так: нет опоры на материалы, задача не выполнима за 5 минут, критерий не проверяем, повтор темы и т.п. Пусто, если всё в порядке"),
+      flags: z.array(z.string()).describe("Что было не так: нет опоры на материалы, задача не выполнима за 5 минут, критерий не проверяем, повтор темы. Пусто, если всё в порядке"),
     }),
   ),
   summary: z.string().describe("2–3 предложения для преподавателя: что поправлено и что стоит проверить руками"),
@@ -47,7 +47,7 @@ export const LessonsBatchSchema = z.object({
 });
 
 export const FeedbackSchema = z.object({
-  score: z.number().int().describe("Оценка от 1 до 5"),
+  score: z.number().int().describe("Балл от 1 до 5"),
   criteria: z.array(
     z.object({
       criterion: z.string(),
@@ -70,7 +70,7 @@ export const HomeworkResultsSchema = z.object({
         z.object({ criterion: z.string(), met: z.boolean(), comment: z.string() }),
       ),
       feedback: z.string().describe("Комментарий студенту, 2–4 предложения"),
-      flags: z.array(z.string()).describe("Сигналы для преподавателя: подозрение на копипаст, не по теме, пусто и т.п."),
+      flags: z.array(z.string()).describe("Отметки для преподавателя: дословное совпадение с материалами или другой работой, не по заданию, пустая работа"),
     }),
   ),
   overview: z.string().describe("Сводка для преподавателя: типичные ошибки, что разобрать на занятии"),

@@ -1,11 +1,11 @@
-import { requireUser } from "@/lib/auth/session";
+import { requireUser, requireUserId } from "@/lib/auth/session";
 import { listDueFlashcards } from "@/lib/db/queries";
 import { AppShell } from "@/components/shared/AppShell";
 import { FlashcardReview } from "@/components/learn/FlashcardReview";
 
 export default async function ReviewPage() {
-  const user = await requireUser();
-  const due = await listDueFlashcards(user.id);
+  const userId = await requireUserId();
+  const [user, due] = await Promise.all([requireUser(), listDueFlashcards(userId)]);
 
   return (
     <AppShell user={user}>

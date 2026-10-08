@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { teacherCourse } from "@/lib/auth/access";
-import { listGenerations, listMaterials } from "@/lib/db/queries";
+import { countMaterials, listGenerations } from "@/lib/db/queries";
 import { ARTIFACT_KINDS, type ArtifactKind } from "@/lib/lessons/types";
 import { ArtifactGenerator } from "@/components/teach/ArtifactGenerator";
 import { Markdown } from "@/components/shared/Markdown";
@@ -8,10 +8,9 @@ import { formatDateTime } from "@/lib/utils/format";
 
 export default async function GeneratePage({ params }: { params: Promise<{ courseId: string }> }) {
   const { courseId } = await params;
-  const ctx = await teacherCourse(courseId);
+  const [ctx, history, materialsCount] = await Promise.all([teacherCourse(courseId), listGenerations(courseId), countMaterials(courseId)]);
   if (!ctx) notFound();
-  const history = await listGenerations(courseId);
-  const hasMaterials = (await listMaterials(courseId)).length > 0;
+  const hasMaterials = materialsCount > 0;
 
   return (
     <div className="space-y-8">

@@ -1,16 +1,16 @@
 import { notFound } from "next/navigation";
 import { teacherCourse } from "@/lib/auth/access";
-import { listChatMessages, listMaterials } from "@/lib/db/queries";
+import { requireUserId } from "@/lib/auth/session";
+import { countMaterials, listChatMessages } from "@/lib/db/queries";
 import { clearChatAction } from "@/lib/actions/courses";
 import { CourseChat } from "@/components/teach/CourseChat";
 import { Button } from "@/components/ui/button";
 
 export default async function ChatPage({ params }: { params: Promise<{ courseId: string }> }) {
   const { courseId } = await params;
-  const ctx = await teacherCourse(courseId);
+  const userId = await requireUserId();
+  const [ctx, messages, materialsCount] = await Promise.all([teacherCourse(courseId), listChatMessages(courseId, userId), countMaterials(courseId)]);
   if (!ctx) notFound();
-  const messages = await listChatMessages(courseId, ctx.user.id);
-  const materialsCount = (await listMaterials(courseId)).length;
 
   return (
     <div>

@@ -36,7 +36,7 @@ export function isDemoMode(): boolean {
 
 export function providerLabel(): string {
   const name = resolveProviderName();
-  if (name === "demo") return "демо";
+  if (name === "demo") return "пробный режим";
   const p = getProvider();
   return `${name === "anthropic" ? "Anthropic" : "OpenAI-совместимый"} · ${p.model}`;
 }
@@ -82,7 +82,7 @@ async function completeJson<T extends z.ZodTypeAny>(kind: Kind, ctx: CallContext
   try {
     parsed = JSON.parse(result.text);
   } catch {
-    throw new Error("Модель вернула не JSON. Попробуй ещё раз или уменьши объём.");
+    throw new Error("Модель вернула не JSON. Попробуйте ещё раз или уменьшите объём.");
   }
   return schema.parse(parsed);
 }
@@ -171,7 +171,7 @@ export async function reviewLessons(
     maxTokens: 32000,
     effort: "high",
   });
-  if (result.lessons.length !== lessons.length) throw new Error("Ревьюер вернул другое количество уроков. Попробуй ещё раз.");
+  if (result.lessons.length !== lessons.length) throw new Error("Методист вернул другое количество уроков. Попробуйте ещё раз.");
   return result;
 }
 
@@ -218,7 +218,7 @@ export async function reevaluateAnswer(
 ): Promise<Feedback> {
   if (isDemoMode()) {
     const f = demo.feedback(lesson, answer);
-    return { ...f, summary: `Демо-режим: возражение получено («${objection.slice(0, 60)}…»). С подключённой моделью наставник пересмотрит оценку.` };
+    return { ...f, summary: `Пробный режим: возражение получено («${objection.slice(0, 60)}…»). С подключённой моделью наставник пересмотрит оценку.` };
   }
   return completeJson("evaluate", ctx, FeedbackSchema, {
     task: reevaluatePrompt(lesson, answer, previous.summary, previous.score, objection, opts),

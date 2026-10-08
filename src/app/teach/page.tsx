@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { requireUser } from "@/lib/auth/session";
-import { listCoursesByOwner, listLessons, listMaterials, listStudentsWithStats } from "@/lib/db/queries";
+import { requireUser, requireUserId } from "@/lib/auth/session";
+import { listCourseSummariesByOwner } from "@/lib/db/queries";
 import { createCourseAction } from "@/lib/actions/courses";
 import { createDemoCourseAction } from "@/lib/actions/seed";
 import { AppShell } from "@/components/shared/AppShell";
@@ -18,15 +18,10 @@ const DEMO_COURSES = [
 ];
 
 export default async function TeachPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
-  const user = await requireUser();
-  const sp = await searchParams;
-  const courses = await listCoursesByOwner(user.id);
-  const cards = await Promise.all(
-    courses.map(async (c) => {
-      const [lessons, materials, students] = await Promise.all([listLessons(c.id), listMaterials(c.id), listStudentsWithStats(c.id)]);
-      return { course: c, lessons, published: lessons.filter((l) => l.status === "published").length, materials: materials.length, students: students.length };
-    }),
-  );
+  // Профиль и курсы со счётчиками грузятся параллельно: id берём из JWT без похода за профилем.
+  const userId = await requireUserId();
+  const [user, sp, cards] = await Promise.all([requireUser(), searchParams, listCourseSummariesByOwner(userId)]);
+  const courses = cards.map((c) => c.course);
 
   return (
     <AppShell user={user}>
@@ -46,7 +41,7 @@ export default async function TeachPage({ searchParams }: { searchParams: Promis
                         <CardDescription>{c.description || "Без описания"}</CardDescription>
                       </CardHeader>
                       <CardContent className="text-sm text-muted-foreground">
-                        {plural(materials, "материал", "материала", "материалов")} · {published}/{lessons.length} уроков опубликовано · {plural(students, "студент", "студента", "студентов")}
+                        {plural(materials, "материал", "материала", "материалов")} · {published}/{lessons} уроков опубликовано · {plural(students, "студент", "студента", "студентов")}
                         <div className="mt-2 font-mono text-xs">Код: {c.join_code}</div>
                       </CardContent>
                     </Card>
@@ -85,7 +80,7 @@ export default async function TeachPage({ searchParams }: { searchParams: Promis
           <Card className="mt-4">
             <CardHeader>
               <CardTitle>Готовые курсы для примера</CardTitle>
-              <CardDescription>Методичка и уроки с задачами, сразу опубликованы. Для показа и как образец формата.</CardDescription>
+              <CardDescription>Методичка и уроки с задачами, уже опубликованы. Чтобы показать формат студентам и коллегам.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {DEMO_COURSES.map((d) => (

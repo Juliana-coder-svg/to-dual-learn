@@ -60,7 +60,7 @@ export function MaterialsUploader({ courseId }: { courseId: string }) {
       <Card>
         <CardHeader>
           <CardTitle>Загрузить файлы</CardTitle>
-          <CardDescription>PDF, TXT или MD. PDF переводит в текст ИИ, это занимает до минуты.</CardDescription>
+          <CardDescription>PDF, TXT или MD. Текст из PDF извлекает ИИ, это занимает до минуты.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={uploadFiles} className="space-y-3">

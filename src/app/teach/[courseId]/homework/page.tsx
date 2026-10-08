@@ -7,9 +7,8 @@ import { formatDateTime } from "@/lib/utils/format";
 
 export default async function HomeworkPage({ params }: { params: Promise<{ courseId: string }> }) {
   const { courseId } = await params;
-  const ctx = await teacherCourse(courseId);
+  const [ctx, history] = await Promise.all([teacherCourse(courseId), listHomeworkChecks(courseId)]);
   if (!ctx) notFound();
-  const history = await listHomeworkChecks(courseId);
 
   return (
     <div className="space-y-8">

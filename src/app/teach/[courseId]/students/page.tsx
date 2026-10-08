@@ -1,16 +1,24 @@
 import { notFound } from "next/navigation";
 import { teacherCourse } from "@/lib/auth/access";
-import { listLessons, listStudentsWithStats, listSubmissionsByCourse } from "@/lib/db/queries";
+import { listLessonSummaries, listStudentsWithStats, listSubmissionsByCourse } from "@/lib/db/queries";
 import { formatDateTime } from "@/lib/utils/format";
 import { Badge } from "@/components/ui/badge";
 
 export default async function StudentsPage({ params }: { params: Promise<{ courseId: string }> }) {
   const { courseId } = await params;
-  const ctx = await teacherCourse(courseId);
+  const [ctx, students, publishedLessons, allSubmissions] = await Promise.all([
+    teacherCourse(courseId),
+    // RPC бросает 42501 чужому пользователю, а запрос идёт параллельно с проверкой владельца: тогда пусто, дальше 404.
+    listStudentsWithStats(courseId).catch((e: unknown) => {
+      if (String(e).includes("not a course owner")) return [];
+      throw e;
+    }),
+    listLessonSummaries(courseId, { publishedOnly: true }),
+    listSubmissionsByCourse(courseId),
+  ]);
   if (!ctx) notFound();
-  const students = await listStudentsWithStats(courseId);
-  const published = (await listLessons(courseId, { publishedOnly: true })).length;
-  const submissions = (await listSubmissionsByCourse(courseId)).slice(0, 30);
+  const published = publishedLessons.length;
+  const submissions = allSubmissions.slice(0, 30);
 
   return (
     <div className="space-y-10">
@@ -18,7 +26,7 @@ export default async function StudentsPage({ params }: { params: Promise<{ cours
         <h2 className="text-lg font-semibold">Студенты</h2>
         <p className="mt-1 text-sm text-muted-foreground">Записываются по коду <span className="font-mono font-semibold">{ctx.course.join_code}</span>. Опубликовано уроков: {published}.</p>
         {students.length === 0 ? (
-          <p className="mt-6 rounded-md border border-dashed p-6 text-sm text-muted-foreground">Пока никто не записался.</p>
+          <p className="mt-6 rounded-md border border-dashed p-6 text-sm text-muted-foreground">Пока никто не записался. Отправьте студентам код курса или ссылку из настроек.</p>
         ) : (
           <table className="mt-6 w-full text-sm">
             <thead className="text-left text-xs text-muted-foreground">

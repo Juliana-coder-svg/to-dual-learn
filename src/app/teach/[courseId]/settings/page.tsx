@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { teacherCourse } from "@/lib/auth/access";
-import { courseUsageByKind, listCalibrationSamples, listLessons } from "@/lib/db/queries";
+import { courseUsageByKind, listCalibrationSamples, listLessonSummaries } from "@/lib/db/queries";
 import { addCalibrationSampleAction, deleteCalibrationSampleAction, updateCourseSettingsAction } from "@/lib/actions/courses";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,8 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { formatRub, usdRubRate, usdToRub } from "@/lib/utils/money";
 
 const KIND_LABELS: Record<string, string> = {
-  extract: "Извлечение PDF",
-  lessons: "Генерация уроков",
+  extract: "Чтение PDF",
+  lessons: "Сборка уроков",
   review: "Проверка уроков методистом",
   artifact: "Материалы для занятий",
   evaluate: "Оценка ответов",
@@ -22,13 +22,15 @@ const KIND_LABELS: Record<string, string> = {
 
 export default async function SettingsPage({ params, searchParams }: { params: Promise<{ courseId: string }>; searchParams: Promise<{ saved?: string; error?: string }> }) {
   const { courseId } = await params;
-  const sp = await searchParams;
-  const ctx = await teacherCourse(courseId);
+  const [sp, ctx, lessons, samples, usage] = await Promise.all([
+    searchParams,
+    teacherCourse(courseId),
+    listLessonSummaries(courseId),
+    listCalibrationSamples(courseId),
+    courseUsageByKind(courseId),
+  ]);
   if (!ctx) notFound();
   const { course } = ctx;
-  const lessons = await listLessons(courseId);
-  const samples = await listCalibrationSamples(courseId);
-  const usage = await courseUsageByKind(courseId);
   const site = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
   return (
@@ -36,7 +38,7 @@ export default async function SettingsPage({ params, searchParams }: { params: P
       <Card>
         <CardHeader>
           <CardTitle>Курс</CardTitle>
-          <CardDescription>Образовательные результаты и тон учитываются везде: когда ИИ собирает уроки, проверяет их и оценивает ответы.</CardDescription>
+          <CardDescription>ИИ учитывает образовательные результаты и обращение везде: когда собирает уроки, проверяет их и оценивает ответы.</CardDescription>
         </CardHeader>
         <CardContent>
           {sp.saved ? <p className="mb-3 text-sm text-primary">Сохранено.</p> : null}
@@ -122,7 +124,7 @@ export default async function SettingsPage({ params, searchParams }: { params: P
         <Card>
           <CardHeader>
             <CardTitle>Расход по курсу</CardTitle>
-            <CardDescription>Оценка в рублях по курсу {usdRubRate()} ₽ за доллар (переменная USD_RUB_RATE). Точная сумма в кабинете поставщика модели.</CardDescription>
+            <CardDescription>Оценка в рублях по курсу {usdRubRate()} ₽ за доллар (переменная USD_RUB_RATE). Точная сумма: в кабинете поставщика модели.</CardDescription>
           </CardHeader>
           <CardContent>
             {usage.length === 0 ? <p className="text-sm text-muted-foreground">Запросов к ИИ пока не было.</p> : (

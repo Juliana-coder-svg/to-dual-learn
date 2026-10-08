@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     const task = String(body.task ?? "").trim();
     const criteria = String(body.criteria ?? "").trim();
     const submissions = parseWorks(String(body.works ?? ""));
-    if (!task || !criteria) return jsonError("Нужны задание и критерии");
+    if (!task || !criteria) return jsonError("Заполните задание и критерии");
     if (submissions.length === 0) return jsonError("Нет работ для проверки");
     if (submissions.length > 40) return jsonError("За раз можно проверить до 40 работ");
     const results = await checkHomework({ userId: ctx.user.id, courseId: ctx.course.id }, await listMaterials(ctx.course.id), { task, criteria, submissions, tone: ctx.course.tone });
