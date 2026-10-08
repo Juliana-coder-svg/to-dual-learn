@@ -20,15 +20,23 @@ export function parseRole(v: unknown): Role {
 /** Адрес возврата после входа: только относительный путь внутри сайта (см. next-path.ts). */
 export const safeNext = safeNextPath;
 
-/** Адрес приложения: NEXT_PUBLIC_SITE_URL, иначе хост запроса. Яндекс принимает только redirect_uri,
- *  зарегистрированные в приложении, поэтому подделка заголовка Host ничего не даёт. */
+const LOOPBACK = /^(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/;
+
+/** Адрес, с которого пришёл запрос, по заголовкам. В dev `new URL(req.url).origin` всегда даёт localhost,
+ *  даже если страницу открыли на 127.0.0.1 или [::1], а cookie привязаны к хосту из адресной строки. */
+export async function requestOrigin(): Promise<string> {
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
+  const proto = h.get("x-forwarded-proto") ?? (LOOPBACK.test(host) ? "http" : "https");
+  return `${proto}://${host}`;
+}
+
+/** Адрес приложения для redirect_uri: NEXT_PUBLIC_SITE_URL, иначе хост запроса. Яндекс принимает только
+ *  redirect_uri, зарегистрированные в приложении, поэтому подделка заголовка Host ничего не даёт. */
 export async function siteOrigin(): Promise<string> {
   const fromEnv = process.env.NEXT_PUBLIC_SITE_URL;
   if (fromEnv) return fromEnv.replace(/\/$/, "");
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
-  const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
-  return `${proto}://${host}`;
+  return requestOrigin();
 }
 
 export async function yandexRedirectUri(): Promise<string> {

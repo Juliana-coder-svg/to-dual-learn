@@ -1,6 +1,7 @@
 import { startYandexLogin } from "@/lib/actions/yandex";
 import { yandexConfig } from "@/lib/auth/yandex";
 import { buttonVariants } from "@/components/ui/button";
+import { cn } from "cn";
 
 /** Тексты ошибок входа через Яндекс. Приходят в /login?yandex=…, отдельно от ?error=,
  *  чтобы не пересекаться с ошибками формы почты. */
@@ -28,14 +29,14 @@ export function YandexLoginButton({ error }: { error?: string }) {
         type="submit"
         formAction={startYandexLogin}
         formNoValidate
-        className={buttonVariants({ variant: "outline", className: "w-full" })}
+        className={cn(buttonVariants({ variant: "outline" }), "w-full")}
       >
         Войти с Яндекс ID
       </button>
+      {message ? <p role="alert" className="text-sm text-destructive">{message}</p> : null}
       <p className="text-xs text-muted-foreground">
         Войдём с основной почтой вашего Яндекс ID. Если раньше вы входили с другой почтой, введите её выше. Иначе появится новый профиль, а прогресс останется в старом.
       </p>
-      {message ? <p className="text-sm text-destructive">{message}</p> : null}
     </div>
   );
 }

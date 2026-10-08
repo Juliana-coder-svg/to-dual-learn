@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { yandexConfig } from "@/lib/auth/yandex";
-import { beginYandexLogin, parseRole, safeNext } from "@/lib/auth/yandex-flow";
+import { beginYandexLogin, parseRole, requestOrigin, safeNext } from "@/lib/auth/yandex-flow";
 import { getCurrentUser, homeFor } from "@/lib/auth/session";
 
 export const runtime = "nodejs";
@@ -9,15 +9,16 @@ export const runtime = "nodejs";
  *  Кнопка на /login идёт через server action startYandexLogin, здесь то же самое для ссылок. */
 export async function GET(req: Request): Promise<NextResponse> {
   const url = new URL(req.url);
+  const origin = await requestOrigin();
   const role = parseRole(url.searchParams.get("role"));
   const next = safeNext(url.searchParams.get("next"));
   const tail = `role=${role}${next ? `&next=${encodeURIComponent(next)}` : ""}`;
 
   const cfg = yandexConfig();
-  if (!cfg) return NextResponse.redirect(new URL(`/login?yandex=off&${tail}`, url.origin));
+  if (!cfg) return NextResponse.redirect(new URL(`/login?yandex=off&${tail}`, origin));
 
   const user = await getCurrentUser();
-  if (user) return NextResponse.redirect(new URL(next || homeFor(user), url.origin));
+  if (user) return NextResponse.redirect(new URL(next || homeFor(user), origin));
 
   return NextResponse.redirect(await beginYandexLogin(cfg, { role, next }));
 }
