@@ -1,0 +1,66 @@
+import { randomBytes, timingSafeEqual } from "node:crypto";
+import { cookies, headers } from "next/headers";
+import type { Role } from "@/lib/db/queries";
+import { setLoginPrefs } from "@/lib/auth/login-prefs";
+import { buildAuthorizeUrl, type YandexConfig } from "@/lib/auth/yandex";
+
+/** Cookie-часть входа через Яндекс: state против CSRF и роль с адресом возврата в tdd_login_prefs. */
+
+const STATE_COOKIE = "tdd_yandex_state";
+/** Код Яндекса живёт 10 минут, столько же держим state. */
+const STATE_MAX_AGE_SEC = 60 * 10;
+/** Cookie нужна только на /auth/yandex/callback; lax, потому что callback — переход с oauth.yandex.ru. */
+const STATE_COOKIE_PATH = "/auth/yandex";
+
+export function parseRole(v: unknown): Role {
+  return v === "teacher" ? "teacher" : "student";
+}
+
+/** Только относительный путь внутри сайта: `//host` и обратные слэши браузер читает как другой хост. */
+export function safeNext(v: unknown): string {
+  if (typeof v !== "string" || !v.startsWith("/") || v.startsWith("//") || v.includes("\\")) return "";
+  return v;
+}
+
+/** Адрес приложения: NEXT_PUBLIC_SITE_URL, иначе хост запроса. Яндекс принимает только redirect_uri,
+ *  зарегистрированные в приложении, поэтому подделка заголовка Host ничего не даёт. */
+export async function siteOrigin(): Promise<string> {
+  const fromEnv = process.env.NEXT_PUBLIC_SITE_URL;
+  if (fromEnv) return fromEnv.replace(/\/$/, "");
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
+  const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
+  return `${proto}://${host}`;
+}
+
+export async function yandexRedirectUri(): Promise<string> {
+  return `${await siteOrigin()}/auth/yandex/callback`;
+}
+
+/** Запоминает роль и адрес возврата, ставит state и возвращает адрес страницы разрешений Яндекса. */
+export async function beginYandexLogin(cfg: YandexConfig, p: { role: Role; next: string }): Promise<string> {
+  const state = randomBytes(32).toString("base64url");
+  const store = await cookies();
+  store.set(STATE_COOKIE, state, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: STATE_COOKIE_PATH,
+    maxAge: STATE_MAX_AGE_SEC,
+  });
+  // Имя не задаём: новый пользователь получит его из Яндекса через user_metadata,
+  // а имя существующего профиля при входе не перезаписываем.
+  await setLoginPrefs({ name: "", role: p.role, ...(p.next ? { next: p.next } : {}) });
+  return buildAuthorizeUrl({ clientId: cfg.clientId, redirectUri: await yandexRedirectUri(), state });
+}
+
+/** Сверяет state из адреса с cookie и удаляет cookie при любом исходе. */
+export async function consumeYandexState(fromQuery: string | null): Promise<boolean> {
+  const store = await cookies();
+  const expected = store.get(STATE_COOKIE)?.value ?? "";
+  store.set(STATE_COOKIE, "", { httpOnly: true, sameSite: "lax", path: STATE_COOKIE_PATH, maxAge: 0 });
+  if (!expected || !fromQuery) return false;
+  const a = Buffer.from(expected);
+  const b = Buffer.from(fromQuery);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
