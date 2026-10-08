@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Markdown } from "@/components/shared/Markdown";
 import { AiNote } from "@/components/shared/AiNote";
+import { Notice } from "@/components/shared/Notice";
 
 interface Msg { id: string; role: "user" | "assistant"; content: string }
 
@@ -41,23 +42,35 @@ export function CourseChat({ courseId, initial }: { courseId: string; initial: M
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="min-h-64 space-y-4 rounded-md border p-4">
-        {messages.length === 0 ? <p className="text-sm text-muted-foreground">Пока пусто. Например: «Какие темы есть в материалах?» или «Составь три вопроса для обсуждения по второму разделу».</p> : null}
+      <div className={`min-h-72 space-y-5 rounded-lg border p-4 md:p-5 ${messages.length === 0 ? "flex items-center justify-center" : ""}`}>
+        {messages.length === 0 ? (
+          <p className="max-w-md text-center text-sm text-muted-foreground">
+            Пока пусто. Например: «Какие темы есть в материалах?» или «Составь три вопроса для обсуждения по второму разделу».
+          </p>
+        ) : null}
         {messages.map((m) => (
-          <div key={m.id} className={m.role === "user" ? "ml-auto max-w-[85%] rounded-md bg-muted px-4 py-2 text-sm" : "max-w-[95%]"}>
-            {m.role === "user" ? <p className="whitespace-pre-wrap">{m.content}</p> : <><Markdown text={m.content} /><AiNote kind="chat" className="mt-1" /></>}
-          </div>
+          m.role === "user" ? (
+            <div key={m.id} className="ml-auto max-w-[85%] rounded-lg bg-primary-soft px-4 py-2.5 text-sm">
+              <p className="whitespace-pre-wrap">{m.content}</p>
+            </div>
+          ) : (
+            <div key={m.id} className="max-w-[95%]">
+              <Markdown text={m.content} />
+              <AiNote kind="chat" className="mt-2" />
+            </div>
+          )
         ))}
-        {busy ? <p className="text-sm text-muted-foreground">Читаю материалы…</p> : null}
+        {busy ? <p role="status" className="text-sm text-muted-foreground">Читаю материалы…</p> : null}
       </div>
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
-      <form onSubmit={send} className="flex gap-2">
+      {error ? <Notice kind="error">{error}</Notice> : null}
+      <form onSubmit={send} className="flex items-end gap-2">
         <Textarea
           rows={2}
+          aria-label="Вопрос по материалам"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void send(e); } }}
-          placeholder="Вопрос по материалам… (Enter — отправить, Shift+Enter — перенос)"
+          placeholder="Вопрос по материалам… Enter отправляет, Shift+Enter переносит строку"
         />
         <Button type="submit" disabled={busy || !input.trim()}>Отправить</Button>
       </form>

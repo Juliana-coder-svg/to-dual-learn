@@ -5,6 +5,7 @@ import { ARTIFACT_KINDS, type ArtifactKind } from "@/lib/lessons/types";
 import { ArtifactGenerator } from "@/components/teach/ArtifactGenerator";
 import { Markdown } from "@/components/shared/Markdown";
 import { AiNote } from "@/components/shared/AiNote";
+import { SectionHeader } from "@/components/shared/PageHeader";
 import { formatDateTime } from "@/lib/utils/format";
 
 export default async function GeneratePage({ params }: { params: Promise<{ courseId: string }> }) {
@@ -14,20 +15,29 @@ export default async function GeneratePage({ params }: { params: Promise<{ cours
   const hasMaterials = materialsCount > 0;
 
   return (
-    <div className="space-y-8">
-      <ArtifactGenerator courseId={courseId} disabled={!hasMaterials} />
+    <div className="space-y-10">
+      <section>
+        <SectionHeader title="Материалы для занятий" description="Задание, тест, конспект или план занятия по материалам курса." />
+        <div className="mt-6">
+          <ArtifactGenerator courseId={courseId} disabled={!hasMaterials} />
+        </div>
+      </section>
       {history.length > 0 ? (
         <section>
-          <h2 className="text-lg font-semibold">История</h2>
-          <ul className="mt-4 space-y-3">
+          <SectionHeader title="История" />
+          <ul className="mt-4 divide-y rounded-lg border">
             {history.map((g) => (
-              <li key={g.id} className="rounded-md border p-4">
-                <details>
-                  <summary className="cursor-pointer text-sm">
+              <li key={g.id} className="p-4">
+                <details className="group">
+                  <summary className="flex min-h-8 cursor-pointer list-none items-center gap-2 text-sm [&::-webkit-details-marker]:hidden">
+                    <span aria-hidden className="text-muted-foreground transition-transform group-open:rotate-90">›</span>
                     <span className="font-medium">{ARTIFACT_KINDS[g.kind as ArtifactKind] ?? g.kind}</span>
                     <span className="text-muted-foreground"> · {formatDateTime(g.created_at)}{g.prompt ? ` · ${g.prompt.slice(0, 80)}` : ""}</span>
                   </summary>
-                  <div className="mt-3"><AiNote kind="artifact" /><Markdown text={g.output} /></div>
+                  <div className="mt-3 border-t pt-4">
+                    <AiNote kind="artifact" className="mb-3" />
+                    <Markdown text={g.output} />
+                  </div>
                 </details>
               </li>
             ))}
