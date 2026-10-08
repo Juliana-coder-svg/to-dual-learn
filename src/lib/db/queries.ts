@@ -170,6 +170,57 @@ export async function listCoursesByOwner(ownerId: string): Promise<Course[]> {
   );
 }
 
+export interface CourseSummary {
+  course: Course;
+  lessons: number;
+  published: number;
+  materials: number;
+  students: number;
+}
+
+/** Курсы преподавателя со счётчиками для списка: один запрос вместо трёх на каждый курс. */
+export async function listCourseSummariesByOwner(ownerId: string): Promise<CourseSummary[]> {
+  const sb = await getSupabase();
+  const rows = unwrap(
+    await sb
+      .from("courses")
+      .select("*, lessons(status), materials(id), enrollments(user_id)")
+      .eq("owner_id", ownerId)
+      .order("created_at", { ascending: false })
+      .overrideTypes<
+        Array<CourseRow & { lessons: Array<{ status: LessonStatus }>; materials: Array<{ id: string }>; enrollments: Array<{ user_id: string }> }>,
+        { merge: false }
+      >(),
+    "course summaries",
+  );
+  return rows.map(({ lessons, materials, enrollments, ...course }) => ({
+    course,
+    lessons: lessons.length,
+    published: lessons.filter((l) => l.status === "published").length,
+    materials: materials.length,
+    students: enrollments.length,
+  }));
+}
+
+/** Курсы студента с опубликованными уроками (RLS отдаёт студенту только опубликованные). */
+export async function listCoursesForStudentWithLessons(userId: string): Promise<Array<{ course: Course; lessons: LessonSummary[] }>> {
+  const sb = await getSupabase();
+  const rows = unwrap(
+    await sb
+      .from("enrollments")
+      .select(`joined_at, course:courses(*, lessons(${LESSON_SUMMARY_COLUMNS}))`)
+      .eq("user_id", userId)
+      .order("joined_at", { ascending: false })
+      .overrideTypes<Array<{ joined_at: string; course: (CourseRow & { lessons: LessonSummary[] }) | null }>, { merge: false }>(),
+    "courses for student",
+  );
+  return rows.flatMap((r) => {
+    if (!r.course) return [];
+    const { lessons, ...course } = r.course;
+    return [{ course, lessons: lessons.filter((l) => l.status === "published").sort((a, b) => a.position - b.position) }];
+  });
+}
+
 export async function listCoursesForStudent(userId: string): Promise<Course[]> {
   const sb = await getSupabase();
   const rows = unwrap(
@@ -228,6 +279,14 @@ export async function addMaterial(input: { courseId: string; filename: string; k
       .single(),
     "material insert",
   );
+}
+
+/** Сколько материалов у курса, без выборки их текста. */
+export async function countMaterials(courseId: string): Promise<number> {
+  const sb = await getSupabase();
+  const res = await sb.from("materials").select("id", { count: "exact", head: true }).eq("course_id", courseId);
+  check(res, "materials count");
+  return res.count ?? 0;
 }
 
 export async function listMaterials(courseId: string): Promise<Material[]> {
@@ -323,6 +382,17 @@ export async function listLessons(courseId: string, opts: { publishedOnly?: bool
   return rows.map(rowToLesson);
 }
 
+const LESSON_SUMMARY_COLUMNS = "id, course_id, position, title, concept, status";
+export type LessonSummary = Pick<LessonRow, "id" | "course_id" | "position" | "title" | "concept" | "status">;
+
+/** Уроки без контента: для списков, выбора следующего урока и счётчиков. */
+export async function listLessonSummaries(courseId: string, opts: { publishedOnly?: boolean } = {}): Promise<LessonSummary[]> {
+  const sb = await getSupabase();
+  let q = sb.from("lessons").select(LESSON_SUMMARY_COLUMNS).eq("course_id", courseId);
+  if (opts.publishedOnly) q = q.eq("status", "published");
+  return unwrap(await q.order("position"), "lesson summaries");
+}
+
 export async function getLesson(id: string): Promise<Lesson | undefined> {
   const sb = await getSupabase();
   const r = unwrapMaybe(await sb.from("lessons").select("*").eq("id", id).maybeSingle(), "lesson");
@@ -412,6 +482,28 @@ export async function latestSubmissionsForCourse(userId: string, courseId: strin
   const map = new Map<string, Submission>();
   for (const r of rows) if (!map.has(r.lesson_id)) map.set(r.lesson_id, rowToSubmission(r));
   return map;
+}
+
+/** Последний балл студента по каждому уроку, сгруппировано по курсу: course_id → (lesson_id → score).
+ *  Для списка курсов: только три колонки вместо текстов ответов и разборов. */
+export async function latestScoresByCourse(userId: string): Promise<Map<string, Map<string, number>>> {
+  const sb = await getSupabase();
+  const rows = unwrap(
+    await sb
+      .from("submissions")
+      .select("lesson_id, score, created_at, lessons!inner(course_id)")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .overrideTypes<Array<{ lesson_id: string; score: number; created_at: string; lessons: { course_id: string } }>, { merge: false }>(),
+    "scores by course",
+  );
+  const out = new Map<string, Map<string, number>>();
+  for (const r of rows) {
+    let m = out.get(r.lessons.course_id);
+    if (!m) out.set(r.lessons.course_id, (m = new Map()));
+    if (!m.has(r.lesson_id)) m.set(r.lesson_id, r.score);
+  }
+  return out;
 }
 
 /** Сколько уроков курса студент начал сегодня (первая сдача за день). Для лимита «один урок в день». */

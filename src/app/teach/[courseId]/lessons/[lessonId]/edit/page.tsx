@@ -10,10 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 
 export default async function EditLessonPage({ params, searchParams }: { params: Promise<{ courseId: string; lessonId: string }>; searchParams: Promise<{ error?: string }> }) {
   const { courseId, lessonId } = await params;
-  const sp = await searchParams;
-  const ctx = await teacherCourse(courseId);
+  const [sp, ctx, lesson] = await Promise.all([searchParams, teacherCourse(courseId), getLesson(lessonId)]);
   if (!ctx) notFound();
-  const lesson = await getLesson(lessonId);
   if (!lesson || lesson.course_id !== courseId) notFound();
   const c = lesson.content;
 

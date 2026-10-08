@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { teacherCourse } from "@/lib/auth/access";
-import { listLessons, listMaterials } from "@/lib/db/queries";
+import { countMaterials, listLessons } from "@/lib/db/queries";
 import { deleteLessonAction, moveLessonAction, publishAllAction, setLessonStatusAction } from "@/lib/actions/courses";
 import { LessonsGenerator } from "@/components/teach/LessonsGenerator";
 import { ReviewButton } from "@/components/teach/ReviewButton";
@@ -10,10 +10,9 @@ import { Badge } from "@/components/ui/badge";
 
 export default async function LessonsPage({ params }: { params: Promise<{ courseId: string }> }) {
   const { courseId } = await params;
-  const ctx = await teacherCourse(courseId);
+  const [ctx, lessons, materialsCount] = await Promise.all([teacherCourse(courseId), listLessons(courseId), countMaterials(courseId)]);
   if (!ctx) notFound();
-  const lessons = await listLessons(courseId);
-  const hasMaterials = (await listMaterials(courseId)).length > 0;
+  const hasMaterials = materialsCount > 0;
   const drafts = lessons.filter((l) => l.status === "draft").length;
 
   return (

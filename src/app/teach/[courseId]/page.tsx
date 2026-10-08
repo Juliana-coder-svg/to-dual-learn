@@ -8,9 +8,8 @@ import { formatChars, formatDate } from "@/lib/utils/format";
 
 export default async function MaterialsPage({ params }: { params: Promise<{ courseId: string }> }) {
   const { courseId } = await params;
-  const ctx = await teacherCourse(courseId);
+  const [ctx, materials] = await Promise.all([teacherCourse(courseId), listMaterials(courseId)]);
   if (!ctx) notFound();
-  const materials = await listMaterials(courseId);
   const totalChars = materials.reduce((s, m) => s + m.char_count, 0);
 
   return (
