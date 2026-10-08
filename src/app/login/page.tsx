@@ -46,6 +46,11 @@ export default async function LoginPage({
       <p className="mt-2 text-sm text-muted-foreground">
         {magic ? "Пароль не нужен: пришлём на почту ссылку для входа." : "Пароль не нужен: введите почту и имя."} Профиль появится при первом входе.
       </p>
+      {magic ? null : (
+        <p className="mt-4 rounded-md border border-dashed px-3 py-2 text-xs text-muted-foreground">
+          Демонстрационный вход: без подтверждения почты. Не вводите чужие адреса и настоящие данные студентов.
+        </p>
+      )}
       {sp.error ? <p className="mt-4 text-sm text-destructive">{ERRORS[sp.error] ?? ERRORS["1"]}</p> : null}
       <form action={login} className="mt-8 space-y-5">
         {sp.next ? <input type="hidden" name="next" value={sp.next} /> : null}

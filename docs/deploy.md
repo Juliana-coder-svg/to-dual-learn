@@ -23,6 +23,7 @@ CLI спросит область (scope), имя проекта и папку. 
 | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` | Supabase |
 | `SESSION_SECRET` | Длинная случайная строка, если cookie-сессия ещё используется |
 | `NEXT_PUBLIC_SITE_URL` | Публичный адрес, для ссылок в письмах и приглашениях |
+| `ALLOW_DIRECT_LOGIN` | `1` включает вход без письма на стенде для показа. В production без неё вход только по ссылке на почту; адрес `<домен>/auth/callback` должен быть в Redirect URLs проекта Supabase |
 | `CRON_SECRET` | Обязательно. Vercel подставляет его в заголовок cron-запроса к `/api/cron/daily`; без переменной маршрут отвечает 401 и письма не уходят |
 | `RESEND_API_KEY`, `MAIL_FROM` | Письма «урок дня», необязательно |
 
