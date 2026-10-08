@@ -40,6 +40,9 @@ export default async function EditLessonPage({ params, searchParams }: { params:
           <Label htmlFor="flashcards">Карточки для повторения: «вопрос | ответ», по одной на строку</Label>
           <Textarea id="flashcards" name="flashcards" rows={4} defaultValue={c.flashcards.map((f) => `${f.question} | ${f.answer}`).join("\n")} />
         </div>
+        <p className="text-xs text-muted-foreground">
+          Кнопка «Сохранить» отмечает урок как проверенный вами, студенты увидят эту отметку. Если урок потом перепишет методист, отметка снимется.
+        </p>
         <div className="flex gap-3">
           <Button type="submit">Сохранить</Button>
           <Button nativeButton={false} render={<Link href={`/teach/${courseId}/lessons`} />} variant="ghost">Отмена</Button>

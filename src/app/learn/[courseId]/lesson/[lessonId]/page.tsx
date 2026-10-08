@@ -40,6 +40,7 @@ export default async function LessonPage({ params }: { params: Promise<{ courseI
         ) : (
         <LessonPlayer
           lesson={{ id: lesson.id, position: lesson.position, content: lesson.content }}
+          reviewed={Boolean(lesson.reviewed_at)}
           previous={previous ? { answer: previous.answer, feedback: previous.feedback } : null}
           nextHref={nextLesson ? `/learn/${courseId}/lesson/${nextLesson.id}` : `/learn/${courseId}`}
           tone={ctx.course.tone}

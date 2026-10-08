@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Markdown } from "@/components/shared/Markdown";
+import { AiNote } from "@/components/shared/AiNote";
 
 interface Msg { id: string; role: "user" | "assistant"; content: string }
 
@@ -44,7 +45,7 @@ export function CourseChat({ courseId, initial }: { courseId: string; initial: M
         {messages.length === 0 ? <p className="text-sm text-muted-foreground">Пока пусто. Например: «Какие темы есть в материалах?» или «Составь три вопроса для обсуждения по второму разделу».</p> : null}
         {messages.map((m) => (
           <div key={m.id} className={m.role === "user" ? "ml-auto max-w-[85%] rounded-md bg-muted px-4 py-2 text-sm" : "max-w-[95%]"}>
-            {m.role === "user" ? <p className="whitespace-pre-wrap">{m.content}</p> : <Markdown text={m.content} />}
+            {m.role === "user" ? <p className="whitespace-pre-wrap">{m.content}</p> : <><Markdown text={m.content} /><AiNote kind="chat" className="mt-1" /></>}
           </div>
         ))}
         {busy ? <p className="text-sm text-muted-foreground">Читаю материалы…</p> : null}

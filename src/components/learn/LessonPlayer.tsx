@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { AiNote } from "@/components/shared/AiNote";
 import type { Feedback, LessonContent } from "@/lib/lessons/types";
 import { APPEAL_RETRY_HINT, RETRY_HINT, TOO_SHORT, lessonCopy } from "@/lib/lessons/copy";
 import type { Tone } from "@/lib/prompts/tone";
@@ -40,13 +41,15 @@ const ANSWER_COLLAPSE_CHARS = 600;
 
 interface Props {
   lesson: { id: string; position: number; content: LessonContent };
+  /** Сохранял ли преподаватель урок в редакторе после сборки моделью. */
+  reviewed: boolean;
   previous: { answer: string; feedback: Feedback } | null;
   nextHref: string;
   nextLabel: string;
   tone: Tone;
 }
 
-export function LessonPlayer({ lesson, previous, nextHref, nextLabel, tone }: Props) {
+export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, tone }: Props) {
   const router = useRouter();
   const c = lesson.content;
   const t = lessonCopy(tone);
@@ -145,6 +148,7 @@ export function LessonPlayer({ lesson, previous, nextHref, nextLabel, tone }: Pr
       </div>
       <h1 className="mt-2 text-2xl font-semibold tracking-tight">{c.title}</h1>
       <p className="mt-1 text-sm text-muted-foreground">{c.concept}</p>
+      <AiNote kind={reviewed ? "lessonReviewed" : "lessonUnreviewed"} className="mt-2" />
 
       {step === "intro" ? (
         <section className="mt-8 space-y-6">
@@ -194,6 +198,7 @@ export function LessonPlayer({ lesson, previous, nextHref, nextLabel, tone }: Pr
               <ul className="mt-2 space-y-2 text-[15px]">{feedback.improvements.map((s, i) => <li key={i} className="flex gap-3"><span aria-hidden className="text-primary">→</span><span>{s}</span></li>)}</ul>
             </div>
           ) : null}
+          <p className="text-xs text-muted-foreground">Разбор и балл подготовит модель. Ответ увидит преподаватель курса, итоговое решение за ним.</p>
           <div>
             <label htmlFor="answer" className="text-sm font-medium">{t.answerLabel}</label>
             <Textarea id="answer" className="mt-2 min-h-36 md:min-h-40" rows={7} value={answer} onChange={(e) => setAnswer(e.target.value)} disabled={busy} placeholder={t.answerPlaceholder} aria-describedby={!error && answer.trim().length > 0 && answer.trim().length < 10 ? "answer-hint" : undefined} />
@@ -214,6 +219,7 @@ export function LessonPlayer({ lesson, previous, nextHref, nextLabel, tone }: Pr
 
       {step === "feedback" && feedback ? (
         <section className="mt-8 space-y-6">
+          <AiNote kind="feedback" />
           <div className="flex flex-wrap items-center gap-3">
             <h2 data-step-heading tabIndex={-1} className="text-xl font-semibold tracking-tight outline-none">Разбор</h2>
             <Badge className="text-base"><span className="sr-only">Оценка: {feedback.score} из 5</span><span aria-hidden>{feedback.score}/5</span></Badge>

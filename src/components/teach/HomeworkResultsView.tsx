@@ -1,12 +1,14 @@
 import type { HomeworkResults } from "@/lib/lessons/types";
 import { Badge } from "@/components/ui/badge";
 import { DownloadResultsButton } from "./DownloadResultsButton";
+import { AiNote } from "@/components/shared/AiNote";
 
 export function HomeworkResultsView({ results }: { results: HomeworkResults }) {
   return (
     <div className="space-y-4">
       <div className="rounded-md bg-muted p-4 text-sm">
         <div className="flex items-center justify-between gap-2"><div className="font-medium">Сводка для преподавателя</div><DownloadResultsButton results={results} /></div>
+        <AiNote kind="homework" className="mt-1" />
         <p className="mt-1 whitespace-pre-wrap">{results.overview}</p>
       </div>
       <ul className="space-y-3">
