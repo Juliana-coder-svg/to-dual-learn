@@ -118,6 +118,9 @@ export function LessonPlayer({ lesson, previous, nextHref, nextLabel, tone }: Pr
   }
 
   const answerIsLong = answer.length > ANSWER_COLLAPSE_CHARS;
+  // Разборы до 8 октября 2026 сохранены без worked и nextStep: поля могут отсутствовать, а не только быть null.
+  const worked = feedback?.worked?.trim() || null;
+  const prevNextStep = feedback?.nextStep?.trim() || null;
   const topRef = useRef<HTMLElement>(null);
   const firstRender = useRef(true);
   useEffect(() => {
@@ -188,10 +191,11 @@ export function LessonPlayer({ lesson, previous, nextHref, nextLabel, tone }: Pr
               <ul className="space-y-2 pb-3 pt-1 text-[15px]">{c.signals.map((s, i) => <li key={i} className="flex gap-3"><span className="text-primary">→</span><span>{s}</span></li>)}</ul>
             </details>
           ) : null}
-          {feedback && feedback.improvements.length > 0 ? (
+          {feedback && (prevNextStep || feedback.improvements.length > 0) ? (
             <div className="rounded-md border p-4">
               <div className="text-sm font-medium">В прошлый раз: что улучшить · {feedback.score}/5</div>
-              <ul className="mt-2 space-y-2 text-[15px]">{feedback.improvements.map((s, i) => <li key={i} className="flex gap-3"><span aria-hidden className="text-primary">→</span><span>{s}</span></li>)}</ul>
+              {prevNextStep ? <p className="mt-2 text-[15px]"><span className="font-medium">Следующий шаг.</span> {prevNextStep}</p> : null}
+              {feedback.improvements.length > 0 ? <ul className="mt-2 space-y-2 text-[15px]">{feedback.improvements.map((s, i) => <li key={i} className="flex gap-3"><span aria-hidden className="text-primary">→</span><span>{s}</span></li>)}</ul> : null}
             </div>
           ) : null}
           <div>
@@ -220,7 +224,23 @@ export function LessonPlayer({ lesson, previous, nextHref, nextLabel, tone }: Pr
             {progress ? <span className="text-sm text-muted-foreground">+{plural(progress.gained, "балл", "балла", "баллов")} · серия: {plural(progress.streak, "день", "дня", "дней")}</span> : null}
           </div>
           {scoreNote ? <p className="text-sm text-muted-foreground">{scoreNote}</p> : null}
-          <p className="text-lg leading-relaxed">{feedback.summary}</p>
+          {worked || prevNextStep ? (
+            <div className={`grid gap-3 ${worked && prevNextStep ? "md:grid-cols-2" : ""}`}>
+              {worked ? (
+                <section aria-label="Что получилось" className="rounded-md border p-4">
+                  <h3 className="text-xs font-medium uppercase text-muted-foreground">Что получилось</h3>
+                  <p className="mt-1 text-[15px] leading-relaxed">{worked}</p>
+                </section>
+              ) : null}
+              {prevNextStep ? (
+                <section aria-label="Один следующий шаг" className="rounded-md border-l-4 border-primary bg-muted/50 p-4">
+                  <h3 className="text-xs font-medium uppercase text-primary">Один следующий шаг</h3>
+                  <p className="mt-1 text-[15px] leading-relaxed">{prevNextStep}</p>
+                </section>
+              ) : null}
+            </div>
+          ) : null}
+          <p className={worked || prevNextStep ? "leading-relaxed" : "text-lg leading-relaxed"}>{feedback.summary}</p>
           <div>
             <div className="text-sm font-medium">{t.yourAnswer}</div>
             <blockquote className={`mt-1 whitespace-pre-wrap border-l-2 pl-3 text-[15px] leading-relaxed ${answerIsLong && !answerOpen && !appealOpen ? "line-clamp-6" : ""}`}>{answer}</blockquote>
@@ -250,7 +270,7 @@ export function LessonPlayer({ lesson, previous, nextHref, nextLabel, tone }: Pr
               </ul>
             </div>
           ) : null}
-          {feedback.strengths.length > 0 ? <div><div className="text-sm font-medium">Что получилось</div><ul className="mt-1 list-disc pl-5 text-[15px]">{feedback.strengths.map((s, i) => <li key={i}>{s}</li>)}</ul></div> : null}
+          {!worked && feedback.strengths.length > 0 ? <div><div className="text-sm font-medium">Что получилось</div><ul className="mt-1 list-disc pl-5 text-[15px]">{feedback.strengths.map((s, i) => <li key={i}>{s}</li>)}</ul></div> : null}
           {feedback.improvements.length > 0 ? (
             <div className="rounded-md border p-4">
               <div className="text-sm font-medium">Что улучшить</div>

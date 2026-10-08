@@ -57,6 +57,14 @@ export const FeedbackSchema = z.object({
   ),
   strengths: z.array(z.string()).describe("Что сделано хорошо, 1–3 пункта"),
   improvements: z.array(z.string()).describe("Что улучшить, 1–3 конкретных пункта"),
+  worked: z
+    .string()
+    .nullable()
+    .describe("Одна-две фразы студенту: что в ответе получилось, по выполненным критериям, с указанием места в ответе. null, если не выполнен ни один критерий и по задаче в ответе ничего нет"),
+  nextStep: z
+    .string()
+    .nullable()
+    .describe("Один следующий шаг как действие, одно предложение: что сделать в следующем ответе, чтобы закрыть самый важный невыполненный критерий. Не готовый ответ. null только если шаг назвать нельзя"),
   summary: z.string().describe("2–3 предложения итогового разбора от наставника, по-человечески, без штампов"),
 });
 export type Feedback = z.infer<typeof FeedbackSchema>;
