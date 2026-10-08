@@ -11,6 +11,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { plural } from "@/lib/utils/format";
 
+/** Курсы-примеры из content/courses/<slug>.json. */
+const DEMO_COURSES = [
+  { slug: "critical-thinking-ai", title: "Критическое мышление в эпоху ИИ", short: "Критическое мышление", note: "пять уроков для маркетологов и продактов, обращение на «ты»" },
+  { slug: "ai-grading", title: "Как проверять работы студентов с помощью ИИ", short: "Проверка работ с ИИ", note: "шесть уроков для преподавателей, обращение на «вы»" },
+];
+
 export default async function TeachPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   // Профиль и курсы со счётчиками грузятся параллельно: id берём из JWT без похода за профилем.
   const userId = await requireUserId();
@@ -73,13 +79,21 @@ export default async function TeachPage({ searchParams }: { searchParams: Promis
           </Card>
           <Card className="mt-4">
             <CardHeader>
-              <CardTitle>Готовый курс для примера</CardTitle>
-              <CardDescription>«Критическое мышление в эпоху ИИ»: методичка и пять уроков с задачами, уже опубликованы. Чтобы показать формат студентам и коллегам.</CardDescription>
+              <CardTitle>Готовые курсы для примера</CardTitle>
+              <CardDescription>Методичка и уроки с задачами, сразу опубликованы. Для показа и как образец формата.</CardDescription>
             </CardHeader>
-            <CardContent>
-              <form action={createDemoCourseAction.bind(null, "critical-thinking-ai")}>
-                <Button type="submit" variant="outline" className="w-full">Добавить курс-пример</Button>
-              </form>
+            <CardContent className="space-y-4">
+              {DEMO_COURSES.map((d) => (
+                <div key={d.slug} className="space-y-2">
+                  <p className="text-sm">
+                    <span className="font-medium">{d.title}</span>
+                    <span className="text-muted-foreground"> — {d.note}</span>
+                  </p>
+                  <form action={createDemoCourseAction.bind(null, d.slug)}>
+                    <Button type="submit" variant="outline" className="w-full">Добавить «{d.short}»</Button>
+                  </form>
+                </div>
+              ))}
             </CardContent>
           </Card>
         </aside>
