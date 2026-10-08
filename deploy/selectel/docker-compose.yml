@@ -1,0 +1,56 @@
+# Приложение To Dual Learn + HTTPS-прокси. Supabase живёт отдельным compose-проектом в /opt/supabase
+# (см. docs/deploy-selectel.md, шаг 5). Запуск: docker compose --env-file .env up -d --build
+name: todual
+
+services:
+  app:
+    build:
+      context: ../..
+      args:
+        # Вшиваются в клиентский код при сборке; после смены адреса образ надо пересобрать.
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
+    restart: unless-stopped
+    env_file: .env
+    expose:
+      - "3000"
+    extra_hosts:
+      # Сервер ходит в Supabase по публичному адресу API. Эта запись отправляет его сразу на Caddy этой же ВМ
+      # и не зависит от того, пропускает ли облако запросы изнутри к своему публичному IP.
+      - "${API_DOMAIN}:host-gateway"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN}
+      API_DOMAIN: ${API_DOMAIN}
+      SUPABASE_GATEWAY: ${SUPABASE_GATEWAY:-api-gw:8000}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - default
+      - supabase
+
+networks:
+  # Сеть, которую создаёт compose-проект Supabase в /opt/supabase (имя = <папка>_default). Проверить: docker network ls
+  supabase:
+    external: true
+    name: ${SUPABASE_NETWORK:-supabase_default}
+
+volumes:
+  caddy_data:
+  caddy_config:

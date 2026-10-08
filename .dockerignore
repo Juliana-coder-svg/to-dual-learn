@@ -1,0 +1,15 @@
+node_modules
+**/node_modules
+.next
+.next-*
+.git
+.claude
+**/.env*
+!**/.env.example
+**/*.db
+data
+docs
+*.md
+!README.md
+tsconfig.tsbuildinfo
+deploy/selectel/.env
