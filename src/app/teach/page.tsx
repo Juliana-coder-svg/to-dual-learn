@@ -80,7 +80,7 @@ export default async function TeachPage({ searchParams }: { searchParams: Promis
           <Card className="mt-4">
             <CardHeader>
               <CardTitle>Готовые курсы для примера</CardTitle>
-              <CardDescription>Методичка и уроки с задачами, сразу опубликованы. Для показа и как образец формата.</CardDescription>
+              <CardDescription>Методичка и уроки с задачами, уже опубликованы. Чтобы показать формат студентам и коллегам.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {DEMO_COURSES.map((d) => (

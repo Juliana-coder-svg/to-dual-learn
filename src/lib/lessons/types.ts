@@ -7,9 +7,9 @@ export const LessonContentSchema = z.object({
   concept: z.string().describe("Одна фраза: какой навык отрабатывает урок"),
   intro: z.string().describe("2–3 предложения: зачем это нужно, с опорой на материалы курса"),
   keyIdea: z.string().describe("Ключевая мысль урока, 2–4 предложения"),
-  signals: z.array(z.string()).describe("3–5 коротких признаков/правил, которые надо запомнить"),
+  signals: z.array(z.string()).describe("3–5 коротких признаков или правил, которые стоит запомнить"),
   task: z.string().describe("Практическая задача с открытым ответом на новом материале, выполнимая за 3–5 минут"),
-  sample: z.string().nullable().describe("Текст/кейс для разбора в задаче, если нужен; иначе null"),
+  sample: z.string().nullable().describe("Текст или пример для разбора в задаче, если нужен; иначе null"),
   rubricCriteria: z.array(z.string()).describe("3–4 критерия хорошего ответа"),
   keyTakeaway: z.string().describe("Одна фраза, которую студент уносит с собой"),
   flashcards: z
@@ -55,7 +55,7 @@ export const FeedbackSchema = z.object({
       comment: z.string().describe("Одно предложение с цитатой из ответа: почему критерий выполнен или нет"),
     }),
   ),
-  strengths: z.array(z.string()).describe("Что сделано хорошо, 1–3 пункта"),
+  strengths: z.array(z.string()).describe("Что сделано хорошо, 0–3 пункта; при балле 1 список может быть пустым"),
   improvements: z.array(z.string()).describe("Что улучшить, 1–3 конкретных пункта"),
   summary: z.string().describe("2–3 предложения итогового разбора от наставника, по-человечески, без штампов"),
 });

@@ -156,10 +156,16 @@ export async function clarifyingQuestions(ctx: CallContext, course: Course, mate
 }
 
 /** Второй проход: методист-ревьюер сверяет уроки с материалами и правит их. */
-export async function reviewLessons(ctx: CallContext, course: Course, materials: Material[], lessons: LessonContent[]): Promise<LessonReview> {
+export async function reviewLessons(
+  ctx: CallContext,
+  course: Course,
+  materials: Material[],
+  lessons: LessonContent[],
+  opts: { existingCount?: number } = {},
+): Promise<LessonReview> {
   if (isDemoMode()) return demo.review(lessons);
   const result = await completeJson("review", ctx, LessonReviewSchema, {
-    task: reviewLessonsPrompt({ courseTitle: course.title, audience: course.audience, outcomes: course.outcomes, tone: course.tone, lessons }),
+    task: reviewLessonsPrompt({ courseTitle: course.title, audience: course.audience, outcomes: course.outcomes, tone: course.tone, lessons, existingCount: opts.existingCount }),
     materials: materialsBlock(materials),
     messages: [{ role: "user", content: `Проверь ${lessons.length} уроков и верни исправленные.` }],
     maxTokens: 32000,
