@@ -1,9 +1,15 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import type { User } from "@/lib/db/queries";
 import { logout, switchRole } from "@/lib/actions/auth";
+import { currentUserConsented } from "@/lib/auth/session";
 import { Button } from "@/components/ui/button";
 
-export function AppShell({ user, children }: { user: User; children: React.ReactNode }) {
+/** Каркас страниц с сессией. Без действующего согласия на обработку данных (старая сессия,
+ *  новая версия документов) уводит на /consent; requireConsent={false} только для «Моих данных»,
+ *  где человек без согласия должен иметь возможность удалить аккаунт. */
+export async function AppShell({ user, requireConsent = true, children }: { user: User; requireConsent?: boolean; children: React.ReactNode }) {
+  if (requireConsent && !(await currentUserConsented())) redirect("/consent");
   const isTeacher = user.role === "teacher";
   return (
     <div className="flex min-h-screen flex-col">
