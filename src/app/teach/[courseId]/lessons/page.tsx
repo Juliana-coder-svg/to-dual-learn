@@ -55,7 +55,7 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="eyebrow">Урок {l.position}</span>
+                      <span className="type-counter text-primary">{String(l.position).padStart(2, "0")}</span>
                       <Badge variant={l.status === "published" ? "default" : "secondary"}>{l.status === "published" ? "Опубликован" : "Черновик"}</Badge>
                       <Badge
                         variant={l.reviewed_at ? "outline" : "soft"}
@@ -64,7 +64,7 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
                         {l.reviewed_at ? `Проверен ${formatDateTime(l.reviewed_at)}` : "Не проверен"}
                       </Badge>
                     </div>
-                    <h3 className="mt-2 text-base font-semibold">{l.title}</h3>
+                    <h3 className="mt-3 type-heading">{l.title}</h3>
                     <p className="text-sm text-muted-foreground">{l.concept}</p>
                     {l.reviewed_at ? null : <AiNote kind="teacherDraft" className="mt-2" />}
                     {l.review ? (
@@ -77,7 +77,8 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
                       )
                     ) : null}
                   </div>
-                  <div className="flex flex-wrap items-center gap-1">
+                  {/* До lg действия занимают отдельную строку: иначе кнопки сжимают заголовок урока в узкую колонку. */}
+                  <div className="flex basis-full flex-wrap items-center gap-1 lg:basis-auto">
                     <form action={moveLessonAction.bind(null, courseId, l.id, -1)}><Button type="submit" variant="ghost" size="icon-sm" disabled={i === 0} aria-label="Выше">↑</Button></form>
                     <form action={moveLessonAction.bind(null, courseId, l.id, 1)}><Button type="submit" variant="ghost" size="icon-sm" disabled={i === lessons.length - 1} aria-label="Ниже">↓</Button></form>
                     <Button nativeButton={false} render={<Link href={`/teach/${courseId}/lessons/${l.id}/edit`} />} variant="outline" size="sm">Править</Button>
