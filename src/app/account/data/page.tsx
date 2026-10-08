@@ -13,7 +13,7 @@ import { plural } from "@/lib/utils/format";
 
 const ERRORS: Record<string, string> = {
   confirm: "Почта не совпадает. Введите адрес, под которым вы вошли.",
-  courses: "Пока на ваших курсах есть студенты, удалить аккаунт нельзя: пропали бы их ответы.",
+  courses: "Пока на ваших курсах есть студенты, удалить аккаунт нельзя: пропали бы их ответы. Напишите нам, решим вручную.",
   delete: "Не удалось удалить аккаунт. Попробуйте ещё раз через минуту или напишите нам.",
 };
 
@@ -37,8 +37,8 @@ export default async function MyDataPage({ searchParams }: { searchParams: Promi
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Мои данные</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Мы храним вашу почту, имя, роль, ответы на задания с разбором, карточки для повторения и записи на курсы.
-            У преподавателя ещё материалы, уроки, документы, вопросы по материалам и проверки работ. Подробнее в{" "}
+            Мы храним вашу почту, имя, роль, ответы на задачи с разборами, карточки для повторения и записи на курсы.
+            Если вы преподаватель, ещё храним материалы, уроки, документы, вопросы по материалам и проверки работ. Подробнее в{" "}
             <Link href="/legal/privacy" className="underline hover:text-foreground">Политике</Link>.
           </p>
         </div>
@@ -73,7 +73,7 @@ export default async function MyDataPage({ searchParams }: { searchParams: Promi
             <form action={setMarketingConsentAction} className="flex items-center justify-between gap-3 border-t pt-4 text-sm">
               <span>Письма о программах To Dual: {marketingOn ? "включены" : "выключены"}</span>
               <input type="hidden" name="enabled" value={marketingOn ? "0" : "1"} />
-              <Button type="submit" variant="outline" size="sm">{marketingOn ? "Отозвать согласие" : "Разрешить"}</Button>
+              <Button type="submit" variant="outline" size="sm">{marketingOn ? "Отозвать согласие" : "Дать согласие"}</Button>
             </form>
           </CardContent>
         </Card>
@@ -82,9 +82,9 @@ export default async function MyDataPage({ searchParams }: { searchParams: Promi
           <CardHeader>
             <CardTitle>Удалить аккаунт</CardTitle>
             <CardDescription>
-              Удаление отзывает согласие на обработку. Из рабочей базы пропадут профиль, ответы, карточки, записи на курсы
+              Вместе с аккаунтом вы отзовёте согласие на обработку данных. Из рабочей базы сразу пропадут профиль, ответы, карточки, записи на курсы
               {user.role === "teacher" || blockingCourses.length > 0 ? ", а также ваши курсы без студентов вместе с материалами и уроками" : ""}.
-              Из резервных копий данные исчезнут по мере их обновления.
+              Из резервных копий данные исчезнут, когда копии обновятся.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -94,7 +94,7 @@ export default async function MyDataPage({ searchParams }: { searchParams: Promi
                 <ul className="list-disc pl-5 text-muted-foreground">
                   {blockingCourses.map((c) => <li key={c.id}>{c.title}: {plural(c.students, "студент", "студента", "студентов")}</li>)}
                 </ul>
-                <p className="text-muted-foreground">Отчислите студентов на странице курса или напишите нам: передачу курса другому преподавателю мы добавим позже.</p>
+                <p className="text-muted-foreground">Отчислить студентов или передать курс другому преподавателю в интерфейсе пока нельзя. Напишите нам, решим вручную.</p>
               </div>
             ) : (
               <form action={deleteAccountAction} className="space-y-3">

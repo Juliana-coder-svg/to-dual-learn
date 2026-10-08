@@ -43,7 +43,7 @@ export default async function EditLessonPage({ params, searchParams }: { params:
           <Textarea id="flashcards" name="flashcards" rows={4} defaultValue={c.flashcards.map((f) => `${f.question} | ${f.answer}`).join("\n")} />
         </div>
         <p className="text-xs text-muted-foreground">
-          Сохранение отмечает урок как проверенный вами: студенты увидят это на уроке. Если потом урок перепишет методист, отметка снимется.
+          Кнопка «Сохранить» отмечает урок как проверенный вами, студенты увидят эту отметку. Если урок потом перепишет методист, отметка снимется.
         </p>
         <div className="flex gap-3">
           <Button type="submit">Сохранить</Button>

@@ -43,7 +43,7 @@ export default async function LegalPage({ params }: { params: Promise<{ doc: str
       <h1 className="mt-6 text-2xl font-semibold tracking-tight">{document.title}</h1>
       <p className="mt-2 text-sm text-muted-foreground">Версия {document.version}.</p>
       <p className="mt-4 rounded-md border border-dashed px-3 py-2 text-xs text-muted-foreground">
-        Проект документа. Реквизиты оператора в квадратных скобках появятся после проверки юристом.
+        Проект документа. Реквизиты оператора пока стоят в квадратных скобках, впишем их после проверки юристом.
       </p>
       <article className="mt-6">
         <Markdown text={document.body} />

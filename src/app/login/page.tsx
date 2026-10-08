@@ -13,7 +13,7 @@ const ERRORS: Record<string, string> = {
   send: "Не удалось войти. Попробуйте ещё раз через минуту.",
   email: "На этот адрес письмо не уйдёт. Проверьте, нет ли опечатки.",
   link: "Ссылка не сработала или устарела. Запросите новую.",
-  consent: "Без согласия на обработку данных войти нельзя: без него сервис не может хранить ваши ответы.",
+  consent: "Отметьте согласие на обработку данных: без него сервис не сможет хранить ваши ответы.",
 };
 
 export default async function LoginPage({
@@ -50,12 +50,12 @@ export default async function LoginPage({
       </p>
       {magic ? null : (
         <p className="mt-4 rounded-md border border-dashed px-3 py-2 text-xs text-muted-foreground">
-          Демонстрационный вход: без подтверждения почты. Не вводите чужие адреса и настоящие данные студентов.
+          Демонстрационная версия: почту при входе не проверяем, поэтому не вводите чужие адреса и настоящие данные студентов.
         </p>
       )}
       {sp.deleted ? (
         <p className="mt-4 rounded-md border px-3 py-2 text-sm">
-          Аккаунт удалён. Из рабочей базы данные удалены сразу, из резервных копий исчезнут по мере их обновления.
+          Аккаунт и данные удалены из рабочей базы. Из резервных копий данные исчезнут, когда копии обновятся.
         </p>
       ) : null}
       {sp.error ? <p className="mt-4 text-sm text-destructive">{ERRORS[sp.error] ?? ERRORS["1"]}</p> : null}
@@ -70,8 +70,8 @@ export default async function LoginPage({
           <Input id="name" name="name" required minLength={2} placeholder="Как к вам обращаться" />
         </div>
         <p className="text-xs text-muted-foreground">
-          Мы храним вашу почту, имя и ответы, чтобы вы могли учиться. Текст ответа обрабатывает нейросеть.
-          Не пишите в ответах данные других людей и то, что не хотите передавать.
+          Мы храним вашу почту, имя и ответы, чтобы вы могли учиться. Для разбора ответы читает ИИ,
+          поэтому не пишите в них данные других людей и то, что не хотите передавать.
         </p>
         <fieldset className="space-y-2">
           <legend className="text-sm font-medium">Роль</legend>

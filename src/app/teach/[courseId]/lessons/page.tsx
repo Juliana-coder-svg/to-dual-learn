@@ -61,7 +61,7 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
                   </div>
                   <div className="flex flex-wrap items-center gap-1">
                     <Badge variant={l.status === "published" ? "default" : "secondary"}>{l.status === "published" ? "Опубликован" : "Черновик"}</Badge>
-                    <Badge variant="outline" title={l.reviewed_at ? "Вы сохранили урок в редакторе" : "Урок собрала модель, вы его ещё не сохраняли в редакторе"}>{l.reviewed_at ? `Проверен ${formatDateTime(l.reviewed_at)}` : "Не проверен"}</Badge>
+                    <Badge variant="outline" title={l.reviewed_at ? "Вы сохранили урок в редакторе. Студенты видят, что урок проверен." : "Урок собрала модель. Чтобы отметить его проверенным, нажмите «Править» и сохраните."}>{l.reviewed_at ? `Проверен ${formatDateTime(l.reviewed_at)}` : "Не проверен"}</Badge>
                     <form action={moveLessonAction.bind(null, courseId, l.id, -1)}><Button type="submit" variant="ghost" size="sm" disabled={i === 0} aria-label="Выше">↑</Button></form>
                     <form action={moveLessonAction.bind(null, courseId, l.id, 1)}><Button type="submit" variant="ghost" size="sm" disabled={i === lessons.length - 1} aria-label="Ниже">↓</Button></form>
                     <Button nativeButton={false} render={<Link href={`/teach/${courseId}/lessons/${l.id}/edit`} />} variant="outline" size="sm">Править</Button>

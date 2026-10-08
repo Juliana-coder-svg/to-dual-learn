@@ -9,9 +9,9 @@ export function ConsentFields({ showMarketing = true }: { showMarketing?: boolea
       <label className="flex cursor-pointer items-start gap-3">
         <input type="checkbox" name="consent_processing" value="1" required className="mt-1" />
         <span>
-          Я согласен(на) на обработку моих данных для работы сервиса:{" "}
-          <Link href="/legal/consent" target="_blank" className="underline hover:text-primary">Согласие</Link> и{" "}
-          <Link href="/legal/privacy" target="_blank" className="underline hover:text-primary">Политика</Link>.
+          Соглашаюсь на обработку моих данных для работы сервиса на условиях{" "}
+          <Link href="/legal/consent" target="_blank" className="underline hover:text-primary">Согласия</Link> и{" "}
+          <Link href="/legal/privacy" target="_blank" className="underline hover:text-primary">Политики</Link>.
         </span>
       </label>
       {showMarketing ? (
@@ -19,7 +19,7 @@ export function ConsentFields({ showMarketing = true }: { showMarketing?: boolea
           <input type="checkbox" name="consent_marketing" value="1" className="mt-1" />
           <span>
             Присылайте мне письма о программах To Dual.{" "}
-            <span className="text-muted-foreground">Необязательно, отозвать можно в любой момент.</span>
+            <span className="text-muted-foreground">Необязательно. Согласие можно отозвать в любой момент в разделе «Мои данные».</span>
           </span>
         </label>
       ) : null}

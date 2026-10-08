@@ -14,16 +14,16 @@ export default async function ConsentPage({ searchParams }: { searchParams: Prom
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-16">
       <h1 className="text-2xl font-semibold tracking-tight">Согласие на обработку данных</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        {user.name}, чтобы продолжить, подтвердите согласие: без него сервис не может хранить вашу почту, имя и ответы.
+        {user.name}, чтобы продолжить, отметьте согласие ниже: без него сервис не может хранить вашу почту, имя и ответы.
       </p>
-      {sp.error ? <p className="mt-4 text-sm text-destructive">Без согласия на обработку данных продолжить нельзя.</p> : null}
+      {sp.error ? <p className="mt-4 text-sm text-destructive">Отметьте согласие на обработку данных, чтобы продолжить.</p> : null}
       <form action={acceptConsentAction} className="mt-8 space-y-5">
         {next ? <input type="hidden" name="next" value={next} /> : null}
         <ConsentFields />
         <Button type="submit" className="w-full">Продолжить</Button>
       </form>
       <form action={logout} className="mt-4">
-        <Button type="submit" variant="ghost" size="sm" className="w-full">Не согласен(на), выйти</Button>
+        <Button type="submit" variant="ghost" size="sm" className="w-full">Выйти без согласия</Button>
       </form>
     </main>
   );

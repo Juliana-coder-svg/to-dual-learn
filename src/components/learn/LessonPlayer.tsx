@@ -115,7 +115,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel }
             <p className="mt-1 text-lg leading-relaxed">{c.task}</p>
           </div>
           {c.sample ? <blockquote className="whitespace-pre-wrap rounded-md border bg-muted/50 p-4 text-[15px] leading-relaxed">{c.sample}</blockquote> : null}
-          <p className="text-xs text-muted-foreground">Ваш ответ увидит преподаватель курса. Балл и разбор готовит модель, итоговое решение принимает преподаватель.</p>
+          <p className="text-xs text-muted-foreground">Разбор и балл подготовит модель. Ответ увидит преподаватель курса, итоговое решение за ним.</p>
           <Textarea rows={7} value={answer} onChange={(e) => setAnswer(e.target.value)} placeholder="Ваш ответ. Конкретика важнее объёма." />
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
           <div className="flex gap-3">
