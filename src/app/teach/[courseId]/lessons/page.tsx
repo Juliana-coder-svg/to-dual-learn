@@ -2,7 +2,17 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { teacherCourse } from "@/lib/auth/access";
 import { countMaterials, listLessons } from "@/lib/db/queries";
-import { deleteLessonAction, moveLessonAction, publishAllAction, setLessonStatusAction } from "@/lib/actions/courses";
+import {
+  acceptProposalAction,
+  decideAllProposalsAction,
+  deleteLessonAction,
+  moveLessonAction,
+  publishAllAction,
+  rejectProposalAction,
+  setLessonStatusAction,
+} from "@/lib/actions/courses";
+import { lessonContentChanges } from "@/lib/lessons/diff";
+import { plural } from "@/lib/utils/format";
 import { LessonsGenerator } from "@/components/teach/LessonsGenerator";
 import { ReviewButton } from "@/components/teach/ReviewButton";
 import { Button } from "@/components/ui/button";
@@ -14,6 +24,7 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
   if (!ctx) notFound();
   const hasMaterials = materialsCount > 0;
   const drafts = lessons.filter((l) => l.status === "draft").length;
+  const proposals = lessons.filter((l) => l.review?.proposal).length;
 
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
@@ -32,6 +43,15 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
             ) : null}
           </div>
         </div>
+        {proposals > 0 ? (
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-md border border-primary/40 p-3 text-sm">
+            <span>Методист предлагает правки в {plural(proposals, "уроке", "уроках", "уроках")}. Посмотрите под каждым уроком, что меняется и почему.</span>
+            <div className="flex gap-2">
+              <form action={decideAllProposalsAction.bind(null, courseId, "accepted")}><Button type="submit" size="sm">Принять все</Button></form>
+              <form action={decideAllProposalsAction.bind(null, courseId, "rejected")}><Button type="submit" size="sm" variant="outline">Оставить всё как есть</Button></form>
+            </div>
+          </div>
+        ) : null}
         {lessons.length === 0 ? (
           <p className="mt-6 rounded-md border border-dashed p-6 text-sm text-muted-foreground">
             Уроков пока нет. {hasMaterials ? "Соберите первые уроки справа." : "Сначала загрузите материалы на вкладке «Материалы»."}
@@ -45,13 +65,16 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
                     <div className="text-xs text-muted-foreground">Урок {l.position}</div>
                     <div className="font-medium">{l.title}</div>
                     <div className="text-sm text-muted-foreground">{l.concept}</div>
-                    {l.review ? (
+                    {l.review && !l.review.proposal ? (
                       l.review.flags.length > 0 ? (
                         <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
                           {l.review.flags.map((f, j) => <li key={j} className="flex gap-2"><span className="text-primary">!</span><span>{f}</span></li>)}
+                          {l.review.decision ? <li>{l.review.decision === "accepted" ? "Правки методиста приняты." : "Правки методиста отклонены, оставлен ваш текст."}</li> : null}
                         </ul>
                       ) : (
-                        <div className="mt-2 text-xs text-muted-foreground">Методист: замечаний нет{l.review.changed ? ", текст подправлен" : ""}.</div>
+                        <div className="mt-2 text-xs text-muted-foreground">
+                          Методист: замечаний нет{l.review.decision === "accepted" ? ", правки приняты" : l.review.decision === "rejected" ? ", правки отклонены" : l.review.changed ? ", текст подправлен при сборке" : ""}.
+                        </div>
                       )
                     ) : null}
                   </div>
@@ -68,6 +91,35 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
                     </form>
                   </div>
                 </div>
+                {l.review?.proposal ? (
+                  <div className="mt-3 rounded-md border border-primary/40 p-3 text-sm">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <div className="font-medium">Методист предлагает правки</div>
+                        {l.review.flags.length > 0 ? (
+                          <ul className="mt-1 space-y-1 text-xs text-muted-foreground">
+                            {l.review.flags.map((f, j) => <li key={j} className="flex gap-2"><span className="text-primary">!</span><span>{f}</span></li>)}
+                          </ul>
+                        ) : null}
+                      </div>
+                      <div className="flex gap-2">
+                        <form action={acceptProposalAction.bind(null, courseId, l.id)}><Button type="submit" size="sm">Принять</Button></form>
+                        <form action={rejectProposalAction.bind(null, courseId, l.id)}><Button type="submit" size="sm" variant="outline">Оставить как есть</Button></form>
+                      </div>
+                    </div>
+                    <dl className="mt-3 space-y-3">
+                      {lessonContentChanges(l.content, l.review.proposal).map((c) => (
+                        <div key={c.key}>
+                          <dt className="font-medium">{c.label}</dt>
+                          <dd className="mt-1 grid gap-2 sm:grid-cols-2">
+                            <div className="whitespace-pre-wrap rounded-md bg-muted p-2 text-muted-foreground"><span className="text-xs uppercase">Сейчас</span><br />{c.before || "—"}</div>
+                            <div className="whitespace-pre-wrap rounded-md border border-primary/40 p-2"><span className="text-xs uppercase">Предлагается</span><br />{c.after || "—"}</div>
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </div>
+                ) : null}
                 <details className="mt-3 text-sm">
                   <summary className="cursor-pointer text-muted-foreground">Содержимое урока</summary>
                   <div className="mt-3 space-y-3">

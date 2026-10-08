@@ -26,7 +26,7 @@ import {
   type Feedback,
   type HomeworkResults,
   type LessonContent,
-  type LessonReviewNote,
+  type LessonReviewRecord,
 } from "@/lib/lessons/types";
 
 /** Все запросы идут от имени текущего пользователя (cookie-сессия Supabase):
@@ -46,7 +46,7 @@ export type { CalibrationSampleRow };
 
 export interface Lesson extends Omit<LessonRow, "content" | "review"> {
   content: LessonContent;
-  review: LessonReviewNote | null;
+  review: LessonReviewRecord | null;
 }
 
 export interface Submission extends Omit<SubmissionRow, "feedback"> {
@@ -311,7 +311,7 @@ function rowToLesson(r: LessonRow): Lesson {
     status: r.status,
     created_at: r.created_at,
     content: normalizeLessonContent(r.content),
-    review: r.review ? (r.review as unknown as LessonReviewNote) : null,
+    review: r.review ? (r.review as unknown as LessonReviewRecord) : null,
   };
 }
 
@@ -327,7 +327,7 @@ export async function updateLessonContent(id: string, courseId: string, content:
   );
 }
 
-export async function setLessonReview(id: string, courseId: string, note: LessonReviewNote | null): Promise<void> {
+export async function setLessonReview(id: string, courseId: string, note: LessonReviewRecord | null): Promise<void> {
   const sb = await getSupabase();
   check(
     await sb
@@ -337,6 +337,41 @@ export async function setLessonReview(id: string, courseId: string, note: Lesson
       .eq("course_id", courseId),
     "lesson review",
   );
+}
+
+async function getLessonReview(id: string, courseId: string): Promise<LessonReviewRecord | null> {
+  const sb = await getSupabase();
+  const row = unwrap(await sb.from("lessons").select("review").eq("id", id).eq("course_id", courseId).maybeSingle(), "lesson review");
+  return row?.review ? (row.review as unknown as LessonReviewRecord) : null;
+}
+
+/** Преподаватель принял правку методиста: предложенный текст становится текущим, заметка остаётся с пометкой. */
+export async function acceptLessonProposal(id: string, courseId: string): Promise<boolean> {
+  const review = await getLessonReview(id, courseId);
+  if (!review?.proposal) return false;
+  await updateLessonContent(id, courseId, review.proposal);
+  await setLessonReview(id, courseId, { ...review, title: review.proposal.title, proposal: null, decision: "accepted" });
+  return true;
+}
+
+/** Преподаватель оставил свой текст: предложение убираем, заметку и замечания сохраняем. */
+export async function rejectLessonProposal(id: string, courseId: string): Promise<boolean> {
+  const review = await getLessonReview(id, courseId);
+  if (!review?.proposal) return false;
+  await setLessonReview(id, courseId, { ...review, proposal: null, decision: "rejected" });
+  return true;
+}
+
+/** Принять или отклонить все предложения методиста по курсу разом. Возвращает число обработанных уроков. */
+export async function decideAllLessonProposals(courseId: string, decision: "accepted" | "rejected"): Promise<number> {
+  const lessons = await listLessons(courseId);
+  let n = 0;
+  for (const l of lessons) {
+    if (!l.review?.proposal) continue;
+    const done = decision === "accepted" ? await acceptLessonProposal(l.id, courseId) : await rejectLessonProposal(l.id, courseId);
+    if (done) n += 1;
+  }
+  return n;
 }
 
 /** Меняет урок местами с соседом: direction -1 — вверх, +1 — вниз. */
