@@ -4,6 +4,8 @@ import type {
   AiCallRow,
   CalibrationSampleRow,
   ChatMessageRow,
+  ConsentKind,
+  ConsentRow,
   CourseRow,
   FlashcardRow,
   GenerationRow,
@@ -34,7 +36,7 @@ import {
  *  Проверки в src/lib/auth/access.ts остаются как второй слой.
  *  Фоновые задачи без пользователя (крон) оборачивают вызовы в runAsService(). */
 
-export type { Role, LessonStatus } from "@/lib/supabase/types";
+export type { Role, LessonStatus, ConsentKind, ConsentRow } from "@/lib/supabase/types";
 
 export type User = ProfileRow;
 export type Course = CourseRow;
@@ -107,6 +109,54 @@ export async function markDigestSent(id: string): Promise<void> {
 export async function updateUserProgress(id: string, p: { streak: number; last_lesson_at: string; xp: number }): Promise<void> {
   const sb = await getSupabase();
   check(await sb.from("profiles").update(p).eq("id", id), "progress update");
+}
+
+// ---------- consents ----------
+
+export interface ConsentInput {
+  kind: ConsentKind;
+  version: string;
+}
+
+/** Записывает согласия, которых у пользователя ещё нет в этой версии. accepted_at ставит база
+ *  (на колонку нет гранта), поэтому передаём только user_id, kind и version. */
+export async function ensureConsents(userId: string, items: ConsentInput[]): Promise<void> {
+  if (items.length === 0) return;
+  const sb = await getSupabase();
+  const existing = unwrap(
+    await sb.from("consents").select("kind, version").eq("user_id", userId).is("withdrawn_at", null),
+    "consents",
+  );
+  const have = new Set(existing.map((c) => `${c.kind}:${c.version}`));
+  const rows = items.filter((i) => !have.has(`${i.kind}:${i.version}`)).map((i) => ({ user_id: userId, kind: i.kind, version: i.version }));
+  if (rows.length === 0) return;
+  check(await sb.from("consents").insert(rows), "consents insert");
+}
+
+export async function listConsents(userId: string): Promise<ConsentRow[]> {
+  const sb = await getSupabase();
+  return unwrap(
+    await sb.from("consents").select("*").eq("user_id", userId).order("accepted_at", { ascending: false }),
+    "consents list",
+  );
+}
+
+/** Есть ли действующее (не отозванное) согласие этого вида в этой версии. */
+export async function hasActiveConsent(userId: string, kind: ConsentKind, version: string): Promise<boolean> {
+  const sb = await getSupabase();
+  const row = unwrapMaybe(
+    await sb.from("consents").select("id").eq("user_id", userId).eq("kind", kind).eq("version", version).is("withdrawn_at", null).limit(1).maybeSingle(),
+    "consent check",
+  );
+  return Boolean(row);
+}
+
+export async function withdrawConsent(userId: string, kind: ConsentKind): Promise<void> {
+  const sb = await getSupabase();
+  check(
+    await sb.from("consents").update({ withdrawn_at: nowIso() }).eq("user_id", userId).eq("kind", kind).is("withdrawn_at", null),
+    "consent withdraw",
+  );
 }
 
 // ---------- courses ----------
