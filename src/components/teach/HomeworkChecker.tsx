@@ -81,6 +81,7 @@ export function HomeworkChecker({ courseId }: { courseId: string }) {
               <Label htmlFor="works">Работы студентов</Label>
               <Textarea id="works" rows={12} required value={works} onChange={(e) => setWorks(e.target.value)} placeholder={EXAMPLE} className="font-mono text-xs" />
               <p className="text-xs text-muted-foreground">Каждая работа начинается со строки <code>## Имя студента</code>. Или загрузите таблицу CSV из вашей системы обучения с колонками «имя» и «ответ»:</p>
+              <p className="text-xs text-muted-foreground">Работы читает модель. Если передавать работы студентов вам не разрешено, замените фамилии на номера.</p>
               <input type="file" accept=".csv,text/csv" onChange={importCsv} className="block w-full text-xs text-muted-foreground file:mr-3 file:rounded-md file:border file:bg-background file:px-3 file:py-1 file:text-xs" />
             </div>
             <div className="lg:col-span-2">

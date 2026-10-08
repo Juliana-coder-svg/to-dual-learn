@@ -32,6 +32,7 @@ export default async function LessonPage({ params }: { params: Promise<{ courseI
         ) : (
         <LessonPlayer
           lesson={{ id: lesson.id, position: lesson.position, content: lesson.content }}
+          reviewed={lesson.reviewed_at !== null}
           previous={previous ? { answer: previous.answer, feedback: previous.feedback } : null}
           nextHref={nextLesson ? `/learn/${courseId}/lesson/${nextLesson.id}` : `/learn/${courseId}`}
           nextLabel={nextLesson ? `Следующий урок: ${nextLesson.title}` : "К списку уроков"}

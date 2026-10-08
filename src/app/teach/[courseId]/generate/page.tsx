@@ -4,6 +4,7 @@ import { listGenerations, listMaterials } from "@/lib/db/queries";
 import { ARTIFACT_KINDS, type ArtifactKind } from "@/lib/lessons/types";
 import { ArtifactGenerator } from "@/components/teach/ArtifactGenerator";
 import { Markdown } from "@/components/shared/Markdown";
+import { AiNote } from "@/components/shared/AiNote";
 import { formatDateTime } from "@/lib/utils/format";
 
 export default async function GeneratePage({ params }: { params: Promise<{ courseId: string }> }) {
@@ -27,7 +28,7 @@ export default async function GeneratePage({ params }: { params: Promise<{ cours
                     <span className="font-medium">{ARTIFACT_KINDS[g.kind as ArtifactKind] ?? g.kind}</span>
                     <span className="text-muted-foreground"> · {formatDateTime(g.created_at)}{g.prompt ? ` · ${g.prompt.slice(0, 80)}` : ""}</span>
                   </summary>
-                  <div className="mt-3"><Markdown text={g.output} /></div>
+                  <div className="mt-3"><AiNote kind="artifact" /><Markdown text={g.output} /></div>
                 </details>
               </li>
             ))}

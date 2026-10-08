@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/auth/session";
 import { listUserSubmissions } from "@/lib/db/queries";
 import { AppShell } from "@/components/shared/AppShell";
 import { Badge } from "@/components/ui/badge";
+import { AiNote } from "@/components/shared/AiNote";
 import { formatDateTime } from "@/lib/utils/format";
 
 export default async function HistoryPage() {
@@ -28,6 +29,7 @@ export default async function HistoryPage() {
                   <Badge>{s.score}/5</Badge>
                 </div>
                 <p className="mt-2 text-muted-foreground">{s.feedback.summary}</p>
+                <AiNote kind="feedback" className="mt-1" />
                 <details className="mt-2">
                   <summary className="cursor-pointer text-muted-foreground">Мой ответ{s.objection ? " и возражение" : ""}</summary>
                   <blockquote className="mt-2 whitespace-pre-wrap border-l-2 pl-3">{s.answer}</blockquote>

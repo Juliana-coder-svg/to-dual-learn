@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Markdown } from "@/components/shared/Markdown";
+import { AI_LABELS, AiNote } from "@/components/shared/AiNote";
 import { ARTIFACT_KINDS, type ArtifactKind } from "@/lib/lessons/types";
 
 export function ArtifactGenerator({ courseId, disabled }: { courseId: string; disabled: boolean }) {
@@ -69,8 +70,9 @@ export function ArtifactGenerator({ courseId, disabled }: { courseId: string; di
       <div className="min-h-40 rounded-md border p-5">
         {result ? (
           <>
-            <div className="mb-3 flex justify-end">
-              <Button variant="outline" size="sm" onClick={() => navigator.clipboard.writeText(result)}>Скопировать</Button>
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <AiNote kind="artifact" />
+              <Button variant="outline" size="sm" onClick={() => navigator.clipboard.writeText(`${result}\n\n${AI_LABELS.artifact}`)}>Скопировать</Button>
             </div>
             <Markdown text={result} />
           </>

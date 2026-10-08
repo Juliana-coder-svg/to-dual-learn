@@ -7,6 +7,8 @@ import { LessonsGenerator } from "@/components/teach/LessonsGenerator";
 import { ReviewButton } from "@/components/teach/ReviewButton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { AiNote } from "@/components/shared/AiNote";
+import { formatDateTime } from "@/lib/utils/format";
 
 export default async function LessonsPage({ params }: { params: Promise<{ courseId: string }> }) {
   const { courseId } = await params;
@@ -46,6 +48,7 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
                     <div className="text-xs text-muted-foreground">Урок {l.position}</div>
                     <div className="font-medium">{l.title}</div>
                     <div className="text-sm text-muted-foreground">{l.concept}</div>
+                    {l.reviewed_at ? null : <AiNote kind="teacherDraft" className="mt-1" />}
                     {l.review ? (
                       l.review.flags.length > 0 ? (
                         <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
@@ -58,6 +61,7 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
                   </div>
                   <div className="flex flex-wrap items-center gap-1">
                     <Badge variant={l.status === "published" ? "default" : "secondary"}>{l.status === "published" ? "Опубликован" : "Черновик"}</Badge>
+                    <Badge variant="outline" title={l.reviewed_at ? "Вы сохранили урок в редакторе" : "Урок собрала модель, вы его ещё не сохраняли в редакторе"}>{l.reviewed_at ? `Проверен ${formatDateTime(l.reviewed_at)}` : "Не проверен"}</Badge>
                     <form action={moveLessonAction.bind(null, courseId, l.id, -1)}><Button type="submit" variant="ghost" size="sm" disabled={i === 0} aria-label="Выше">↑</Button></form>
                     <form action={moveLessonAction.bind(null, courseId, l.id, 1)}><Button type="submit" variant="ghost" size="sm" disabled={i === lessons.length - 1} aria-label="Ниже">↓</Button></form>
                     <Button nativeButton={false} render={<Link href={`/teach/${courseId}/lessons/${l.id}/edit`} />} variant="outline" size="sm">Править</Button>

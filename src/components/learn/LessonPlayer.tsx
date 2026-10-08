@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { AiNote } from "@/components/shared/AiNote";
 import type { Feedback, LessonContent } from "@/lib/lessons/types";
 import { plural } from "@/lib/utils/format";
 
@@ -13,12 +14,14 @@ type Step = "intro" | "task" | "feedback";
 
 interface Props {
   lesson: { id: string; position: number; content: LessonContent };
+  /** Сохранял ли преподаватель урок в редакторе после сборки моделью. */
+  reviewed: boolean;
   previous: { answer: string; feedback: Feedback } | null;
   nextHref: string;
   nextLabel: string;
 }
 
-export function LessonPlayer({ lesson, previous, nextHref, nextLabel }: Props) {
+export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel }: Props) {
   const router = useRouter();
   const c = lesson.content;
   const [step, setStep] = useState<Step>(previous ? "feedback" : "intro");
@@ -88,6 +91,7 @@ export function LessonPlayer({ lesson, previous, nextHref, nextLabel }: Props) {
       </div>
       <h1 className="mt-2 text-2xl font-semibold tracking-tight">{c.title}</h1>
       <p className="mt-1 text-sm text-muted-foreground">{c.concept}</p>
+      <AiNote kind={reviewed ? "lessonReviewed" : "lessonUnreviewed"} className="mt-2" />
 
       {step === "intro" ? (
         <section className="mt-8 space-y-6">
@@ -111,6 +115,7 @@ export function LessonPlayer({ lesson, previous, nextHref, nextLabel }: Props) {
             <p className="mt-1 text-lg leading-relaxed">{c.task}</p>
           </div>
           {c.sample ? <blockquote className="whitespace-pre-wrap rounded-md border bg-muted/50 p-4 text-[15px] leading-relaxed">{c.sample}</blockquote> : null}
+          <p className="text-xs text-muted-foreground">Ваш ответ увидит преподаватель курса. Балл и разбор готовит модель, итоговое решение принимает преподаватель.</p>
           <Textarea rows={7} value={answer} onChange={(e) => setAnswer(e.target.value)} placeholder="Ваш ответ. Конкретика важнее объёма." />
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
           <div className="flex gap-3">
@@ -122,6 +127,7 @@ export function LessonPlayer({ lesson, previous, nextHref, nextLabel }: Props) {
 
       {step === "feedback" && feedback ? (
         <section className="mt-8 space-y-6">
+          <AiNote kind="feedback" />
           <div className="flex flex-wrap items-center gap-3">
             <Badge className="text-base">{feedback.score}/5</Badge>
             {progress ? <span className="text-sm text-muted-foreground">+{plural(progress.gained, "балл", "балла", "баллов")} · серия: {plural(progress.streak, "день", "дня", "дней")}</span> : null}
