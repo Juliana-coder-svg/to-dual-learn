@@ -17,7 +17,7 @@ export type AiNoteKind = keyof typeof AI_LABELS;
 /** Пометка «ИИ» и текст одной строкой, приглушённым цветом. Форма одна на все экраны, чтобы пометка узнавалась. */
 export function AiNote({ kind, className = "" }: { kind: AiNoteKind; className?: string }) {
   return (
-    <p className={`flex items-start gap-2 text-caption text-muted-foreground ${className}`.trim()}>
+    <p className={`flex items-start gap-2 type-caption text-muted-foreground ${className}`.trim()}>
       <span aria-hidden className="mt-px inline-flex h-4 shrink-0 items-center rounded-sm border px-1 text-[10px] font-semibold uppercase tracking-wide">ИИ</span>
       <span>{AI_LABELS[kind]}</span>
     </p>

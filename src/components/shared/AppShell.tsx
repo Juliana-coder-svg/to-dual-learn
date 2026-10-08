@@ -65,7 +65,7 @@ export async function AppShell({
         </div>
       </header>
       <main className={`mx-auto w-full flex-1 px-4 py-8 md:py-10 ${width === "narrow" ? "max-w-2xl" : "max-w-5xl"}`}>{children}</main>
-      <footer className="border-t py-5 text-caption text-muted-foreground">
+      <footer className="border-t py-5 type-caption text-muted-foreground">
         <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center gap-x-5 gap-y-2 px-4">
           <span className="font-medium text-foreground/70">To Dual Education</span>
           <Link href="/legal/privacy" className="hover:text-foreground">Политика</Link>

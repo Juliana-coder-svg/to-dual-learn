@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ConsentFields } from "@/components/shared/ConsentFields";
+import { PublicShell } from "@/components/shared/PublicShell";
+import { RoleChoice } from "@/components/shared/RoleChoice";
+import { Notice } from "@/components/shared/Notice";
 
 const ERRORS: Record<string, string> = {
   "1": "Проверьте почту и имя.",
@@ -29,68 +32,66 @@ export default async function LoginPage({
 
   if (sp.sent) {
     return (
-      <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-16">
-        <h1 className="text-2xl font-semibold tracking-tight">Проверьте почту</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Отправили письмо со ссылкой для входа. Откройте его в этом же браузере и нажмите на ссылку. Ссылка действует час.
-        </p>
-        <p className="mt-6 text-sm text-muted-foreground">
-          Письма нет? Проверьте «Спам» или{" "}
-          <Link href={`/login?role=${defaultRole}`} className="underline hover:text-foreground">запросите ссылку ещё раз</Link>.
-        </p>
-      </main>
+      <PublicShell>
+        <div className="flex flex-1 flex-col justify-center py-12">
+          <h1 className="type-title">Проверьте почту</h1>
+          <p className="mt-3 type-body text-muted-foreground">
+            Отправили письмо со ссылкой для входа. Откройте его в этом же браузере и нажмите на ссылку. Ссылка действует час.
+          </p>
+          <p className="mt-6 text-sm text-muted-foreground">
+            Письма нет? Проверьте «Спам» или{" "}
+            <Link href={`/login?role=${defaultRole}`} className="text-foreground underline underline-offset-4 hover:text-primary-strong">запросите ссылку ещё раз</Link>.
+          </p>
+        </div>
+      </PublicShell>
     );
   }
 
+  const submitLabel = magic ? "Получить ссылку для входа" : "Войти";
+
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-16">
-      <h1 className="text-2xl font-semibold tracking-tight">Вход</h1>
-      <p className="mt-2 text-sm text-muted-foreground">
-        {magic ? "Пароль не нужен: пришлём на почту ссылку для входа." : "Пароль не нужен: введите почту и имя."} Профиль появится при первом входе.
-      </p>
-      {magic ? null : (
-        <p className="mt-4 rounded-md border border-dashed px-3 py-2 text-xs text-muted-foreground">
-          Демонстрационная версия: почту при входе не проверяем, поэтому не вводите чужие адреса и настоящие данные студентов.
+    <PublicShell>
+      <div className="flex flex-1 flex-col justify-center py-12">
+        <h1 className="type-title">Вход</h1>
+        <p className="mt-3 type-body text-muted-foreground">
+          {magic ? "Пароль не нужен: пришлём на почту ссылку для входа." : "Пароль не нужен: введите почту и имя."} Профиль появится при первом входе.
         </p>
-      )}
-      {sp.deleted ? (
-        <p className="mt-4 rounded-md border px-3 py-2 text-sm">
-          Аккаунт и данные удалены из рабочей базы. Из резервных копий данные исчезнут, когда копии обновятся.
-        </p>
-      ) : null}
-      {sp.error ? <p className="mt-4 text-sm text-destructive">{ERRORS[sp.error] ?? ERRORS["1"]}</p> : null}
-      <form action={login} className="mt-8 space-y-5">
-        {sp.next ? <input type="hidden" name="next" value={sp.next} /> : null}
-        <div className="space-y-2">
-          <Label htmlFor="email">Почта</Label>
-          <Input id="email" name="email" type="email" required autoComplete="email" placeholder="you@example.com" />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="name">Имя</Label>
-          <Input id="name" name="name" required minLength={2} placeholder="Как к вам обращаться" />
-        </div>
-        <p className="text-xs text-muted-foreground">
-          Мы храним вашу почту, имя и ответы, чтобы вы могли учиться. Для разбора ответы читает ИИ,
-          поэтому не пишите в них данные других людей и то, что не хотите передавать.
-        </p>
-        <fieldset className="space-y-2">
-          <legend className="text-sm font-medium">Роль</legend>
-          <div className="grid grid-cols-2 gap-2">
-            <label className="flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm has-[:checked]:border-primary">
-              <input type="radio" name="role" value="teacher" defaultChecked={defaultRole === "teacher"} /> Преподаватель
-            </label>
-            <label className="flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm has-[:checked]:border-primary">
-              <input type="radio" name="role" value="student" defaultChecked={defaultRole === "student"} /> Студент
-            </label>
+        {magic ? null : (
+          <Notice className="mt-5">
+            Демонстрационная версия: почту при входе не проверяем, поэтому не вводите чужие адреса и настоящие данные студентов.
+          </Notice>
+        )}
+        {sp.deleted ? (
+          <Notice kind="success" className="mt-5">
+            Аккаунт и данные удалены из рабочей базы. Из резервных копий данные исчезнут, когда копии обновятся.
+          </Notice>
+        ) : null}
+        {sp.error ? <Notice kind="error" className="mt-5">{ERRORS[sp.error] ?? ERRORS["1"]}</Notice> : null}
+        <form action={login} className="mt-8 space-y-6">
+          {sp.next ? <input type="hidden" name="next" value={sp.next} /> : null}
+          <div className="space-y-2">
+            <Label htmlFor="email">Почта</Label>
+            <Input id="email" name="email" type="email" required autoComplete="email" placeholder="you@example.com" />
           </div>
-        </fieldset>
-        <ConsentFields />
-        <Button type="submit" className="w-full">{magic ? "Получить ссылку для входа" : "Войти"}</Button>
-        <p className="text-xs text-muted-foreground">
-          Нажимая «{magic ? "Получить ссылку для входа" : "Войти"}», вы принимаете{" "}
-          <Link href="/legal/terms" target="_blank" className="underline hover:text-foreground">Пользовательское соглашение</Link>.
-        </p>
-      </form>
-    </main>
+          <div className="space-y-2">
+            <Label htmlFor="name">Имя</Label>
+            <Input id="name" name="name" required minLength={2} placeholder="Как к вам обращаться" />
+            <p className="type-caption text-muted-foreground">
+              Мы храним вашу почту, имя и ответы, чтобы вы могли учиться. Для разбора ответы читает ИИ,
+              поэтому не пишите в них данные других людей и то, что не хотите передавать.
+            </p>
+          </div>
+          <RoleChoice defaultRole={defaultRole} />
+          <ConsentFields />
+          <div className="space-y-3">
+            <Button type="submit" size="lg" className="w-full">{submitLabel}</Button>
+            <p className="text-center type-caption text-muted-foreground">
+              Нажимая «{submitLabel}», вы принимаете{" "}
+              <Link href="/legal/terms" target="_blank" className="underline underline-offset-4 hover:text-foreground">Пользовательское соглашение</Link>.
+            </p>
+          </div>
+        </form>
+      </div>
+    </PublicShell>
   );
 }
