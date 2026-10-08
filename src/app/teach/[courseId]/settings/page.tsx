@@ -11,8 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { formatRub, usdRubRate, usdToRub } from "@/lib/utils/money";
 
 const KIND_LABELS: Record<string, string> = {
-  extract: "Извлечение PDF",
-  lessons: "Генерация уроков",
+  extract: "Чтение PDF",
+  lessons: "Сборка уроков",
   review: "Проверка уроков методистом",
   artifact: "Материалы для занятий",
   evaluate: "Оценка ответов",
@@ -36,7 +36,7 @@ export default async function SettingsPage({ params, searchParams }: { params: P
       <Card>
         <CardHeader>
           <CardTitle>Курс</CardTitle>
-          <CardDescription>Образовательные результаты и тон учитываются везде: когда ИИ собирает уроки, проверяет их и оценивает ответы.</CardDescription>
+          <CardDescription>ИИ учитывает образовательные результаты и обращение везде: когда собирает уроки, проверяет их и оценивает ответы.</CardDescription>
         </CardHeader>
         <CardContent>
           {sp.saved ? <p className="mb-3 text-sm text-primary">Сохранено.</p> : null}
@@ -122,7 +122,7 @@ export default async function SettingsPage({ params, searchParams }: { params: P
         <Card>
           <CardHeader>
             <CardTitle>Расход по курсу</CardTitle>
-            <CardDescription>Оценка в рублях по курсу {usdRubRate()} ₽ за доллар (переменная USD_RUB_RATE). Точная сумма в кабинете поставщика модели.</CardDescription>
+            <CardDescription>Оценка в рублях по курсу {usdRubRate()} ₽ за доллар (переменная USD_RUB_RATE). Точная сумма: в кабинете поставщика модели.</CardDescription>
           </CardHeader>
           <CardContent>
             {usage.length === 0 ? <p className="text-sm text-muted-foreground">Запросов к ИИ пока не было.</p> : (

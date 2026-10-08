@@ -79,7 +79,7 @@ export default async function TeachPage({ searchParams }: { searchParams: Promis
           <Card className="mt-4">
             <CardHeader>
               <CardTitle>Готовый курс для примера</CardTitle>
-              <CardDescription>«Критическое мышление в эпоху ИИ»: методичка и пять уроков с задачами, сразу опубликованы. Для показа и как образец формата.</CardDescription>
+              <CardDescription>«Критическое мышление в эпоху ИИ»: методичка и пять уроков с задачами, уже опубликованы. Чтобы показать формат студентам и коллегам.</CardDescription>
             </CardHeader>
             <CardContent>
               <form action={createDemoCourseAction.bind(null, "critical-thinking-ai")}>

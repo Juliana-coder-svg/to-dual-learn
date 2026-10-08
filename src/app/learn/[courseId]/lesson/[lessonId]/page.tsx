@@ -26,7 +26,7 @@ export default async function LessonPage({ params }: { params: Promise<{ courseI
         {locked ? (
           <div className="mt-6 rounded-md border border-dashed p-6">
             <div className="font-medium">Этот урок откроется завтра</div>
-            <p className="mt-1 text-sm text-muted-foreground">Сегодняшний урок уже пройден. Один урок в день нужен, чтобы знания успели осесть. Завтра придет карточка на повторение.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Сегодняшний урок уже пройден. Один урок в день: так знания успевают осесть. Завтра придёт карточка на повторение.</p>
             <Link href={`/learn/${courseId}`} className="mt-3 inline-block text-sm text-primary">← К курсу</Link>
           </div>
         ) : (

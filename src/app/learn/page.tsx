@@ -85,7 +85,7 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
               {sp.error ? <p className="mb-3 text-sm text-destructive">Курс с таким кодом не найден.</p> : null}
               <form action={joinCourseAction} className="flex gap-2">
                 <Input name="code" required placeholder="ABC234" className="font-mono uppercase" maxLength={6} />
-                <Button type="submit">Войти</Button>
+                <Button type="submit">Записаться</Button>
               </form>
             </CardContent>
           </Card>

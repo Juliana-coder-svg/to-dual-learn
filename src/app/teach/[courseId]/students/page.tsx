@@ -18,7 +18,7 @@ export default async function StudentsPage({ params }: { params: Promise<{ cours
         <h2 className="text-lg font-semibold">Студенты</h2>
         <p className="mt-1 text-sm text-muted-foreground">Записываются по коду <span className="font-mono font-semibold">{ctx.course.join_code}</span>. Опубликовано уроков: {published}.</p>
         {students.length === 0 ? (
-          <p className="mt-6 rounded-md border border-dashed p-6 text-sm text-muted-foreground">Пока никто не записался.</p>
+          <p className="mt-6 rounded-md border border-dashed p-6 text-sm text-muted-foreground">Пока никто не записался. Отправьте студентам код курса или ссылку из настроек.</p>
         ) : (
           <table className="mt-6 w-full text-sm">
             <thead className="text-left text-xs text-muted-foreground">

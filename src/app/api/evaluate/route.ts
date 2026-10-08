@@ -10,6 +10,7 @@ import {
   upsertFlashcards,
 } from "@/lib/db/queries";
 import { evaluateAnswer, reevaluateAnswer } from "@/lib/ai";
+import { plural } from "@/lib/utils/format";
 import { nextStreak, xpForLesson } from "@/lib/progress/streak";
 import { firstDueAt } from "@/lib/progress/flashcards";
 import { handleRouteError, jsonError } from "@/lib/api";
@@ -26,7 +27,7 @@ export async function POST(req: Request) {
     if (!ctx) return jsonError("Нет доступа к курсу", 403);
     const { user, course } = ctx;
     const isOwner = course.owner_id === user.id;
-    if (lesson.status !== "published" && !isOwner) return jsonError("Урок еще не опубликован", 403);
+    if (lesson.status !== "published" && !isOwner) return jsonError("Урок ещё не опубликован", 403);
     const callCtx = { userId: user.id, courseId: course.id };
     const previous = await getLatestSubmission(lesson.id, user.id);
 
@@ -43,7 +44,7 @@ export async function POST(req: Request) {
     if (answer.length < 10) return jsonError("Напишите ответ хотя бы в одно предложение");
     const firstTime = !previous;
     if (firstTime && !isOwner && course.daily_limit > 0 && await countLessonsStartedToday(user.id, course.id) >= course.daily_limit) {
-      return jsonError(`Сегодня можно начать только ${course.daily_limit === 1 ? "один новый урок" : `${course.daily_limit} новых урока`}. Следующий откроется завтра.`, 429);
+      return jsonError(`Сегодня можно начать только ${course.daily_limit === 1 ? "один новый урок" : plural(course.daily_limit, "новый урок", "новых урока", "новых уроков")}. Следующий откроется завтра.`, 429);
     }
 
     const samples = (await listCalibrationSamples(course.id, lesson.id)).map((s) => ({ answer: s.answer, score: s.score, comment: s.comment }));

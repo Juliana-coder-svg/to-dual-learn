@@ -33,7 +33,7 @@ export default async function CourseLayout({ children, params }: { children: Rea
       </div>
       {isDemoMode() ? (
         <p className="mt-4 rounded-md border border-dashed px-3 py-2 text-xs text-muted-foreground">
-          Пробный режим: ключ модели не задан, вместо ответов ИИ показываются примеры. Добавьте ключ в .env.local и перезапустите сервер.
+          Пробный режим: ключ модели не задан, поэтому вместо ответов ИИ сервис показывает примеры. Добавьте ключ в .env.local и перезапустите сервер.
         </p>
       ) : null}
       <CourseTabs courseId={course.id} />
