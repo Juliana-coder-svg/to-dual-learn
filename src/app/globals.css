@@ -4,6 +4,12 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+  Дизайн-токены To Dual Learn. Словарь и правила: docs/design.md.
+  Плоский минимализм: один акцент (фирменный оранжевый), системный шрифт,
+  рамки и воздух вместо теней и градиентов. Радиусов два: 8 px для блоков и
+  полный круг для бейджей, шагов и аватаров.
+*/
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -35,40 +41,68 @@
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary: var(--primary);
+  /* Оранжевый для мелкого текста: контраст с белым выше 4,5:1. Заливка #FF4A07 для текста не годится (около 3,4:1). */
+  --color-primary-strong: var(--primary-strong);
+  /* Подложка акцентных блоков: «Идея урока», «Запомнить», «Один следующий шаг». */
+  --color-primary-soft: var(--primary-soft);
+  /* Фон страницы за карточками, когда нужно отделить колонку или шапку. */
+  --color-surface: var(--surface);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
+  --radius-sm: calc(var(--radius) * 0.75);
+  --radius-md: var(--radius);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-xl: var(--radius);
+  --radius-2xl: calc(var(--radius) * 1.5);
+  --radius-3xl: calc(var(--radius) * 2);
+  --radius-4xl: 9999px;
+
+  /* Шкала текста. Основная: body 15/24, caption 12/16; заголовки: display 44/48, title 30/36, h2 20/28. */
+  --text-display: 2.75rem;
+  --text-display--line-height: 1.1;
+  --text-display--letter-spacing: -0.02em;
+  --text-display--font-weight: 600;
+  --text-title: 1.875rem;
+  --text-title--line-height: 1.2;
+  --text-title--letter-spacing: -0.02em;
+  --text-title--font-weight: 600;
+  --text-heading: 1.25rem;
+  --text-heading--line-height: 1.4;
+  --text-heading--letter-spacing: -0.01em;
+  --text-heading--font-weight: 600;
+  --text-body: 0.9375rem;
+  --text-body--line-height: 1.6;
+  --text-caption: 0.75rem;
+  --text-caption--line-height: 1.35;
 }
 
 :root {
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --foreground: oklch(0.17 0.005 60);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.17 0.005 60);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
+  --popover-foreground: oklch(0.17 0.005 60);
+  /* Фирменный оранжевый #FF4A07. */
   --primary: oklch(0.67 0.22 36);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
+  --primary-foreground: oklch(1 0 0);
+  --primary-strong: oklch(0.52 0.19 36);
+  --primary-soft: oklch(0.97 0.02 50);
+  --surface: oklch(0.985 0.002 60);
+  --secondary: oklch(0.965 0.003 60);
+  --secondary-foreground: oklch(0.21 0.005 60);
+  --muted: oklch(0.965 0.003 60);
+  --muted-foreground: oklch(0.5 0.01 60);
+  --accent: oklch(0.965 0.003 60);
+  --accent-foreground: oklch(0.21 0.005 60);
+  --destructive: oklch(0.55 0.22 27);
+  --border: oklch(0.9 0.004 60);
+  --input: oklch(0.86 0.005 60);
   --ring: oklch(0.67 0.22 36);
-  --chart-1: oklch(0.87 0 0);
+  --chart-1: oklch(0.67 0.22 36);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
@@ -91,8 +125,11 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
+  --primary: oklch(0.67 0.22 36);
+  --primary-foreground: oklch(1 0 0);
+  --primary-strong: oklch(0.78 0.17 45);
+  --primary-soft: oklch(0.25 0.03 40);
+  --surface: oklch(0.17 0 0);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
@@ -102,8 +139,8 @@
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
+  --ring: oklch(0.67 0.22 36);
+  --chart-1: oklch(0.67 0.22 36);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
@@ -124,8 +161,51 @@
   }
   body {
     @apply bg-background text-foreground;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
   html {
     @apply font-sans;
+  }
+  /* Нативные чекбоксы, радио и прогресс красятся в акцент без своих компонентов. */
+  input[type="checkbox"],
+  input[type="radio"],
+  progress {
+    accent-color: var(--primary);
+  }
+  /* Выделение текста тоже в фирменном цвете, но полупрозрачное, чтобы читалось. */
+  ::selection {
+    background: color-mix(in oklch, var(--primary) 25%, transparent);
+  }
+}
+
+@layer components {
+  /* Блок с акцентом: подложка без рамки, подпись тёмно-оранжевая. */
+  .callout {
+    @apply rounded-lg bg-primary-soft p-4;
+  }
+  .callout-label {
+    @apply text-caption font-semibold uppercase tracking-wide text-primary-strong;
+  }
+  /* Подпись к разделу: «Урок 3 · шаг 2 из 3», «Опубликовано 5 из 5». */
+  .eyebrow {
+    @apply text-caption font-medium uppercase tracking-wide text-muted-foreground;
+  }
+  /* Пустое состояние: рамка пунктиром, текст по центру, действие внутри. */
+  .empty-state {
+    @apply flex flex-col items-center gap-3 rounded-lg border border-dashed px-6 py-10 text-center;
+  }
+  /* Таблица данных: числа табличные, шапка приглушена, на телефоне прокрутка. */
+  .data-table {
+    @apply w-full text-sm tabular-nums;
+  }
+  .data-table th {
+    @apply border-b py-2 pr-4 text-left text-caption font-medium uppercase tracking-wide text-muted-foreground;
+  }
+  .data-table td {
+    @apply border-b py-3 pr-4 align-top;
+  }
+  .data-table tr:last-child td {
+    @apply border-b-0;
   }
 }
