@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ConsentFields } from "@/components/shared/ConsentFields";
+import { YandexLoginButton } from "@/components/shared/YandexLoginButton";
 
 const ERRORS: Record<string, string> = {
   "1": "Проверьте почту и имя.",
@@ -19,7 +20,7 @@ const ERRORS: Record<string, string> = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ role?: string; error?: string; sent?: string; next?: string; deleted?: string }>;
+  searchParams: Promise<{ role?: string; error?: string; sent?: string; next?: string; deleted?: string; yandex?: string }>;
 }) {
   const user = await getCurrentUser();
   if (user) redirect(homeFor(user));
@@ -86,8 +87,9 @@ export default async function LoginPage({
         </fieldset>
         <ConsentFields />
         <Button type="submit" className="w-full">{magic ? "Получить ссылку для входа" : "Войти"}</Button>
+        <YandexLoginButton error={sp.yandex} />
         <p className="text-xs text-muted-foreground">
-          Нажимая «{magic ? "Получить ссылку для входа" : "Войти"}», вы принимаете{" "}
+          Нажимая «{magic ? "Получить ссылку для входа" : "Войти"}» или «Войти с Яндекс ID», вы принимаете{" "}
           <Link href="/legal/terms" target="_blank" className="underline hover:text-foreground">Пользовательское соглашение</Link>.
         </p>
       </form>
