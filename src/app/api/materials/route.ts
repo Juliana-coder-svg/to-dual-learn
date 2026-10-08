@@ -38,11 +38,11 @@ export async function POST(req: Request) {
       if (entry.size > MAX_BYTES) return jsonError(`Файл больше 20 МБ: ${entry.name}`);
       const bytes = Buffer.from(await entry.arrayBuffer());
       const text = await extractMaterialText({ userId: ctx.user.id, courseId }, { name: entry.name, mime: entry.type, bytes });
-      if (text.trim().length === 0) return jsonError(`Не удалось извлечь текст из ${entry.name}`);
+      if (text.trim().length === 0) return jsonError(`Не удалось извлечь текст из ${entry.name}. Проверьте, что в файле есть текст, а не только картинки`);
       await addMaterial({ courseId, filename: entry.name, kind, contentText: text });
       added++;
     }
-    if (added === 0) return jsonError("Нечего загружать");
+    if (added === 0) return jsonError("Нечего загружать: выберите файл или вставьте текст");
     return NextResponse.json({ ok: true, added });
   } catch (e) {
     return handleRouteError(e);

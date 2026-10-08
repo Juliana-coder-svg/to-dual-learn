@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import type { Feedback, LessonContent } from "@/lib/lessons/types";
+import { plural } from "@/lib/utils/format";
 
 type Step = "intro" | "task" | "feedback";
 
@@ -123,7 +124,7 @@ export function LessonPlayer({ lesson, previous, nextHref, nextLabel }: Props) {
         <section className="mt-8 space-y-6">
           <div className="flex flex-wrap items-center gap-3">
             <Badge className="text-base">{feedback.score}/5</Badge>
-            {progress ? <span className="text-sm text-muted-foreground">+{progress.gained} баллов · серия {progress.streak}</span> : null}
+            {progress ? <span className="text-sm text-muted-foreground">+{plural(progress.gained, "балл", "балла", "баллов")} · серия: {plural(progress.streak, "день", "дня", "дней")}</span> : null}
           </div>
           <p className="text-lg leading-relaxed">{feedback.summary}</p>
           <ul className="space-y-2">

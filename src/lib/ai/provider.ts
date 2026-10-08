@@ -57,7 +57,7 @@ export class AiRefusedError extends Error {
 
 export class AiTruncatedError extends Error {
   constructor() {
-    super("Ответ модели оборван по лимиту токенов. Попробуй меньший объём.");
+    super("Ответ модели оборван по лимиту токенов. Попробуйте меньший объём.");
     this.name = "AiTruncatedError";
   }
 }

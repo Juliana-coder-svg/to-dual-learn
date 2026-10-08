@@ -62,7 +62,7 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
                     <form action={moveLessonAction.bind(null, courseId, l.id, 1)}><Button type="submit" variant="ghost" size="sm" disabled={i === lessons.length - 1} aria-label="Ниже">↓</Button></form>
                     <Button nativeButton={false} render={<Link href={`/teach/${courseId}/lessons/${l.id}/edit`} />} variant="outline" size="sm">Править</Button>
                     <form action={setLessonStatusAction.bind(null, courseId, l.id, l.status === "published" ? "draft" : "published")}>
-                      <Button type="submit" variant="outline" size="sm">{l.status === "published" ? "Снять" : "Опубликовать"}</Button>
+                      <Button type="submit" variant="outline" size="sm">{l.status === "published" ? "Снять с публикации" : "Опубликовать"}</Button>
                     </form>
                     <form action={deleteLessonAction.bind(null, courseId, l.id)}>
                       <Button type="submit" variant="ghost" size="sm">Удалить</Button>
