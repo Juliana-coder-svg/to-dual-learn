@@ -40,7 +40,12 @@ export function AppShell({ user, children }: { user: User; children: React.React
       </header>
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">{children}</main>
       <footer className="border-t py-4 text-center text-xs text-muted-foreground">
-        To Dual Education
+        <div className="mx-auto flex w-full max-w-5xl flex-wrap justify-center gap-x-4 gap-y-1 px-4">
+          <span>To Dual Education</span>
+          <Link href="/legal/privacy" className="hover:text-foreground">Политика</Link>
+          <Link href="/legal/terms" className="hover:text-foreground">Соглашение</Link>
+          <Link href="/legal/consent" className="hover:text-foreground">Согласие</Link>
+        </div>
       </footer>
     </div>
   );
