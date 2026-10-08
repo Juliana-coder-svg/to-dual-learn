@@ -49,7 +49,7 @@ This file is read at the start of every Claude Code session. It defines what we'
 
 ## Команда агентов
 
-В `.claude/agents/` живут роли, которые улучшают продукт: `methodist` (проектирует обучение по паттернам из навыка `learning-design`), `product` (приоритеты, спецификации, `docs/roadmap.md`), `marketer`, `researcher`, `editor` (тексты по-русски без штампов), `planner`, `code-reviewer`, `qa`, `analyst`. Команды-сценарии в `.claude/commands/`: `/improve`, `/lesson-audit`, `/copy-audit`, `/metrics`, `/research`.
+В `.claude/agents/` живут роли, которые улучшают продукт: `methodist` (проектирует обучение по паттернам из навыка `learning-design`), `product` (приоритеты, спецификации, `docs/roadmap.md`), `marketer`, `researcher`, `editor` (тексты по-русски без штампов), `planner`, `code-reviewer`, `qa`, `analyst`, `ux-researcher` (интервью, карты пути, юзабилити-тесты), `feedback` (отзывы → задачи), `experiments` (гипотеза, метрика, журнал в `docs/experiments.md`). Команды-сценарии в `.claude/commands/`: `/improve`, `/lesson-audit`, `/copy-audit`, `/metrics`, `/research`.
 
 Правило: задача про уроки, оценку или путь студента не идёт в код без методиста; изменение кода не коммитится без ревьюера; пользовательский текст не публикуется без редактора.
 
