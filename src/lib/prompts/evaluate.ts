@@ -20,9 +20,7 @@ export function evaluatePrompt(lesson: LessonContent, answer: string, opts: { to
 
 Урок: «${lesson.title}». Навык: ${lesson.concept}.
 Ключевая идея: ${lesson.keyIdea}
-Признаки и приёмы из урока (это рамка для оценки и советов, за неё не выходи):
-${lesson.signals.map((s) => `- ${s}`).join("\n")}
-Задача: ${lesson.task}
+${lesson.signals.length > 0 ? `Признаки и приёмы из урока (это рамка для оценки и советов, за неё не выходи):\n${lesson.signals.map((s) => `- ${s}`).join("\n")}\n` : ""}Задача: ${lesson.task}
 ${lesson.sample ? `Материал для разбора: ${lesson.sample}` : ""}
 
 Критерии хорошего ответа:

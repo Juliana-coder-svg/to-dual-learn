@@ -22,7 +22,7 @@ export async function POST(req: Request) {
     let lessons = generated;
     let notes: { changed: boolean; flags: string[]; title: string }[] | null = null;
     if (body.review !== false) {
-      const review = await reviewLessons(callCtx, ctx.course, materials, generated);
+      const review = await reviewLessons(callCtx, ctx.course, materials, generated, { existingCount: existingTitles.length });
       lessons = review.lessons;
       notes = review.notes;
       reviewSummary = review.summary;

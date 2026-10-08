@@ -55,7 +55,7 @@ export const FeedbackSchema = z.object({
       comment: z.string().describe("Одно предложение с цитатой из ответа: почему критерий выполнен или нет"),
     }),
   ),
-  strengths: z.array(z.string()).describe("Что сделано хорошо, 1–3 пункта"),
+  strengths: z.array(z.string()).describe("Что сделано хорошо, 0–3 пункта; при балле 1 список может быть пустым"),
   improvements: z.array(z.string()).describe("Что улучшить, 1–3 конкретных пункта"),
   summary: z.string().describe("2–3 предложения итогового разбора от наставника, по-человечески, без штампов"),
 });
