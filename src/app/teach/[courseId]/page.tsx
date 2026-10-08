@@ -1,5 +1,4 @@
-import { notFound } from "next/navigation";
-import { teacherCourse } from "@/lib/auth/access";
+import { teacherCourse, noCourseAccess } from "@/lib/auth/access";
 import { listMaterials } from "@/lib/db/queries";
 import { deleteMaterialAction } from "@/lib/actions/courses";
 import { MaterialsUploader } from "@/components/teach/MaterialsUploader";
@@ -9,7 +8,7 @@ import { formatChars, formatDate } from "@/lib/utils/format";
 export default async function MaterialsPage({ params }: { params: Promise<{ courseId: string }> }) {
   const { courseId } = await params;
   const [ctx, materials] = await Promise.all([teacherCourse(courseId), listMaterials(courseId)]);
-  if (!ctx) notFound();
+  if (!ctx) return noCourseAccess(`/teach/${courseId}`);
   const totalChars = materials.reduce((s, m) => s + m.char_count, 0);
 
   return (

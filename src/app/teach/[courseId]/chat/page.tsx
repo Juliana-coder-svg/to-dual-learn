@@ -1,5 +1,4 @@
-import { notFound } from "next/navigation";
-import { teacherCourse } from "@/lib/auth/access";
+import { teacherCourse, noCourseAccess } from "@/lib/auth/access";
 import { requireUserId } from "@/lib/auth/session";
 import { countMaterials, listChatMessages } from "@/lib/db/queries";
 import { clearChatAction } from "@/lib/actions/courses";
@@ -10,7 +9,7 @@ export default async function ChatPage({ params }: { params: Promise<{ courseId:
   const { courseId } = await params;
   const userId = await requireUserId();
   const [ctx, messages, materialsCount] = await Promise.all([teacherCourse(courseId), listChatMessages(courseId, userId), countMaterials(courseId)]);
-  if (!ctx) notFound();
+  if (!ctx) return noCourseAccess(`/teach/${courseId}/chat`);
 
   return (
     <div>

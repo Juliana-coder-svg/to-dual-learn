@@ -1,5 +1,4 @@
-import { notFound } from "next/navigation";
-import { teacherCourse } from "@/lib/auth/access";
+import { teacherCourse, noCourseAccess } from "@/lib/auth/access";
 import { countMaterials, listGenerations } from "@/lib/db/queries";
 import { ARTIFACT_KINDS, type ArtifactKind } from "@/lib/lessons/types";
 import { ArtifactGenerator } from "@/components/teach/ArtifactGenerator";
@@ -10,7 +9,7 @@ import { formatDateTime } from "@/lib/utils/format";
 export default async function GeneratePage({ params }: { params: Promise<{ courseId: string }> }) {
   const { courseId } = await params;
   const [ctx, history, materialsCount] = await Promise.all([teacherCourse(courseId), listGenerations(courseId), countMaterials(courseId)]);
-  if (!ctx) notFound();
+  if (!ctx) return noCourseAccess(`/teach/${courseId}/generate`);
   const hasMaterials = materialsCount > 0;
 
   return (

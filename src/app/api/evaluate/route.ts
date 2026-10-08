@@ -14,6 +14,7 @@ import { plural } from "@/lib/utils/format";
 import { nextStreak, xpForLesson } from "@/lib/progress/streak";
 import { firstDueAt } from "@/lib/progress/flashcards";
 import { handleRouteError, jsonError } from "@/lib/api";
+import { isUuid } from "@/lib/utils/ids";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -21,7 +22,8 @@ export const maxDuration = 120;
 export async function POST(req: Request) {
   try {
     const body = (await req.json()) as { lessonId?: string; answer?: string; objection?: string };
-    const lesson = await getLesson(String(body.lessonId ?? ""));
+    const lessonId = String(body.lessonId ?? "");
+    const lesson = isUuid(lessonId) ? await getLesson(lessonId) : null;
     if (!lesson) return jsonError("Урок не найден", 404);
     const ctx = await studentCourse(lesson.course_id);
     if (!ctx) return jsonError("Нет доступа к курсу", 403);

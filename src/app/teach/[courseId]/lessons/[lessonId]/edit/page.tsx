@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { teacherCourse } from "@/lib/auth/access";
+import { teacherCourse, noCourseAccess } from "@/lib/auth/access";
 import { getLesson } from "@/lib/db/queries";
 import { updateLessonAction } from "@/lib/actions/courses";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 export default async function EditLessonPage({ params, searchParams }: { params: Promise<{ courseId: string; lessonId: string }>; searchParams: Promise<{ error?: string }> }) {
   const { courseId, lessonId } = await params;
   const [sp, ctx, lesson] = await Promise.all([searchParams, teacherCourse(courseId), getLesson(lessonId)]);
-  if (!ctx) notFound();
+  if (!ctx) return noCourseAccess(`/teach/${courseId}/lessons`);
   if (!lesson || lesson.course_id !== courseId) notFound();
   const c = lesson.content;
 
