@@ -6,6 +6,7 @@ import { loginMode } from "@/lib/auth/mode";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { YandexLoginButton } from "@/components/shared/YandexLoginButton";
 
 const ERRORS: Record<string, string> = {
   "1": "Проверьте почту и имя.",
@@ -17,7 +18,7 @@ const ERRORS: Record<string, string> = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ role?: string; error?: string; sent?: string; next?: string }>;
+  searchParams: Promise<{ role?: string; error?: string; sent?: string; next?: string; yandex?: string }>;
 }) {
   const user = await getCurrentUser();
   if (user) redirect(homeFor(user));
@@ -69,6 +70,7 @@ export default async function LoginPage({
           </div>
         </fieldset>
         <Button type="submit" className="w-full">{magic ? "Получить ссылку для входа" : "Войти"}</Button>
+        <YandexLoginButton error={sp.yandex} />
       </form>
     </main>
   );
