@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import {
   acceptLessonProposal,
+  dropStaleLessonProposal,
   rejectLessonProposal,
   decideAllLessonProposals,
   addCalibrationSample,
@@ -139,6 +140,7 @@ export async function updateLessonAction(courseId: string, lessonId: string, for
   });
   if (!parsed.success) redirect(`/teach/${courseId}/lessons/${lessonId}/edit?error=1`);
   await updateLessonContent(lessonId, courseId, parsed.data);
+  await dropStaleLessonProposal(lessonId, courseId);
   revalidatePath(`/teach/${courseId}/lessons`);
   redirect(`/teach/${courseId}/lessons`);
 }

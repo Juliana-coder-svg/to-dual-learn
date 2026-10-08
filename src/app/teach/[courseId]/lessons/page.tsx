@@ -73,7 +73,7 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
                         </ul>
                       ) : (
                         <div className="mt-2 text-xs text-muted-foreground">
-                          Методист: замечаний нет{l.review.decision === "accepted" ? ", правки приняты" : l.review.decision === "rejected" ? ", правки отклонены" : l.review.changed ? ", текст подправлен при сборке" : ""}.
+                          Методист: замечаний нет{l.review.decision === "accepted" ? ", правки приняты" : l.review.decision === "rejected" ? ", правки отклонены" : l.review.changed ? ", текст подправлен" : ""}.
                         </div>
                       )
                     ) : null}
@@ -96,6 +96,7 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
                         <div className="font-medium">Методист предлагает правки</div>
+                        {l.status === "published" ? <div className="mt-1 text-xs text-muted-foreground">Урок уже открыт студентам: принятая правка сразу изменит задачу и критерии у них.</div> : null}
                         {l.review.flags.length > 0 ? (
                           <ul className="mt-1 space-y-1 text-xs text-muted-foreground">
                             {l.review.flags.map((f, j) => <li key={j} className="flex gap-2"><span className="text-primary">!</span><span>{f}</span></li>)}

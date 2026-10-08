@@ -311,8 +311,19 @@ function rowToLesson(r: LessonRow): Lesson {
     status: r.status,
     created_at: r.created_at,
     content: normalizeLessonContent(r.content),
-    review: r.review ? (r.review as unknown as LessonReviewRecord) : null,
+    review: reviewRecord(r.review),
   };
+}
+
+function reviewRecord(raw: Json | null): LessonReviewRecord | null {
+  if (!raw) return null;
+  const rec = raw as unknown as LessonReviewRecord;
+  if (!rec.proposal) return rec;
+  try {
+    return { ...rec, proposal: normalizeLessonContent(rec.proposal) };
+  } catch {
+    return { ...rec, proposal: null };
+  }
 }
 
 export async function updateLessonContent(id: string, courseId: string, content: LessonContent): Promise<void> {
@@ -345,13 +356,31 @@ async function getLessonReview(id: string, courseId: string): Promise<LessonRevi
   return row?.review ? (row.review as unknown as LessonReviewRecord) : null;
 }
 
-/** Преподаватель принял правку методиста: предложенный текст становится текущим, заметка остаётся с пометкой. */
+/** Преподаватель принял правку методиста: предложенный текст становится текущим, заметка остаётся с пометкой.
+ *  Одним update с условием, что предложение ещё на месте: два клика или две вкладки не разойдутся. */
 export async function acceptLessonProposal(id: string, courseId: string): Promise<boolean> {
   const review = await getLessonReview(id, courseId);
   if (!review?.proposal) return false;
-  await updateLessonContent(id, courseId, review.proposal);
-  await setLessonReview(id, courseId, { ...review, title: review.proposal.title, proposal: null, decision: "accepted" });
+  const content = normalizeLessonContent(review.proposal);
+  const record: LessonReviewRecord = { ...review, title: content.title, proposal: null, decision: "accepted" };
+  const sb = await getSupabase();
+  check(
+    await sb
+      .from("lessons")
+      .update({ title: content.title, concept: content.concept, content: content as unknown as Json, review: record as unknown as Json })
+      .eq("id", id)
+      .eq("course_id", courseId)
+      .not("review->proposal", "is", null),
+    "lesson proposal accept",
+  );
   return true;
+}
+
+/** Преподаватель поправил урок руками: предложение методиста посчитано от старого текста и больше не годится. */
+export async function dropStaleLessonProposal(id: string, courseId: string): Promise<void> {
+  const review = await getLessonReview(id, courseId);
+  if (!review?.proposal) return;
+  await setLessonReview(id, courseId, { ...review, proposal: null, decision: "rejected" });
 }
 
 /** Преподаватель оставил свой текст: предложение убираем, заметку и замечания сохраняем. */
