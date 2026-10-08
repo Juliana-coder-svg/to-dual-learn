@@ -17,7 +17,7 @@ npm run dev                   # http://localhost:3000
 Supabase поднимается за пять минут:
 
 1. Создать проект на supabase.com и вписать в `.env.local` Project URL, publishable-ключ (`NEXT_PUBLIC_SUPABASE_ANON_KEY`) и secret-ключ (`SUPABASE_SERVICE_ROLE_KEY`, только на сервере).
-2. Выполнить `supabase/migrations/0001_init.sql` в SQL Editor проекта (или `supabase db push`, если стоит CLI). Миграция создаёт таблицы, триггер профиля, RPC и политики RLS.
+2. Выполнить файлы из `supabase/migrations/` по порядку номеров в SQL Editor проекта (или `supabase db push`, если стоит CLI). `0001` создаёт таблицы, триггер профиля, RPC и политики RLS; следующие добавляют согласия, отметку проверки урока и ограничения на правку профиля.
 3. В Authentication → URL Configuration добавить в Redirect URLs адрес приложения с `/**`, например `http://localhost:3000/**` и адрес на Vercel, иначе ссылка из письма не вернёт на сайт. Для прода задать `NEXT_PUBLIC_SITE_URL`.
 4. Встроенная почта Supabase отправляет несколько писем в час и не шлёт на зарезервированные домены вроде example.com. Для реальных пользователей нужен свой SMTP в Authentication → Email.
 
