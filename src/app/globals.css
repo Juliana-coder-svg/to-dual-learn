@@ -161,18 +161,27 @@
   }
 }
 
-/* Шкала текста. Утилиты, а не токены font-size: иначе cn() из shadcn принимает их за цвет и выкидывает при слиянии классов. */
+/* Шкала текста. Утилиты, а не токены font-size: иначе cn() из shadcn принимает их за цвет и выкидывает при слиянии классов.
+   display и title текучие: 44 → 72 px и 28 → 40 px от телефона к десктопу, поэтому без md:-префиксов. */
 @utility type-display {
-  font-size: 2.75rem;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
+  font-size: clamp(2.75rem, 1.5rem + 4vw, 4.5rem);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
   font-weight: 600;
 }
 @utility type-title {
-  font-size: 1.875rem;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
+  font-size: clamp(1.75rem, 1.25rem + 1.6vw, 2.5rem);
+  line-height: 1.1;
+  letter-spacing: -0.025em;
   font-weight: 600;
+}
+/* Счётчик: большие табличные цифры для номера урока, серии дней, баллов. Цифры одной ширины, чтобы не прыгали. */
+@utility type-counter {
+  font-size: clamp(2.5rem, 2rem + 1.5vw, 3.5rem);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 @utility type-heading {
   font-size: 1.25rem;
@@ -217,5 +226,43 @@
   }
   .data-table tr:last-child td {
     @apply border-b-0;
+  }
+  /* Оранжевая плашка: сплошной фирменный цвет как поверхность, а не только кнопка. Текст белый,
+     подписи белые с прозрачностью. Один главный блок на экран: «Урок дня», финальный призыв на лендинге. */
+  .accent-panel {
+    @apply rounded-lg bg-primary p-6 text-primary-foreground md:p-8;
+  }
+  .accent-panel .eyebrow,
+  .accent-panel-muted {
+    @apply text-primary-foreground/75;
+  }
+  /* Карточка-ссылка: на наведении рамка становится фирменной, заголовок темнеет. Без тени и сдвига. */
+  .card-link {
+    @apply transition-colors hover:border-primary focus-visible:border-primary focus-visible:ring-3 focus-visible:ring-ring/40;
+  }
+  /* Полоса прогресса вырастает слева направо при появлении на странице (ширину задаёт style). */
+  .bar-grow {
+    transform-origin: left;
+    animation: bar-grow 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+  /* Смена шага урока и появление разбора: короткий подъём снизу. */
+  .step-enter {
+    @apply animate-in fade-in slide-in-from-bottom-2 duration-300;
+  }
+}
+
+@keyframes bar-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bar-grow,
+  .step-enter {
+    animation: none;
   }
 }
