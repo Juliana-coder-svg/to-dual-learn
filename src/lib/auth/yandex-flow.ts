@@ -3,6 +3,7 @@ import { cookies, headers } from "next/headers";
 import type { Role } from "@/lib/db/queries";
 import { setLoginPrefs } from "@/lib/auth/login-prefs";
 import { buildAuthorizeUrl, type YandexConfig } from "@/lib/auth/yandex";
+import { safeNextPath } from "@/lib/auth/next-path";
 
 /** Cookie-часть входа через Яндекс: state против CSRF и роль с адресом возврата в tdd_login_prefs. */
 
@@ -16,11 +17,8 @@ export function parseRole(v: unknown): Role {
   return v === "teacher" ? "teacher" : "student";
 }
 
-/** Только относительный путь внутри сайта: `//host` и обратные слэши браузер читает как другой хост. */
-export function safeNext(v: unknown): string {
-  if (typeof v !== "string" || !v.startsWith("/") || v.startsWith("//") || v.includes("\\")) return "";
-  return v;
-}
+/** Адрес возврата после входа: только относительный путь внутри сайта (см. next-path.ts). */
+export const safeNext = safeNextPath;
 
 /** Адрес приложения: NEXT_PUBLIC_SITE_URL, иначе хост запроса. Яндекс принимает только redirect_uri,
  *  зарегистрированные в приложении, поэтому подделка заголовка Host ничего не даёт. */

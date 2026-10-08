@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { exchangeCode, fetchYandexProfile, yandexConfig } from "@/lib/auth/yandex";
 import { consumeYandexState } from "@/lib/auth/yandex-flow";
+import { takeLoginPrefs } from "@/lib/auth/login-prefs";
 import { getCurrentUser, homeFor } from "@/lib/auth/session";
 import { createServiceClient } from "@/lib/supabase/server";
 
@@ -13,8 +14,10 @@ export const runtime = "nodejs";
  *  tdd_login_prefs в профиль. Так у входа через Яндекс и у ссылки из письма один финал. */
 export async function GET(req: Request): Promise<NextResponse> {
   const url = new URL(req.url);
-  const fail = (kind: "off" | "denied" | "state" | "email" | "failed", detail?: string) => {
+  const fail = async (kind: "off" | "denied" | "state" | "email" | "failed", detail?: string) => {
     if (detail) console.error(`[auth] yandex ${kind}: ${detail}`);
+    // Роль и адрес возврата этой попытки больше не нужны: иначе их подхватит следующий вход по ссылке из письма.
+    await takeLoginPrefs();
     return NextResponse.redirect(new URL(`/login?yandex=${kind}`, url.origin));
   };
 
@@ -22,7 +25,8 @@ export async function GET(req: Request): Promise<NextResponse> {
   if (!cfg) return fail("off");
 
   const stateOk = await consumeYandexState(url.searchParams.get("state"));
-  const yandexError = url.searchParams.get("error");
+  // Код ошибки Яндекса идёт в лог: оставляем только безопасные символы, параметр может прислать кто угодно.
+  const yandexError = (url.searchParams.get("error") ?? "").replace(/[^\w.-]/g, "").slice(0, 64);
   if (yandexError) return fail(yandexError === "access_denied" ? "denied" : "failed", `yandex error ${yandexError}`);
   if (!stateOk) {
     // Повторное открытие адреса (F5, «назад») после удачного входа: просто ведём на главную роли.
