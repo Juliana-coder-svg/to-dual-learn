@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Notice } from "@/components/shared/Notice";
+import { StepMarks } from "@/components/shared/StepMarks";
 
 interface CardData { id: string; course: string; question: string; answer: string; takeaway: string }
 
@@ -27,11 +28,12 @@ export function FlashcardReview({ cards }: { cards: CardData[] }) {
   }
   if (index >= cards.length) {
     return (
-      <div className="callout flex flex-col items-center gap-3 py-10 text-center">
-        <div className="callout-label">Готово</div>
-        <p className="type-heading">{cards.length} из {cards.length} карточек повторено</p>
-        <p className="text-sm text-muted-foreground">Следующие вернутся по расписанию: через день, неделю или месяц.</p>
-        <Button nativeButton={false} render={<Link href="/learn" />} className="mt-2">К курсам</Button>
+      <div className="accent-panel step-enter flex flex-col items-center gap-3 py-12 text-center">
+        <p className="eyebrow">Готово</p>
+        <p className="type-counter">{cards.length}<span className="accent-panel-muted">/{cards.length}</span></p>
+        <p className="type-heading">Карточки повторены</p>
+        <p className="text-sm accent-panel-muted">Следующие вернутся по расписанию: через день, неделю или месяц.</p>
+        <Button nativeButton={false} render={<Link href="/learn" />} variant="inverse" className="mt-3">К курсам</Button>
       </div>
     );
   }
@@ -61,17 +63,15 @@ export function FlashcardReview({ cards }: { cards: CardData[] }) {
 
   return (
     <div>
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <p className="eyebrow">{index + 1} из {cards.length} · {card.course}</p>
-        <ol aria-hidden className="flex gap-1">
-          {cards.map((c, i) => <li key={c.id} className={`h-1.5 w-5 rounded-full ${i < index ? "bg-primary" : i === index ? "bg-primary/50" : "bg-muted"}`} />)}
-        </ol>
+        <StepMarks total={cards.length} filled={index} current={index + 1} size="sm" />
       </div>
-      <div className="mt-4 rounded-lg border p-6 md:p-8">
+      <div key={card.id} className="step-enter mt-4 rounded-lg border p-6 md:p-8">
         <p className="eyebrow">Вопрос</p>
         <p className="mt-2 text-balance type-heading md:text-2xl">{card.question}</p>
         {revealed ? (
-          <div className="mt-6 border-t pt-6">
+          <div className="step-enter mt-6 border-t pt-6">
             <p className="eyebrow text-primary-strong">Ответ</p>
             <p className="mt-2 type-body">{card.answer}</p>
             <p className="mt-4 text-sm text-muted-foreground">{card.takeaway}</p>

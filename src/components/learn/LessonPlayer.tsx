@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { AiNote } from "@/components/shared/AiNote";
+import { StepMarks } from "@/components/shared/StepMarks";
 import type { Feedback, LessonContent } from "@/lib/lessons/types";
 import { APPEAL_RETRY_HINT, RETRY_HINT, TOO_SHORT, lessonCopy } from "@/lib/lessons/copy";
 import type { Tone } from "@/lib/prompts/tone";
@@ -140,11 +141,6 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
   const stepAnnouncement = step === "feedback" ? "Разбор готов." : "";
 
   const stepIndex = step === "intro" ? 1 : step === "task" ? 2 : 3;
-  const STEPS: { n: number; label: string }[] = [
-    { n: 1, label: "Идея" },
-    { n: 2, label: "Задача" },
-    { n: 3, label: "Разбор" },
-  ];
   const arrow = <span aria-hidden className="shrink-0 text-primary-strong">→</span>;
 
   return (
@@ -152,24 +148,22 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
     <p aria-live="polite" className="sr-only">{busy ? (step === "task" ? t.busy : t.appealBusy) : stepAnnouncement}</p>
     <article ref={topRef} className="scroll-mt-4">
       <header>
-        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
+        <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
           <p className="eyebrow">Урок {lesson.position} · шаг {stepIndex} из 3</p>
-          <ol aria-label="Шаги урока" className="flex gap-1.5">
-            {STEPS.map((st) => (
-              <li key={st.n} aria-current={st.n === stepIndex ? "step" : undefined} className="flex flex-col gap-1">
-                <span className={`h-1.5 w-12 rounded-full ${st.n <= stepIndex ? "bg-primary" : "bg-muted"}`} />
-                <span className={`type-caption ${st.n === stepIndex ? "font-medium text-foreground" : "text-muted-foreground"}`}>{st.label}</span>
-              </li>
-            ))}
-          </ol>
+          <StepMarks total={3} filled={stepIndex} size="md" labels={["Идея", "Задача", "Разбор"]} label={`Шаг ${stepIndex} из 3`} />
         </div>
-        <h1 className="mt-4 text-balance type-title">{c.title}</h1>
-        <p className="mt-2 type-body text-muted-foreground">{c.concept}</p>
-        <AiNote kind={reviewed ? "lessonReviewed" : "lessonUnreviewed"} className="mt-3" />
+        <div className="mt-6 flex items-start gap-5">
+          <span aria-hidden className="type-counter shrink-0 text-primary">{String(lesson.position).padStart(2, "0")}</span>
+          <div className="min-w-0 pt-1">
+            <h1 className="text-balance type-title">{c.title}</h1>
+            <p className="mt-2 type-body text-muted-foreground">{c.concept}</p>
+          </div>
+        </div>
+        <AiNote kind={reviewed ? "lessonReviewed" : "lessonUnreviewed"} className="mt-4" />
       </header>
 
       {step === "intro" ? (
-        <section className="mt-10 space-y-8">
+        <section key="intro" className="step-enter mt-10 space-y-8">
           <p className="text-lg leading-relaxed">{c.intro}</p>
           <div className="callout">
             <div className="callout-label">Идея урока</div>
@@ -184,7 +178,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
       ) : null}
 
       {step === "task" ? (
-        <section className="mt-10 space-y-8">
+        <section key="task" className="step-enter mt-10 space-y-8">
           <div>
             <h2 data-step-heading tabIndex={-1} className="eyebrow outline-none">Задача</h2>
             <p className="mt-2 text-lg leading-relaxed">{c.task}</p>
@@ -240,15 +234,31 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
       ) : null}
 
       {step === "feedback" && feedback ? (
-        <section className="mt-10 space-y-8">
-          <div>
-            <div className="flex flex-wrap items-center gap-3">
+        <section key="feedback" className="step-enter mt-10 space-y-8">
+          <div className="flex flex-wrap items-start justify-between gap-x-8 gap-y-4 border-t-2 border-foreground pt-5">
+            <div className="min-w-0">
               <h2 data-step-heading tabIndex={-1} className="type-heading outline-none">Разбор</h2>
-              <Badge className="h-7 px-3 text-sm font-semibold"><span className="sr-only">Оценка: {feedback.score} из 5</span><span aria-hidden>{feedback.score}/5</span></Badge>
-              {progress ? <span className="text-sm text-muted-foreground">+{plural(progress.gained, "балл", "балла", "баллов")} · серия: {plural(progress.streak, "день", "дня", "дней")}</span> : null}
+              {scoreNote ? <p className="mt-2 text-sm text-muted-foreground">{scoreNote}</p> : null}
+              <AiNote kind="feedback" className="mt-2" />
             </div>
-            {scoreNote ? <p className="mt-2 text-sm text-muted-foreground">{scoreNote}</p> : null}
-            <AiNote kind="feedback" className="mt-2" />
+            <dl className="flex shrink-0 gap-8">
+              <div>
+                <dt className="eyebrow">Балл</dt>
+                <dd className="mt-1 type-counter text-primary"><span className="sr-only">{feedback.score} из 5</span><span aria-hidden>{feedback.score}<span className="text-muted-foreground/60">/5</span></span></dd>
+              </div>
+              {progress ? (
+                <>
+                  <div>
+                    <dt className="eyebrow">Баллы</dt>
+                    <dd className="mt-1 type-counter">+{progress.gained}</dd>
+                  </div>
+                  <div>
+                    <dt className="eyebrow">Серия</dt>
+                    <dd className="mt-1 type-counter">{progress.streak}<span className="ml-1 text-base font-normal text-muted-foreground">{plural(progress.streak, "день", "дня", "дней").replace(/^\d+\s/, "")}</span></dd>
+                  </div>
+                </>
+              ) : null}
+            </dl>
           </div>
           {worked || prevNextStep ? (
             <div className={`grid gap-3 ${worked && prevNextStep ? "md:grid-cols-2" : ""}`}>
