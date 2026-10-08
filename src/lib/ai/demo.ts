@@ -58,7 +58,13 @@ export const demo = {
         feedback: "Пример разбора: с подключённой моделью здесь будет оценка по критериям с цитатами.",
         flags: s.answer.trim().length < 20 ? ["Слишком короткая работа"] : [],
       })),
-      overview: `${NOTE} Сводка по группе появится с подключённой моделью.`,
+      overview: {
+        failedCriteria: submissions.some((s) => s.answer.trim().length <= 50)
+          ? [{ criterion: "Работа соответствует заданию", failed: submissions.filter((s) => s.answer.trim().length <= 50).length, total: submissions.length }]
+          : [],
+        reteach: [{ topic: "Пример: раздел материалов, который стоит переобъяснить", why: `${NOTE} С подключённой моделью здесь будет причина с примером из работ.` }],
+        quickWins: ["Пример: что уже получается у большинства."],
+      },
     };
   },
 

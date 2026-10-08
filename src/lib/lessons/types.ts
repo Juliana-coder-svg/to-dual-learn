@@ -81,9 +81,37 @@ export const HomeworkResultsSchema = z.object({
       flags: z.array(z.string()).describe("Отметки для преподавателя: дословное совпадение с материалами или другой работой, не по заданию, пустая работа"),
     }),
   ),
-  overview: z.string().describe("Сводка для преподавателя: типичные ошибки, что разобрать на занятии"),
+  overview: z
+    .object({
+      failedCriteria: z
+        .array(
+          z.object({
+            criterion: z.string().describe("Критерий дословно, как у преподавателя"),
+            failed: z.number().int().describe("Сколько работ его не выполнили"),
+            total: z.number().int().describe("Сколько работ проверено"),
+          }),
+        )
+        .describe("Критерии, которые не выполнила половина работ или больше, по убыванию числа провалов. Пусто, если таких нет"),
+      reteach: z
+        .array(
+          z.object({
+            topic: z.string().describe("Какой фрагмент материалов или какую идею переобъяснить: раздел, правило или приём, как он назван в материалах"),
+            why: z.string().describe("Почему это видно по работам: одно-два предложения с примером из работ"),
+          }),
+        )
+        .describe("1–3 пункта, что переобъяснить на занятии. Пусто, если переобъяснять нечего"),
+      quickWins: z.array(z.string()).describe("Что уже получается у большинства, 1–3 пункта по выполненным критериям. Пусто, если таких нет"),
+    })
+    .describe("Сводка для преподавателя по всей пачке работ"),
 });
 export type HomeworkResults = z.infer<typeof HomeworkResultsSchema>;
+export type HomeworkOverview = HomeworkResults["overview"];
+
+/** Проверки, сохранённые до структурной сводки (до 8 октября 2026), хранят overview строкой.
+ *  При чтении она переезжает в overviewText, а структурная сводка собирается из результатов. */
+export interface StoredHomeworkResults extends HomeworkResults {
+  overviewText?: string;
+}
 
 export const ClarifyingQuestionsSchema = z.object({
   questions: z.array(z.object({ question: z.string(), why: z.string().describe("Одна фраза: зачем этот ответ нужен для уроков") })),
