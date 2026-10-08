@@ -139,7 +139,7 @@ export async function updateLessonAction(courseId: string, lessonId: string, for
     flashcards: flashcards.length > 0 ? flashcards : [{ question: "Какая ключевая идея урока?", answer: String(formData.get("keyTakeaway") ?? "").trim() }],
   });
   if (!parsed.success) redirect(`/teach/${courseId}/lessons/${lessonId}/edit?error=1`);
-  await updateLessonContent(lessonId, courseId, parsed.data);
+  await updateLessonContent(lessonId, courseId, parsed.data, { by: ctx.user.id });
   await dropStaleLessonProposal(lessonId, courseId);
   revalidatePath(`/teach/${courseId}/lessons`);
   redirect(`/teach/${courseId}/lessons`);

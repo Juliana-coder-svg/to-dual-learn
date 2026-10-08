@@ -20,16 +20,34 @@
       "port": 3001
     },
     {
-      "name": "dev-3005",
+      "name": "dev-3004",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "NEXT_DIST_DIR=.next-3004 PORT=3004 npm run dev -- -p 3004"
+      ],
+      "port": 3004
+    },
+    {
+      "name": "start-3005",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "NEXT_DIST_DIR=.next-build npx next start -p 3005"
+      ],
+      "port": 3005
+    },
+    {
+      "name": "dev-3006",
       "runtimeExecutable": "env",
       "runtimeArgs": [
         "-u",
         "ANTHROPIC_BASE_URL",
         "sh",
         "-c",
-        "NEXT_DIST_DIR=.next-3005 PORT=3005 npm run dev -- -p 3005"
+        "NEXT_DIST_DIR=.next-3006 PORT=3006 npm run dev -- -p 3006"
       ],
-      "port": 3005
+      "port": 3006
     }
   ]
 }

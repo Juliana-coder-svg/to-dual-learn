@@ -21,6 +21,7 @@ import { generateArtifactPrompt } from "@/lib/prompts/generate-artifact";
 import { evaluatePrompt, reevaluatePrompt, type CalibrationSample } from "@/lib/prompts/evaluate";
 import { checkHomeworkPrompt } from "@/lib/prompts/check-homework";
 import { CHAT_PROMPT } from "@/lib/prompts/chat";
+import { recountFailedCriteria } from "@/lib/homework/overview";
 import { demo } from "./demo";
 import { estimateCostUsd, resolveProviderName, type AiProvider, type AiRequest, type AiResult } from "./provider";
 import { anthropicProvider } from "./providers/anthropic";
@@ -234,13 +235,14 @@ export async function checkHomework(
   opts: { task: string; criteria: string; submissions: { student: string; answer: string }[]; tone: Course["tone"] },
 ): Promise<HomeworkResults> {
   if (isDemoMode()) return demo.homework(opts.submissions);
-  return completeJson("homework", ctx, HomeworkResultsSchema, {
+  const results = await completeJson("homework", ctx, HomeworkResultsSchema, {
     task: checkHomeworkPrompt(opts),
     materials: materialsBlock(materials),
     messages: [{ role: "user", content: `Проверь ${opts.submissions.length} работ.` }],
     maxTokens: 32000,
     effort: "high",
   });
+  return recountFailedCriteria(results);
 }
 
 export async function chatWithMaterials(

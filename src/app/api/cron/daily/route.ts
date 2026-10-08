@@ -14,12 +14,14 @@ export const runtime = "nodejs";
 export const maxDuration = 300;
 
 /** Письмо «урок дня». Запускается кроном (vercel.json) раз в сутки; защищено CRON_SECRET.
+ *  Без секрета маршрут закрыт: он работает от service role и читает всех пользователей,
+ *  поэтому открывать его «по умолчанию» нельзя.
  *  Одному пользователю — не чаще раза в 20 часов, чтобы повторный запуск не дублировал письма.
  *  У крона нет пользователя, поэтому запросы идут от service role: RLS не применяется. */
 export async function GET(req: Request) {
   const secret = process.env.CRON_SECRET;
   const auth = req.headers.get("authorization");
-  if (secret && auth !== `Bearer ${secret}`) return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
+  if (!secret || auth !== `Bearer ${secret}`) return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
 
   const site = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const cutoff = Date.now() - 20 * 60 * 60 * 1000;

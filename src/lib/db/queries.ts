@@ -1,9 +1,12 @@
-import type { PostgrestMaybeSingleResponse, PostgrestSingleResponse } from "@supabase/supabase-js";
+import type { PostgrestMaybeSingleResponse, PostgrestResponse, PostgrestSingleResponse } from "@supabase/supabase-js";
 import { getSupabase } from "@/lib/supabase/server";
 import type {
   AiCallRow,
   CalibrationSampleRow,
   ChatMessageRow,
+  EnrollmentRow,
+  ConsentKind,
+  ConsentRow,
   CourseRow,
   FlashcardRow,
   GenerationRow,
@@ -27,14 +30,16 @@ import {
   type HomeworkResults,
   type LessonContent,
   type LessonReviewRecord,
+  type StoredHomeworkResults,
 } from "@/lib/lessons/types";
+import { normalizeHomeworkResults } from "@/lib/homework/overview";
 
 /** Все запросы идут от имени текущего пользователя (cookie-сессия Supabase):
  *  RLS из supabase/migrations/0001_init.sql решает, какие строки видны и что можно менять.
  *  Проверки в src/lib/auth/access.ts остаются как второй слой.
  *  Фоновые задачи без пользователя (крон) оборачивают вызовы в runAsService(). */
 
-export type { Role, LessonStatus } from "@/lib/supabase/types";
+export type { Role, LessonStatus, ConsentKind, ConsentRow } from "@/lib/supabase/types";
 
 export type User = ProfileRow;
 export type Course = CourseRow;
@@ -54,7 +59,7 @@ export interface Submission extends Omit<SubmissionRow, "feedback"> {
 }
 
 export interface HomeworkCheck extends Omit<HomeworkCheckRow, "results"> {
-  results: HomeworkResults;
+  results: StoredHomeworkResults;
 }
 
 /** Ошибка PostgREST превращается в исключение: route handlers отдадут её через handleRouteError. */
@@ -107,6 +112,54 @@ export async function markDigestSent(id: string): Promise<void> {
 export async function updateUserProgress(id: string, p: { streak: number; last_lesson_at: string; xp: number }): Promise<void> {
   const sb = await getSupabase();
   check(await sb.from("profiles").update(p).eq("id", id), "progress update");
+}
+
+// ---------- consents ----------
+
+export interface ConsentInput {
+  kind: ConsentKind;
+  version: string;
+}
+
+/** Записывает согласия, которых у пользователя ещё нет в этой версии. accepted_at ставит база
+ *  (на колонку нет гранта), поэтому передаём только user_id, kind и version. */
+export async function ensureConsents(userId: string, items: ConsentInput[]): Promise<void> {
+  if (items.length === 0) return;
+  const sb = await getSupabase();
+  const existing = unwrap(
+    await sb.from("consents").select("kind, version").eq("user_id", userId).is("withdrawn_at", null),
+    "consents",
+  );
+  const have = new Set(existing.map((c) => `${c.kind}:${c.version}`));
+  const rows = items.filter((i) => !have.has(`${i.kind}:${i.version}`)).map((i) => ({ user_id: userId, kind: i.kind, version: i.version }));
+  if (rows.length === 0) return;
+  check(await sb.from("consents").insert(rows), "consents insert");
+}
+
+export async function listConsents(userId: string): Promise<ConsentRow[]> {
+  const sb = await getSupabase();
+  return unwrap(
+    await sb.from("consents").select("*").eq("user_id", userId).order("accepted_at", { ascending: false }),
+    "consents list",
+  );
+}
+
+/** Есть ли действующее (не отозванное) согласие этого вида в этой версии. */
+export async function hasActiveConsent(userId: string, kind: ConsentKind, version: string): Promise<boolean> {
+  const sb = await getSupabase();
+  const row = unwrapMaybe(
+    await sb.from("consents").select("id").eq("user_id", userId).eq("kind", kind).eq("version", version).is("withdrawn_at", null).limit(1).maybeSingle(),
+    "consent check",
+  );
+  return Boolean(row);
+}
+
+export async function withdrawConsent(userId: string, kind: ConsentKind): Promise<void> {
+  const sb = await getSupabase();
+  check(
+    await sb.from("consents").update({ withdrawn_at: nowIso() }).eq("user_id", userId).eq("kind", kind).is("withdrawn_at", null),
+    "consent withdraw",
+  );
 }
 
 // ---------- courses ----------
@@ -310,6 +363,8 @@ function rowToLesson(r: LessonRow): Lesson {
     concept: r.concept,
     status: r.status,
     created_at: r.created_at,
+    reviewed_at: r.reviewed_at,
+    reviewed_by: r.reviewed_by,
     content: normalizeLessonContent(r.content),
     review: reviewRecord(r.review),
   };
@@ -326,12 +381,21 @@ function reviewRecord(raw: Json | null): LessonReviewRecord | null {
   }
 }
 
-export async function updateLessonContent(id: string, courseId: string, content: LessonContent): Promise<void> {
+/** reviewed: `{ by }` — текст сохранил преподаватель, урок считается проверенным им;
+ *  `null` — текст переписала модель, прежняя проверка снимается. Параметр обязателен,
+ *  чтобы каждое место вызова решало это явно. */
+export async function updateLessonContent(id: string, courseId: string, content: LessonContent, reviewed: { by: string } | null): Promise<void> {
   const sb = await getSupabase();
   check(
     await sb
       .from("lessons")
-      .update({ title: content.title, concept: content.concept, content: content as unknown as Json })
+      .update({
+        title: content.title,
+        concept: content.concept,
+        content: content as unknown as Json,
+        reviewed_at: reviewed ? nowIso() : null,
+        reviewed_by: reviewed ? reviewed.by : null,
+      })
       .eq("id", id)
       .eq("course_id", courseId),
     "lesson content",
@@ -367,7 +431,7 @@ export async function acceptLessonProposal(id: string, courseId: string): Promis
   check(
     await sb
       .from("lessons")
-      .update({ title: content.title, concept: content.concept, content: content as unknown as Json, review: record as unknown as Json })
+      .update({ title: content.title, concept: content.concept, content: content as unknown as Json, review: record as unknown as Json, reviewed_at: null, reviewed_by: null })
       .eq("id", id)
       .eq("course_id", courseId)
       .not("review->proposal", "is", null),
@@ -764,7 +828,7 @@ export async function clearChat(courseId: string, userId: string): Promise<void>
 
 function rowToHomework(r: HomeworkCheckRow): HomeworkCheck {
   const { results, ...rest } = r;
-  return { ...rest, results: results as unknown as HomeworkResults };
+  return { ...rest, results: normalizeHomeworkResults(results) };
 }
 
 export async function addHomeworkCheck(input: { courseId: string; userId: string; task: string; criteria: string; results: HomeworkResults }): Promise<HomeworkCheck> {
@@ -882,4 +946,122 @@ export async function listCalibrationSamples(courseId: string, lessonId?: string
 export async function deleteCalibrationSample(id: string, courseId: string): Promise<void> {
   const sb = await getSupabase();
   check(await sb.from("calibration_samples").delete().eq("id", id).eq("course_id", courseId), "calibration delete");
+}
+
+// ---------- мои данные: выгрузка и удаление ----------
+
+/** PostgREST отдаёт не больше 1000 строк за запрос: читаем страницами. */
+async function fetchAll<T>(page: (from: number, to: number) => PromiseLike<PostgrestResponse<T>>, what: string): Promise<T[]> {
+  const size = 1000;
+  const out: T[] = [];
+  for (let from = 0; ; from += size) {
+    const rows = unwrap(await page(from, from + size - 1), what);
+    out.push(...rows);
+    if (rows.length < size) return out;
+  }
+}
+
+export interface UserDataExport {
+  profile: ProfileRow;
+  consents: ConsentRow[];
+  enrollments: Array<EnrollmentRow & { course_title: string }>;
+  submissions: SubmissionRow[];
+  flashcards: FlashcardRow[];
+  ai_calls: AiCallRow[];
+  /** Для преподавателя: его курсы и всё внутри них, кроме ответов и записей других людей. */
+  courses: CourseRow[];
+  materials: MaterialRow[];
+  lessons: LessonRow[];
+  calibration_samples: CalibrationSampleRow[];
+  generations: GenerationRow[];
+  chat_messages: ChatMessageRow[];
+  homework_checks: HomeworkCheckRow[];
+}
+
+/** Всё, что сервис хранит о пользователе (ст. 14 152-ФЗ). Запросы идут от его сессии с явным
+ *  фильтром по user_id или owner_id: ответы и записи студентов на курсах преподавателя не входят,
+ *  это данные других людей. */
+export async function exportUserData(userId: string): Promise<UserDataExport | undefined> {
+  const sb = await getSupabase();
+  const profile = await getUserById(userId);
+  if (!profile) return undefined;
+  const [consents, enrollmentRows, submissions, flashcards, aiCalls, courses] = await Promise.all([
+    listConsents(userId),
+    fetchAll<EnrollmentRow & { course: { title: string } | null }>(
+      (from, to) =>
+        sb.from("enrollments").select("*, course:courses(title)").eq("user_id", userId).order("joined_at").range(from, to)
+          .overrideTypes<Array<EnrollmentRow & { course: { title: string } | null }>, { merge: false }>(),
+      "export enrollments",
+    ),
+    fetchAll<SubmissionRow>((from, to) => sb.from("submissions").select("*").eq("user_id", userId).order("created_at").range(from, to), "export submissions"),
+    fetchAll<FlashcardRow>((from, to) => sb.from("flashcards").select("*").eq("user_id", userId).order("created_at").range(from, to), "export flashcards"),
+    fetchAll<AiCallRow>((from, to) => sb.from("ai_calls").select("*").eq("user_id", userId).order("created_at").range(from, to), "export ai calls"),
+    fetchAll<CourseRow>((from, to) => sb.from("courses").select("*").eq("owner_id", userId).order("created_at").range(from, to), "export courses"),
+  ]);
+  const courseIds = courses.map((c) => c.id);
+  const inCourses = <T>(table: "materials" | "lessons" | "calibration_samples", what: string): Promise<T[]> =>
+    courseIds.length === 0
+      ? Promise.resolve([])
+      : fetchAll<T>((from, to) => sb.from(table).select("*").in("course_id", courseIds).order("created_at").range(from, to).overrideTypes<T[], { merge: false }>(), what);
+  const [materials, lessons, calibration, generations, chat, homework] = await Promise.all([
+    inCourses<MaterialRow>("materials", "export materials"),
+    inCourses<LessonRow>("lessons", "export lessons"),
+    inCourses<CalibrationSampleRow>("calibration_samples", "export calibration"),
+    fetchAll<GenerationRow>((from, to) => sb.from("generations").select("*").eq("user_id", userId).order("created_at").range(from, to), "export generations"),
+    fetchAll<ChatMessageRow>((from, to) => sb.from("chat_messages").select("*").eq("user_id", userId).order("created_at").range(from, to), "export chat"),
+    fetchAll<HomeworkCheckRow>((from, to) => sb.from("homework_checks").select("*").eq("user_id", userId).order("created_at").range(from, to), "export homework"),
+  ]);
+  return {
+    profile,
+    consents,
+    enrollments: enrollmentRows.map(({ course, ...e }) => ({ ...e, course_title: course?.title ?? "" })),
+    submissions,
+    flashcards,
+    ai_calls: aiCalls,
+    courses,
+    materials,
+    lessons,
+    calibration_samples: calibration,
+    generations,
+    chat_messages: chat,
+    homework_checks: homework,
+  };
+}
+
+export interface OwnedCourseWithStudents {
+  id: string;
+  title: string;
+  students: number;
+}
+
+/** Курсы пользователя, где есть другие люди: записанные сейчас или оставившие ответы раньше
+ *  (отчисленный студент теряет запись, а его ответы остаются на уроках). Пока такие курсы есть,
+ *  аккаунт удалять нельзя, иначе каскад унесёт ответы студентов (docs/legal/data-map.md, раздел 6). */
+export async function listOwnedCoursesWithStudents(userId: string): Promise<OwnedCourseWithStudents[]> {
+  const sb = await getSupabase();
+  const rows = unwrap(
+    await sb
+      .from("courses")
+      .select("id, title, enrollments(user_id)")
+      .eq("owner_id", userId)
+      .overrideTypes<Array<{ id: string; title: string; enrollments: { user_id: string }[] }>, { merge: false }>(),
+    "owned courses",
+  );
+  if (rows.length === 0) return [];
+  const answered = unwrap(
+    await sb
+      .from("submissions")
+      .select("user_id, lesson:lessons!inner(course_id)")
+      .in("lesson.course_id", rows.map((c) => c.id))
+      .neq("user_id", userId)
+      .overrideTypes<Array<{ user_id: string; lesson: { course_id: string } }>, { merge: false }>(),
+    "owned courses submissions",
+  );
+  return rows
+    .map((c) => {
+      const people = new Set(c.enrollments.map((e) => e.user_id).filter((id) => id !== userId));
+      for (const s of answered) if (s.lesson.course_id === c.id) people.add(s.user_id);
+      return { id: c.id, title: c.title, students: people.size };
+    })
+    .filter((c) => c.students > 0);
 }
