@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ConsentFields } from "@/components/shared/ConsentFields";
+import { YandexLoginButton } from "@/components/shared/YandexLoginButton";
 import { PublicShell } from "@/components/shared/PublicShell";
 import { RoleChoice } from "@/components/shared/RoleChoice";
 import { Notice } from "@/components/shared/Notice";
@@ -22,7 +23,7 @@ const ERRORS: Record<string, string> = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ role?: string; error?: string; sent?: string; next?: string; deleted?: string }>;
+  searchParams: Promise<{ role?: string; error?: string; sent?: string; next?: string; deleted?: string; yandex?: string }>;
 }) {
   const user = await getCurrentUser();
   if (user) redirect(homeFor(user));
@@ -85,8 +86,9 @@ export default async function LoginPage({
           <ConsentFields />
           <div className="space-y-3">
             <Button type="submit" size="lg" className="w-full">{submitLabel}</Button>
+            <YandexLoginButton error={sp.yandex} />
             <p className="text-center type-caption text-muted-foreground">
-              Нажимая «{submitLabel}», вы принимаете{" "}
+              Нажимая «{submitLabel}» или «Войти с Яндекс ID», вы принимаете{" "}
               <Link href="/legal/terms" target="_blank" className="underline underline-offset-4 hover:text-foreground">Пользовательское соглашение</Link>.
             </p>
           </div>

@@ -1,5 +1,6 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { teacherCourse } from "@/lib/auth/access";
+import { getCurrentUserId } from "@/lib/auth/session";
 import { AppShell } from "@/components/shared/AppShell";
 import { CourseTabs } from "@/components/teach/CourseTabs";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -13,6 +14,9 @@ import { plural } from "@/lib/utils/format";
 export default async function CourseLayout({ children, params }: { children: React.ReactNode; params: Promise<{ courseId: string }> }) {
   const { courseId } = await params;
   if (!isUuid(courseId)) notFound();
+  // Без сессии запрос ушёл бы под ролью anon, у которой нет права вызывать course_usage: вместо
+  // страницы входа была бы ошибка. Проверка по JWT из cookie локальная, круга до базы не добавляет.
+  if (!(await getCurrentUserId())) redirect(`/login?role=teacher&next=${encodeURIComponent(`/teach/${courseId}`)}`);
   // Расход считает RPC с проверкой владельца, поэтому его можно запрашивать параллельно с проверкой доступа.
   const [ctx, usage] = await Promise.all([teacherCourse(courseId), courseUsage(courseId)]);
   if (!ctx) notFound();

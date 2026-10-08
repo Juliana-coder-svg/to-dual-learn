@@ -8,7 +8,8 @@ export async function proxy(request: NextRequest) {
   // Ссылка из письма Supabase ведёт на Site URL, если адрес приложения не добавлен в Redirect URLs.
   // Код обмена при этом приходит на главную: переносим его на /auth/callback, чтобы вход всё равно прошёл.
   const { pathname, searchParams } = request.nextUrl;
-  if (pathname !== "/auth/callback" && (searchParams.has("code") || searchParams.has("token_hash"))) {
+  // Пути /auth/* не трогаем: у входа через Яндекс свой callback с собственным ?code=.
+  if (!pathname.startsWith("/auth/") && (searchParams.has("code") || searchParams.has("token_hash"))) {
     const target = request.nextUrl.clone();
     target.pathname = "/auth/callback";
     return NextResponse.redirect(target);
