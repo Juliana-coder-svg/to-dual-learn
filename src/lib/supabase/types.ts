@@ -57,6 +57,9 @@ export type LessonRow = {
   status: LessonStatus;
   review: Json | null;
   created_at: string;
+  /** Когда и кто из преподавателей сохранил урок в редакторе; null — создан ИИ и не проверен. */
+  reviewed_at: string | null;
+  reviewed_by: string | null;
 };
 
 export type EnrollmentRow = {
@@ -194,7 +197,7 @@ export type Database = {
       profiles: Table<ProfileRow, "created_at" | "streak" | "last_lesson_at" | "xp" | "role" | "daily_email" | "last_digest_at">;
       courses: Table<CourseRow, "id" | "created_at" | "description" | "audience" | "outcomes" | "tone" | "daily_limit">;
       materials: Table<MaterialRow, "id" | "created_at">;
-      lessons: Table<LessonRow, "id" | "created_at" | "status" | "review">;
+      lessons: Table<LessonRow, "id" | "created_at" | "status" | "review" | "reviewed_at" | "reviewed_by">;
       enrollments: Table<EnrollmentRow, "joined_at">;
       submissions: Table<
         SubmissionRow,

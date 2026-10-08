@@ -18,7 +18,8 @@ export async function POST(req: Request) {
     const materials = await listMaterials(ctx.course.id);
     const review = await reviewLessons({ userId: ctx.user.id, courseId: ctx.course.id }, ctx.course, materials, lessons.map((l) => l.content));
     for (const [i, l] of lessons.entries()) {
-      await updateLessonContent(l.id, ctx.course.id, review.lessons[i]);
+      // Текст переписала модель: отметка «проверено преподавателем» снимается.
+      await updateLessonContent(l.id, ctx.course.id, review.lessons[i], null);
       await setLessonReview(l.id, ctx.course.id, review.notes[i] ?? null);
     }
     const changed = review.notes.filter((n) => n.changed).length;

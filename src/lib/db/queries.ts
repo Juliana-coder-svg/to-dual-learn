@@ -301,17 +301,28 @@ function rowToLesson(r: LessonRow): Lesson {
     concept: r.concept,
     status: r.status,
     created_at: r.created_at,
+    reviewed_at: r.reviewed_at,
+    reviewed_by: r.reviewed_by,
     content: normalizeLessonContent(r.content),
     review: r.review ? (r.review as unknown as LessonReviewNote) : null,
   };
 }
 
-export async function updateLessonContent(id: string, courseId: string, content: LessonContent): Promise<void> {
+/** reviewed: `{ by }` — текст сохранил преподаватель, урок считается проверенным им;
+ *  `null` — текст переписала модель, прежняя проверка снимается. Параметр обязателен,
+ *  чтобы каждое место вызова решало это явно. */
+export async function updateLessonContent(id: string, courseId: string, content: LessonContent, reviewed: { by: string } | null): Promise<void> {
   const sb = await getSupabase();
   check(
     await sb
       .from("lessons")
-      .update({ title: content.title, concept: content.concept, content: content as unknown as Json })
+      .update({
+        title: content.title,
+        concept: content.concept,
+        content: content as unknown as Json,
+        reviewed_at: reviewed ? nowIso() : null,
+        reviewed_by: reviewed ? reviewed.by : null,
+      })
       .eq("id", id)
       .eq("course_id", courseId),
     "lesson content",
