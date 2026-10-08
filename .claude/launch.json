@@ -18,6 +18,15 @@
         "NEXT_DIST_DIR=.next-3001 DATABASE_PATH=./data/test.db PORT=3001 npm run dev -- -p 3001"
       ],
       "port": 3001
+    },
+    {
+      "name": "dev-3002",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "NEXT_DIST_DIR=.next-3002 PORT=3002 npm run dev -- -p 3002"
+      ],
+      "port": 3002
     }
   ]
 }
