@@ -102,6 +102,15 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
               </form>
             </CardContent>
           </Card>
+          <Card className="mt-4">
+            <CardHeader>
+              <CardTitle>Мои данные</CardTitle>
+              <CardDescription>Скачать всё, что мы храним о вас, или удалить аккаунт.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button nativeButton={false} render={<Link href="/account/data" />} variant="outline" size="sm">Открыть</Button>
+            </CardContent>
+          </Card>
         </aside>
       </div>
     </AppShell>

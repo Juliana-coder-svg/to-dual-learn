@@ -1,9 +1,10 @@
-import type { PostgrestMaybeSingleResponse, PostgrestSingleResponse } from "@supabase/supabase-js";
+import type { PostgrestMaybeSingleResponse, PostgrestResponse, PostgrestSingleResponse } from "@supabase/supabase-js";
 import { getSupabase } from "@/lib/supabase/server";
 import type {
   AiCallRow,
   CalibrationSampleRow,
   ChatMessageRow,
+  EnrollmentRow,
   ConsentKind,
   ConsentRow,
   CourseRow,
@@ -787,4 +788,107 @@ export async function listCalibrationSamples(courseId: string, lessonId?: string
 export async function deleteCalibrationSample(id: string, courseId: string): Promise<void> {
   const sb = await getSupabase();
   check(await sb.from("calibration_samples").delete().eq("id", id).eq("course_id", courseId), "calibration delete");
+}
+
+// ---------- мои данные: выгрузка и удаление ----------
+
+/** PostgREST отдаёт не больше 1000 строк за запрос: читаем страницами. */
+async function fetchAll<T>(page: (from: number, to: number) => PromiseLike<PostgrestResponse<T>>, what: string): Promise<T[]> {
+  const size = 1000;
+  const out: T[] = [];
+  for (let from = 0; ; from += size) {
+    const rows = unwrap(await page(from, from + size - 1), what);
+    out.push(...rows);
+    if (rows.length < size) return out;
+  }
+}
+
+export interface UserDataExport {
+  profile: ProfileRow;
+  consents: ConsentRow[];
+  enrollments: Array<EnrollmentRow & { course_title: string }>;
+  submissions: SubmissionRow[];
+  flashcards: FlashcardRow[];
+  ai_calls: AiCallRow[];
+  /** Для преподавателя: его курсы и всё внутри них, кроме ответов и записей других людей. */
+  courses: CourseRow[];
+  materials: MaterialRow[];
+  lessons: LessonRow[];
+  calibration_samples: CalibrationSampleRow[];
+  generations: GenerationRow[];
+  chat_messages: ChatMessageRow[];
+  homework_checks: HomeworkCheckRow[];
+}
+
+/** Всё, что сервис хранит о пользователе (ст. 14 152-ФЗ). Запросы идут от его сессии с явным
+ *  фильтром по user_id или owner_id: ответы и записи студентов на курсах преподавателя не входят,
+ *  это данные других людей. */
+export async function exportUserData(userId: string): Promise<UserDataExport | undefined> {
+  const sb = await getSupabase();
+  const profile = await getUserById(userId);
+  if (!profile) return undefined;
+  const [consents, enrollmentRows, submissions, flashcards, aiCalls, courses] = await Promise.all([
+    listConsents(userId),
+    fetchAll<EnrollmentRow & { course: { title: string } | null }>(
+      (from, to) =>
+        sb.from("enrollments").select("*, course:courses(title)").eq("user_id", userId).order("joined_at").range(from, to)
+          .overrideTypes<Array<EnrollmentRow & { course: { title: string } | null }>, { merge: false }>(),
+      "export enrollments",
+    ),
+    fetchAll<SubmissionRow>((from, to) => sb.from("submissions").select("*").eq("user_id", userId).order("created_at").range(from, to), "export submissions"),
+    fetchAll<FlashcardRow>((from, to) => sb.from("flashcards").select("*").eq("user_id", userId).order("created_at").range(from, to), "export flashcards"),
+    fetchAll<AiCallRow>((from, to) => sb.from("ai_calls").select("*").eq("user_id", userId).order("created_at").range(from, to), "export ai calls"),
+    fetchAll<CourseRow>((from, to) => sb.from("courses").select("*").eq("owner_id", userId).order("created_at").range(from, to), "export courses"),
+  ]);
+  const courseIds = courses.map((c) => c.id);
+  const inCourses = <T>(table: "materials" | "lessons" | "calibration_samples", what: string): Promise<T[]> =>
+    courseIds.length === 0
+      ? Promise.resolve([])
+      : fetchAll<T>((from, to) => sb.from(table).select("*").in("course_id", courseIds).order("created_at").range(from, to).overrideTypes<T[], { merge: false }>(), what);
+  const [materials, lessons, calibration, generations, chat, homework] = await Promise.all([
+    inCourses<MaterialRow>("materials", "export materials"),
+    inCourses<LessonRow>("lessons", "export lessons"),
+    inCourses<CalibrationSampleRow>("calibration_samples", "export calibration"),
+    fetchAll<GenerationRow>((from, to) => sb.from("generations").select("*").eq("user_id", userId).order("created_at").range(from, to), "export generations"),
+    fetchAll<ChatMessageRow>((from, to) => sb.from("chat_messages").select("*").eq("user_id", userId).order("created_at").range(from, to), "export chat"),
+    fetchAll<HomeworkCheckRow>((from, to) => sb.from("homework_checks").select("*").eq("user_id", userId).order("created_at").range(from, to), "export homework"),
+  ]);
+  return {
+    profile,
+    consents,
+    enrollments: enrollmentRows.map(({ course, ...e }) => ({ ...e, course_title: course?.title ?? "" })),
+    submissions,
+    flashcards,
+    ai_calls: aiCalls,
+    courses,
+    materials,
+    lessons,
+    calibration_samples: calibration,
+    generations,
+    chat_messages: chat,
+    homework_checks: homework,
+  };
+}
+
+export interface OwnedCourseWithStudents {
+  id: string;
+  title: string;
+  students: number;
+}
+
+/** Курсы пользователя, на которые записан хотя бы один другой человек: пока они есть, аккаунт
+ *  удалять нельзя, иначе каскад унесёт ответы студентов (docs/legal/data-map.md, раздел 6). */
+export async function listOwnedCoursesWithStudents(userId: string): Promise<OwnedCourseWithStudents[]> {
+  const sb = await getSupabase();
+  const rows = unwrap(
+    await sb
+      .from("courses")
+      .select("id, title, enrollments(user_id)")
+      .eq("owner_id", userId)
+      .overrideTypes<Array<{ id: string; title: string; enrollments: { user_id: string }[] }>, { merge: false }>(),
+    "owned courses",
+  );
+  return rows
+    .map((c) => ({ id: c.id, title: c.title, students: c.enrollments.filter((e) => e.user_id !== userId).length }))
+    .filter((c) => c.students > 0);
 }

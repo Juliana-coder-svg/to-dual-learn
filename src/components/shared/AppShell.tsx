@@ -32,6 +32,7 @@ export async function AppShell({ user, requireConsent = true, children }: { user
             </nav>
           </div>
           <div className="flex items-center gap-2 text-sm">
+            <Link href="/account/data" className="hidden text-muted-foreground hover:text-foreground sm:inline">Мои данные</Link>
             <span className="hidden text-muted-foreground sm:inline">{user.name}</span>
             <form action={switchRole}>
               <Button type="submit" variant="ghost" size="sm">
@@ -51,6 +52,7 @@ export async function AppShell({ user, requireConsent = true, children }: { user
           <Link href="/legal/privacy" className="hover:text-foreground">Политика</Link>
           <Link href="/legal/terms" className="hover:text-foreground">Соглашение</Link>
           <Link href="/legal/consent" className="hover:text-foreground">Согласие</Link>
+          <Link href="/account/data" className="hover:text-foreground">Мои данные</Link>
         </div>
       </footer>
     </div>
