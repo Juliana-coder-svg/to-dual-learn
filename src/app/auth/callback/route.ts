@@ -6,6 +6,7 @@ import { takeLoginPrefs } from "@/lib/auth/login-prefs";
 import { hasActiveConsent, updateProfile } from "@/lib/db/queries";
 import { recordConsents } from "@/lib/legal/consents";
 import { CONSENT_VERSION } from "@/lib/legal/versions";
+import { safeNextPath } from "@/lib/auth/next-path";
 
 export const runtime = "nodejs";
 
@@ -44,7 +45,7 @@ export async function GET(req: Request): Promise<NextResponse> {
     const patch = { role: prefs.role, ...(prefs.name ? { name: prefs.name } : {}) };
     await updateProfile(user.id, patch);
     if (prefs.consents?.length) await recordConsents(user.id, prefs.consents);
-    target = prefs.next ?? homeFor({ ...user, ...patch });
+    target = safeNextPath(prefs.next) || homeFor({ ...user, ...patch });
   }
   // Ссылку открыли в другом браузере, и отметок формы входа нет: просим согласие ещё раз.
   if (!(await hasActiveConsent(user.id, "processing", CONSENT_VERSION.processing))) {

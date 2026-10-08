@@ -876,8 +876,9 @@ export interface OwnedCourseWithStudents {
   students: number;
 }
 
-/** Курсы пользователя, на которые записан хотя бы один другой человек: пока они есть, аккаунт
- *  удалять нельзя, иначе каскад унесёт ответы студентов (docs/legal/data-map.md, раздел 6). */
+/** Курсы пользователя, где есть другие люди: записанные сейчас или оставившие ответы раньше
+ *  (отчисленный студент теряет запись, а его ответы остаются на уроках). Пока такие курсы есть,
+ *  аккаунт удалять нельзя, иначе каскад унесёт ответы студентов (docs/legal/data-map.md, раздел 6). */
 export async function listOwnedCoursesWithStudents(userId: string): Promise<OwnedCourseWithStudents[]> {
   const sb = await getSupabase();
   const rows = unwrap(
@@ -888,7 +889,21 @@ export async function listOwnedCoursesWithStudents(userId: string): Promise<Owne
       .overrideTypes<Array<{ id: string; title: string; enrollments: { user_id: string }[] }>, { merge: false }>(),
     "owned courses",
   );
+  if (rows.length === 0) return [];
+  const answered = unwrap(
+    await sb
+      .from("submissions")
+      .select("user_id, lesson:lessons!inner(course_id)")
+      .in("lesson.course_id", rows.map((c) => c.id))
+      .neq("user_id", userId)
+      .overrideTypes<Array<{ user_id: string; lesson: { course_id: string } }>, { merge: false }>(),
+    "owned courses submissions",
+  );
   return rows
-    .map((c) => ({ id: c.id, title: c.title, students: c.enrollments.filter((e) => e.user_id !== userId).length }))
+    .map((c) => {
+      const people = new Set(c.enrollments.map((e) => e.user_id).filter((id) => id !== userId));
+      for (const s of answered) if (s.lesson.course_id === c.id) people.add(s.user_id);
+      return { id: c.id, title: c.title, students: people.size };
+    })
     .filter((c) => c.students > 0);
 }

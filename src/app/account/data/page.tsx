@@ -13,7 +13,7 @@ import { plural } from "@/lib/utils/format";
 
 const ERRORS: Record<string, string> = {
   confirm: "Почта не совпадает. Введите адрес, под которым вы вошли.",
-  courses: "Пока на ваших курсах есть студенты, удалить аккаунт нельзя: пропали бы их ответы. Напишите нам, решим вручную.",
+  courses: "Пока на ваших курсах есть студенты или их ответы, удалить аккаунт нельзя: ответы пропали бы вместе с курсом. Напишите нам, решим вручную.",
   delete: "Не удалось удалить аккаунт. Попробуйте ещё раз через минуту или напишите нам.",
 };
 
@@ -90,7 +90,7 @@ export default async function MyDataPage({ searchParams }: { searchParams: Promi
           <CardContent>
             {blockingCourses.length > 0 ? (
               <div className="space-y-3 text-sm">
-                <p>Пока на ваших курсах есть студенты, удалить аккаунт нельзя: вместе с курсом пропали бы их ответы.</p>
+                <p>Пока на ваших курсах есть студенты или их ответы, удалить аккаунт нельзя: вместе с курсом пропали бы их ответы.</p>
                 <ul className="list-disc pl-5 text-muted-foreground">
                   {blockingCourses.map((c) => <li key={c.id}>{c.title}: {plural(c.students, "студент", "студента", "студентов")}</li>)}
                 </ul>

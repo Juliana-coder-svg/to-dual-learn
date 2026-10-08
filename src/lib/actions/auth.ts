@@ -9,6 +9,7 @@ import { getCurrentUser, homeFor, requireUser } from "@/lib/auth/session";
 import { setLoginPrefs } from "@/lib/auth/login-prefs";
 import { loginMode } from "@/lib/auth/mode";
 import { recordConsents } from "@/lib/legal/consents";
+import { safeNextPath } from "@/lib/auth/next-path";
 
 function parseRole(v: FormDataEntryValue | null): Role {
   return v === "teacher" ? "teacher" : "student";
@@ -21,11 +22,6 @@ function parseConsents(formData: FormData): ConsentKind[] | null {
   const kinds: ConsentKind[] = ["processing", "terms"];
   if (formData.get("consent_marketing") === "1") kinds.push("marketing");
   return kinds;
-}
-
-function safeNextPath(v: FormDataEntryValue | null): string {
-  const next = String(v ?? "");
-  return next.startsWith("/") && !next.startsWith("//") ? next : "";
 }
 
 /** Адрес приложения для ссылки в письме. Должен быть в Redirect URLs проекта Supabase. */

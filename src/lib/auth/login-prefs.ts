@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import type { ConsentKind, Role } from "@/lib/db/queries";
+import { safeNextPath } from "./next-path";
 
 /** Имя и роль из формы входа. Supabase применяет user_metadata только при первой
  *  регистрации, а нам нужно обновлять их при каждом входе, как раньше. Поэтому форма
@@ -33,7 +34,7 @@ export async function takeLoginPrefs(): Promise<LoginPrefs | null> {
     const parsed = JSON.parse(raw) as { name?: unknown; role?: unknown; next?: unknown; consents?: unknown };
     const name = typeof parsed.name === "string" ? parsed.name.trim() : "";
     const role: Role = parsed.role === "teacher" ? "teacher" : "student";
-    const next = typeof parsed.next === "string" && parsed.next.startsWith("/") && !parsed.next.startsWith("//") ? parsed.next : undefined;
+    const next = safeNextPath(parsed.next) || undefined;
     const consents = Array.isArray(parsed.consents)
       ? CONSENT_KINDS.filter((k) => (parsed.consents as unknown[]).includes(k))
       : [];

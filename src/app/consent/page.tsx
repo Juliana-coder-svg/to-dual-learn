@@ -1,4 +1,5 @@
 import { requireUser } from "@/lib/auth/session";
+import { safeNextPath } from "@/lib/auth/next-path";
 import { acceptConsentAction, logout } from "@/lib/actions/auth";
 import { ConsentFields } from "@/components/shared/ConsentFields";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,7 @@ import { Button } from "@/components/ui/button";
 export default async function ConsentPage({ searchParams }: { searchParams: Promise<{ next?: string; error?: string }> }) {
   const user = await requireUser();
   const sp = await searchParams;
-  const next = sp.next && sp.next.startsWith("/") && !sp.next.startsWith("//") ? sp.next : "";
+  const next = safeNextPath(sp.next);
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-16">

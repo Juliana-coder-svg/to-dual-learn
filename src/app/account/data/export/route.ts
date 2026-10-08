@@ -32,6 +32,9 @@ export async function GET(): Promise<NextResponse> {
     payload.materials = data.materials.map((m) => ({ ...m, content_text: null }));
     payload.note = "Выгрузка больше лимита: текст материалов не включён, полный текст пришлём по запросу.";
     body = JSON.stringify(payload, null, 2);
+    if (Buffer.byteLength(body) > MAX_BYTES) {
+      return NextResponse.json({ ok: false, error: "Выгрузка слишком большая для одного файла. Напишите нам, пришлём архив по запросу." }, { status: 413 });
+    }
   }
   const date = new Date().toISOString().slice(0, 10);
   return new NextResponse(body, {
