@@ -30,7 +30,9 @@ import {
   type HomeworkResults,
   type LessonContent,
   type LessonReviewNote,
+  type StoredHomeworkResults,
 } from "@/lib/lessons/types";
+import { normalizeHomeworkResults } from "@/lib/homework/overview";
 
 /** Все запросы идут от имени текущего пользователя (cookie-сессия Supabase):
  *  RLS из supabase/migrations/0001_init.sql решает, какие строки видны и что можно менять.
@@ -57,7 +59,7 @@ export interface Submission extends Omit<SubmissionRow, "feedback"> {
 }
 
 export interface HomeworkCheck extends Omit<HomeworkCheckRow, "results"> {
-  results: HomeworkResults;
+  results: StoredHomeworkResults;
 }
 
 /** Ошибка PostgREST превращается в исключение: route handlers отдадут её через handleRouteError. */
@@ -762,7 +764,7 @@ export async function clearChat(courseId: string, userId: string): Promise<void>
 
 function rowToHomework(r: HomeworkCheckRow): HomeworkCheck {
   const { results, ...rest } = r;
-  return { ...rest, results: results as unknown as HomeworkResults };
+  return { ...rest, results: normalizeHomeworkResults(results) };
 }
 
 export async function addHomeworkCheck(input: { courseId: string; userId: string; task: string; criteria: string; results: HomeworkResults }): Promise<HomeworkCheck> {
