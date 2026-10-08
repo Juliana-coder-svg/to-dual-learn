@@ -484,67 +484,27 @@ export async function latestSubmissionsForCourse(userId: string, courseId: strin
   return map;
 }
 
-export interface CourseProgress {
-  /** Последний ответ на каждый урок: lesson_id → submission. */
-  latest: Map<string, Submission>;
-  /** Сколько уроков курса начато с полуночи (первая сдача по уроку). Для лимита «один урок в день». */
-  startedToday: number;
-}
-
-const EMPTY_PROGRESS: CourseProgress = { latest: new Map(), startedToday: 0 };
-
-/** Группирует ответы по курсу: последний ответ на урок и число уроков, начатых с полуночи. */
-function buildProgress(rows: Array<SubmissionRow & { lessons: { course_id: string } }>, now: Date): Map<string, CourseProgress> {
-  const since = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-  const byCourse = new Map<string, { latest: Map<string, Submission>; firstAt: Map<string, number> }>();
+/** Последний балл студента по каждому уроку, сгруппировано по курсу: course_id → (lesson_id → score).
+ *  Для списка курсов: только три колонки вместо текстов ответов и разборов. */
+export async function latestScoresByCourse(userId: string): Promise<Map<string, Map<string, number>>> {
+  const sb = await getSupabase();
+  const rows = unwrap(
+    await sb
+      .from("submissions")
+      .select("lesson_id, score, created_at, lessons!inner(course_id)")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .overrideTypes<Array<{ lesson_id: string; score: number; created_at: string; lessons: { course_id: string } }>, { merge: false }>(),
+    "scores by course",
+  );
+  const out = new Map<string, Map<string, number>>();
   for (const r of rows) {
-    let c = byCourse.get(r.lessons.course_id);
-    if (!c) byCourse.set(r.lessons.course_id, (c = { latest: new Map(), firstAt: new Map() }));
-    if (!c.latest.has(r.lesson_id)) c.latest.set(r.lesson_id, rowToSubmission(r));
-    c.firstAt.set(r.lesson_id, Math.min(c.firstAt.get(r.lesson_id) ?? Infinity, new Date(r.created_at).getTime()));
-  }
-  const out = new Map<string, CourseProgress>();
-  for (const [courseId, c] of byCourse) {
-    let startedToday = 0;
-    for (const t of c.firstAt.values()) if (t >= since) startedToday++;
-    out.set(courseId, { latest: c.latest, startedToday });
+    let m = out.get(r.lessons.course_id);
+    if (!m) out.set(r.lessons.course_id, (m = new Map()));
+    if (!m.has(r.lesson_id)) m.set(r.lesson_id, r.score);
   }
   return out;
 }
-
-/** Ответы студента по всем курсам одним запросом (для списка курсов). */
-export async function progressByCourse(userId: string, now = new Date()): Promise<Map<string, CourseProgress>> {
-  const sb = await getSupabase();
-  const rows = unwrap(
-    await sb
-      .from("submissions")
-      .select("*, lessons!inner(course_id)")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .overrideTypes<Array<SubmissionRow & { lessons: { course_id: string } }>, { merge: false }>(),
-    "submissions by course",
-  );
-  return buildProgress(rows, now);
-}
-
-/** Ответы студента по курсу одним запросом: и последний ответ на каждый урок, и счётчик для дневного лимита.
- *  Считает то же, что RPC count_lessons_started_today, но без отдельного круга до базы. */
-export async function courseProgress(userId: string, courseId: string, now = new Date()): Promise<CourseProgress> {
-  const sb = await getSupabase();
-  const rows = unwrap(
-    await sb
-      .from("submissions")
-      .select("*, lessons!inner(course_id)")
-      .eq("user_id", userId)
-      .eq("lessons.course_id", courseId)
-      .order("created_at", { ascending: false })
-      .overrideTypes<Array<SubmissionRow & { lessons: { course_id: string } }>, { merge: false }>(),
-    "submissions for course",
-  );
-  return buildProgress(rows, now).get(courseId) ?? EMPTY_PROGRESS;
-}
-
-export { EMPTY_PROGRESS };
 
 /** Сколько уроков курса студент начал сегодня (первая сдача за день). Для лимита «один урок в день». */
 export async function countLessonsStartedToday(userId: string, courseId: string, now = new Date()): Promise<number> {

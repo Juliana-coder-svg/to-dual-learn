@@ -8,7 +8,11 @@ export default async function StudentsPage({ params }: { params: Promise<{ cours
   const { courseId } = await params;
   const [ctx, students, publishedLessons, allSubmissions] = await Promise.all([
     teacherCourse(courseId),
-    listStudentsWithStats(courseId),
+    // RPC бросает 42501 чужому пользователю, а запрос идёт параллельно с проверкой владельца: тогда пусто, дальше 404.
+    listStudentsWithStats(courseId).catch((e: unknown) => {
+      if (String(e).includes("not a course owner")) return [];
+      throw e;
+    }),
     listLessonSummaries(courseId, { publishedOnly: true }),
     listSubmissionsByCourse(courseId),
   ]);

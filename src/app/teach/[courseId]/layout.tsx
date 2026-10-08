@@ -6,9 +6,11 @@ import { CourseTabs } from "@/components/teach/CourseTabs";
 import { isDemoMode, providerLabel } from "@/lib/ai";
 import { courseUsage } from "@/lib/db/queries";
 import { formatRub, usdToRub } from "@/lib/utils/money";
+import { isUuid } from "@/lib/utils/ids";
 
 export default async function CourseLayout({ children, params }: { children: React.ReactNode; params: Promise<{ courseId: string }> }) {
   const { courseId } = await params;
+  if (!isUuid(courseId)) notFound();
   // Расход считает RPC с проверкой владельца, поэтому его можно запрашивать параллельно с проверкой доступа.
   const [ctx, usage] = await Promise.all([teacherCourse(courseId), courseUsage(courseId)]);
   if (!ctx) notFound();

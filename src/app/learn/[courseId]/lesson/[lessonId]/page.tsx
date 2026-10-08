@@ -2,25 +2,28 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { studentCourse } from "@/lib/auth/access";
 import { requireUserId } from "@/lib/auth/session";
-import { courseProgress, getLesson, listLessonSummaries } from "@/lib/db/queries";
+import { countLessonsStartedToday, getLatestSubmission, getLesson, listLessonSummaries } from "@/lib/db/queries";
 import { AppShell } from "@/components/shared/AppShell";
 import { LessonPlayer } from "@/components/learn/LessonPlayer";
+import { isUuid } from "@/lib/utils/ids";
 
 export default async function LessonPage({ params }: { params: Promise<{ courseId: string; lessonId: string }> }) {
   const { courseId, lessonId } = await params;
+  if (!isUuid(courseId) || !isUuid(lessonId)) notFound();
   const userId = await requireUserId();
-  const [ctx, lesson, progress, published] = await Promise.all([
+  // Всё одним кругом до базы; лимит считает та же RPC, что и /api/evaluate.
+  const [ctx, lesson, previous, startedToday, published] = await Promise.all([
     studentCourse(courseId),
     getLesson(lessonId),
-    courseProgress(userId, courseId),
+    getLatestSubmission(lessonId, userId),
+    countLessonsStartedToday(userId, courseId),
     listLessonSummaries(courseId, { publishedOnly: true }),
   ]);
   if (!ctx) notFound();
   if (!lesson || lesson.course_id !== courseId) notFound();
   if (lesson.status !== "published" && ctx.course.owner_id !== ctx.user.id) notFound();
-  const previous = progress.latest.get(lesson.id);
   const isOwner = ctx.course.owner_id === ctx.user.id;
-  const locked = !previous && !isOwner && ctx.course.daily_limit > 0 && progress.startedToday >= ctx.course.daily_limit;
+  const locked = !previous && !isOwner && ctx.course.daily_limit > 0 && startedToday >= ctx.course.daily_limit;
   const idx = published.findIndex((l) => l.id === lesson.id);
   const nextLesson = idx >= 0 ? published[idx + 1] : undefined;
 

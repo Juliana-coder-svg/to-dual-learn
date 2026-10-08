@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { requireUser, requireUserId } from "@/lib/auth/session";
-import { EMPTY_PROGRESS, countDueFlashcards, listCoursesForStudentWithLessons, progressByCourse } from "@/lib/db/queries";
+import { countDueFlashcards, countLessonsStartedToday, latestScoresByCourse, listCoursesForStudentWithLessons } from "@/lib/db/queries";
 import { joinCourseAction } from "@/lib/actions/courses";
 import { setDailyEmailAction } from "@/lib/actions/auth";
 import { AppShell } from "@/components/shared/AppShell";
@@ -10,21 +10,26 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { plural } from "@/lib/utils/format";
 
 export default async function LearnPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
-  // Четыре независимых запроса одним кругом до базы: профиль, курсы с уроками, карточки, ответы по всем курсам.
+  // Четыре независимых запроса одним кругом до базы: профиль, курсы с уроками, карточки, баллы по всем курсам.
   const userId = await requireUserId();
-  const [user, sp, enrolled, due, progress] = await Promise.all([
+  const [user, sp, enrolled, due, scores] = await Promise.all([
     requireUser(),
     searchParams,
     listCoursesForStudentWithLessons(userId),
     countDueFlashcards(userId),
-    progressByCourse(userId),
+    latestScoresByCourse(userId),
   ]);
+  // Дневной лимит считает та же RPC, что и /api/evaluate, чтобы страница и проверка ответа не расходились.
+  // Второй круг до базы только для курсов с лимитом, параллельно по курсам.
+  const startedToday = await Promise.all(
+    enrolled.map(({ course: c }) => (c.owner_id !== user.id && c.daily_limit > 0 ? countLessonsStartedToday(userId, c.id) : Promise.resolve(0))),
+  );
   const courses = enrolled.map((e) => e.course);
-  const cards = enrolled.map(({ course: c, lessons }) => {
-    const { latest: done, startedToday } = progress.get(c.id) ?? EMPTY_PROGRESS;
+  const cards = enrolled.map(({ course: c, lessons }, i) => {
+    const done = scores.get(c.id) ?? new Map<string, number>();
     const completed = lessons.filter((l) => done.has(l.id)).length;
     const next = lessons.find((l) => !done.has(l.id));
-    const limitReached = c.owner_id !== user.id && c.daily_limit > 0 && startedToday >= c.daily_limit;
+    const limitReached = c.owner_id !== user.id && c.daily_limit > 0 && startedToday[i] >= c.daily_limit;
     return { course: c, lessons, completed, next, limitReached };
   });
 
