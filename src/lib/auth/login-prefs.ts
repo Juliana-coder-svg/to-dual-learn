@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import type { Role } from "@/lib/db/queries";
+import type { ConsentKind, Role } from "@/lib/db/queries";
 
 /** Имя и роль из формы входа. Supabase применяет user_metadata только при первой
  *  регистрации, а нам нужно обновлять их при каждом входе, как раньше. Поэтому форма
@@ -13,7 +13,11 @@ export interface LoginPrefs {
   role: Role;
   /** Куда вернуть после входа (например, /join/КОД). Только относительный путь. */
   next?: string;
+  /** Согласия, отмеченные в форме входа: записываются в consents после подтверждения ссылки. */
+  consents?: ConsentKind[];
 }
+
+const CONSENT_KINDS: ConsentKind[] = ["processing", "marketing", "terms"];
 
 export async function setLoginPrefs(prefs: LoginPrefs): Promise<void> {
   const store = await cookies();
@@ -26,11 +30,14 @@ export async function takeLoginPrefs(): Promise<LoginPrefs | null> {
   if (!raw) return null;
   store.delete(COOKIE);
   try {
-    const parsed = JSON.parse(raw) as { name?: unknown; role?: unknown; next?: unknown };
+    const parsed = JSON.parse(raw) as { name?: unknown; role?: unknown; next?: unknown; consents?: unknown };
     const name = typeof parsed.name === "string" ? parsed.name.trim() : "";
     const role: Role = parsed.role === "teacher" ? "teacher" : "student";
     const next = typeof parsed.next === "string" && parsed.next.startsWith("/") && !parsed.next.startsWith("//") ? parsed.next : undefined;
-    return { name: name.length >= 2 ? name : "", role, next };
+    const consents = Array.isArray(parsed.consents)
+      ? CONSENT_KINDS.filter((k) => (parsed.consents as unknown[]).includes(k))
+      : [];
+    return { name: name.length >= 2 ? name : "", role, next, consents };
   } catch {
     return null;
   }
