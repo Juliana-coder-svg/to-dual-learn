@@ -4,6 +4,9 @@ import { listCourseSummariesByOwner } from "@/lib/db/queries";
 import { createCourseAction } from "@/lib/actions/courses";
 import { createDemoCourseAction } from "@/lib/actions/seed";
 import { AppShell } from "@/components/shared/AppShell";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { Notice } from "@/components/shared/Notice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,24 +28,43 @@ export default async function TeachPage({ searchParams }: { searchParams: Promis
 
   return (
     <AppShell user={user}>
-      <div className="grid gap-10 lg:grid-cols-[1fr_360px]">
+      <PageHeader title="Мои курсы" description={courses.length > 0 ? `${plural(courses.length, "курс", "курса", "курсов")}. Откройте курс, чтобы загрузить материалы, собрать уроки и посмотреть ответы.` : undefined} />
+      <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_360px]">
         <section>
-          <h1 className="text-2xl font-semibold tracking-tight">Мои курсы</h1>
           {courses.length === 0 ? (
-            <p className="mt-4 text-sm text-muted-foreground">Пока нет курсов. Создайте первый справа: название, пара слов о программе, а потом загрузите материалы.</p>
+            <EmptyState
+              title="Пока нет курсов"
+              description="Создайте первый справа: название, пара слов о программе, а потом загрузите материалы. Или добавьте готовый курс-пример, чтобы посмотреть формат."
+            />
           ) : (
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2">
               {cards.map(({ course: c, lessons, published, materials, students }) => {
+                const ready = lessons > 0 && published === lessons;
                 return (
-                  <Link key={c.id} href={`/teach/${c.id}`} className="block">
-                    <Card className="h-full transition-colors hover:border-primary">
+                  <Link key={c.id} href={`/teach/${c.id}`} className="group block rounded-lg outline-none focus-visible:ring-3 focus-visible:ring-ring/40">
+                    <Card className="h-full transition-colors group-hover:border-foreground/40">
                       <CardHeader>
-                        <CardTitle>{c.title}</CardTitle>
-                        <CardDescription>{c.description || "Без описания"}</CardDescription>
+                        <CardTitle className="text-balance">{c.title}</CardTitle>
+                        <CardDescription className="line-clamp-3">{c.description || "Без описания"}</CardDescription>
                       </CardHeader>
-                      <CardContent className="text-sm text-muted-foreground">
-                        {plural(materials, "материал", "материала", "материалов")} · {published}/{lessons} уроков опубликовано · {plural(students, "студент", "студента", "студентов")}
-                        <div className="mt-2 font-mono text-xs">Код: {c.join_code}</div>
+                      <CardContent className="mt-auto">
+                        <dl className="grid grid-cols-3 gap-3 border-t pt-4">
+                          <div>
+                            <dt className="type-caption text-muted-foreground">Материалы</dt>
+                            <dd className="mt-0.5 font-semibold tabular-nums">{materials}</dd>
+                          </div>
+                          <div>
+                            <dt className="type-caption text-muted-foreground">Опубликовано</dt>
+                            <dd className={`mt-0.5 font-semibold tabular-nums ${ready ? "text-primary-strong" : ""}`}>{published}/{lessons}</dd>
+                          </div>
+                          <div>
+                            <dt className="type-caption text-muted-foreground">Студенты</dt>
+                            <dd className="mt-0.5 font-semibold tabular-nums">{students}</dd>
+                          </div>
+                        </dl>
+                        <div className="mt-3 type-caption text-muted-foreground">
+                          Код <span className="font-mono font-semibold tracking-wider text-foreground">{c.join_code}</span>
+                        </div>
                       </CardContent>
                     </Card>
                   </Link>
@@ -51,15 +73,15 @@ export default async function TeachPage({ searchParams }: { searchParams: Promis
             </div>
           )}
         </section>
-        <aside>
+        <aside className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>Новый курс</CardTitle>
               <CardDescription>Потом загрузите материалы и соберёте уроки.</CardDescription>
             </CardHeader>
             <CardContent>
-              {sp.error === "title" ? <p className="mb-3 text-sm text-destructive">Нужно название.</p> : null}
-              {sp.error === "seed" ? <p className="mb-3 text-sm text-destructive">Файл курса-примера не найден.</p> : null}
+              {sp.error === "title" ? <Notice kind="error" className="mb-4">Нужно название.</Notice> : null}
+              {sp.error === "seed" ? <Notice kind="error" className="mb-4">Файл курса-примера не найден.</Notice> : null}
               <form action={createCourseAction} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="title">Название</Label>
@@ -73,11 +95,11 @@ export default async function TeachPage({ searchParams }: { searchParams: Promis
                   <Label htmlFor="audience">Аудитория</Label>
                   <Input id="audience" name="audience" placeholder="Маркетологи и продакты 25–40 лет" />
                 </div>
-                <Button type="submit" className="w-full">Создать</Button>
+                <Button type="submit" className="w-full">Создать курс</Button>
               </form>
             </CardContent>
           </Card>
-          <Card className="mt-4">
+          <Card size="sm" className="bg-surface">
             <CardHeader>
               <CardTitle>Готовые курсы для примера</CardTitle>
               <CardDescription>Методичка и уроки с задачами, уже опубликованы. Чтобы показать формат студентам и коллегам.</CardDescription>
@@ -87,10 +109,10 @@ export default async function TeachPage({ searchParams }: { searchParams: Promis
                 <div key={d.slug} className="space-y-2">
                   <p className="text-sm">
                     <span className="font-medium">{d.title}</span>
-                    <span className="text-muted-foreground"> — {d.note}</span>
+                    <span className="text-muted-foreground">: {d.note}</span>
                   </p>
                   <form action={createDemoCourseAction.bind(null, d.slug)}>
-                    <Button type="submit" variant="outline" className="w-full">Добавить «{d.short}»</Button>
+                    <Button type="submit" variant="outline" size="sm" className="w-full">Добавить «{d.short}»</Button>
                   </form>
                 </div>
               ))}

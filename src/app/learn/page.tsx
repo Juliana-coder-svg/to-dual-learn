@@ -4,10 +4,26 @@ import { countDueFlashcards, countLessonsStartedToday, latestScoresByCourse, lis
 import { joinCourseAction } from "@/lib/actions/courses";
 import { setDailyEmailAction } from "@/lib/actions/auth";
 import { AppShell } from "@/components/shared/AppShell";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { Notice } from "@/components/shared/Notice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { plural } from "@/lib/utils/format";
+
+/** Плитка показателя: подпись сверху, число крупно. Ссылка, когда за числом стоит действие. */
+function Stat({ label, value, hint, href, accent }: { label: string; value: string; hint?: string; href?: string; accent?: boolean }) {
+  const body = (
+    <>
+      <div className="type-caption text-muted-foreground">{label}</div>
+      <div className={`mt-1 text-2xl font-semibold tracking-tight tabular-nums ${accent ? "text-primary-strong" : ""}`}>{value}</div>
+      {hint ? <div className="mt-1 type-caption text-muted-foreground">{hint}</div> : null}
+    </>
+  );
+  const cls = "block rounded-lg border p-4";
+  return href ? <Link href={href} className={`${cls} transition-colors hover:border-foreground/40 focus-visible:ring-3 focus-visible:ring-ring/40`}>{body}</Link> : <div className={cls}>{body}</div>;
+}
 
 export default async function LearnPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   // Четыре независимых запроса одним кругом до базы: профиль, курсы с уроками, карточки, баллы по всем курсам.
@@ -35,43 +51,51 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
 
   return (
     <AppShell user={user}>
-      <div className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-md border p-4"><div className="text-xs text-muted-foreground">Дней подряд</div><div className="mt-1 text-2xl font-semibold">{plural(user.streak, "день", "дня", "дней")}</div></div>
-        <div className="rounded-md border p-4"><div className="text-xs text-muted-foreground">Баллы</div><div className="mt-1 text-2xl font-semibold">{user.xp}</div></div>
-        <Link href="/learn/review" className="rounded-md border p-4 transition-colors hover:border-primary">
-          <div className="text-xs text-muted-foreground">Повторение</div>
-          <div className="mt-1 text-2xl font-semibold">{due > 0 ? plural(due, "карточка", "карточки", "карточек") : "Пусто"}</div>
-        </Link>
+      <PageHeader title={`Привет, ${user.name}`} description="Один урок в день и карточки на повторение. Пять минут, и свободны." />
+
+      <div className="mt-8 grid gap-3 sm:grid-cols-3">
+        <Stat label="Дней подряд" value={String(user.streak)} hint={plural(user.streak, "день", "дня", "дней").replace(/^\d+\s/, "") === "" ? undefined : user.streak > 0 ? "не прерывайте серию" : "начните сегодня"} />
+        <Stat label="Баллы" value={String(user.xp)} hint="за уроки и повторение" />
+        <Stat label="Повторение" value={due > 0 ? String(due) : "0"} hint={due > 0 ? `${plural(due, "карточка ждёт", "карточки ждут", "карточек ждут")} · открыть` : "на сегодня пусто"} href="/learn/review" accent={due > 0} />
       </div>
 
       <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_340px]">
         <section>
-          <h1 className="text-2xl font-semibold tracking-tight">Мои курсы</h1>
+          <h2 className="type-heading">Мои курсы</h2>
           {courses.length === 0 ? (
-            <p className="mt-4 text-sm text-muted-foreground">Пока нет курсов. Введите код от преподавателя справа.</p>
+            <EmptyState className="mt-4" title="Пока нет курсов" description="Введите код от преподавателя справа, и курс появится здесь." />
           ) : (
-            <div className="mt-6 space-y-4">
+            <div className="mt-4 space-y-4">
               {cards.map(({ course: c, lessons, completed, next, limitReached }) => {
+                const pct = lessons.length ? Math.round((completed / lessons.length) * 100) : 0;
                 return (
                   <Card key={c.id}>
                     <CardHeader>
-                      <CardTitle><Link href={`/learn/${c.id}`} className="hover:text-primary">{c.title}</Link></CardTitle>
-                      <CardDescription>{c.description || "Без описания"}</CardDescription>
+                      <CardTitle className="text-balance"><Link href={`/learn/${c.id}`} className="hover:text-primary-strong">{c.title}</Link></CardTitle>
+                      <CardDescription className="line-clamp-2">{c.description || "Без описания"}</CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="flex items-center gap-3 text-sm">
-                        <div className="h-2 w-full overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width: `${lessons.length ? Math.round((completed / lessons.length) * 100) : 0}%` }} /></div>
-                        <span className="whitespace-nowrap text-muted-foreground">{completed}/{lessons.length}</span>
+                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuenow={completed} aria-valuemin={0} aria-valuemax={lessons.length} aria-label="Пройдено уроков">
+                          <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
+                        </div>
+                        <span className="whitespace-nowrap tabular-nums text-muted-foreground">{completed}/{lessons.length}</span>
                       </div>
-                      <div className="mt-4">
+                      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
                         {next && limitReached ? (
-                          <span className="text-sm text-muted-foreground">Сегодня пройдено. Завтра: {next.title}</span>
+                          <p className="text-sm text-muted-foreground">Сегодня пройдено. Завтра: <span className="text-foreground">{next.title}</span></p>
                         ) : next ? (
-                          <Button nativeButton={false} render={<Link href={`/learn/${c.id}/lesson/${next.id}`} />} size="sm">Урок дня: {next.title}</Button>
+                          <>
+                            <div className="min-w-0 text-sm">
+                              <div className="eyebrow text-primary-strong">Урок дня</div>
+                              <div className="mt-0.5 font-medium">{next.title}</div>
+                            </div>
+                            <Button nativeButton={false} render={<Link href={`/learn/${c.id}/lesson/${next.id}`} />}>Начать</Button>
+                          </>
                         ) : lessons.length === 0 ? (
-                          <span className="text-sm text-muted-foreground">Преподаватель ещё не опубликовал уроки.</span>
+                          <p className="text-sm text-muted-foreground">Преподаватель ещё не опубликовал уроки.</p>
                         ) : (
-                          <span className="text-sm text-muted-foreground">Все уроки пройдены. Загляните в повторение.</span>
+                          <p className="text-sm text-muted-foreground">Все уроки пройдены. Загляните в повторение.</p>
                         )}
                       </div>
                     </CardContent>
@@ -81,42 +105,39 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
             </div>
           )}
         </section>
-        <aside>
+        <aside className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>Записаться на курс</CardTitle>
               <CardDescription>Код из шести символов даёт преподаватель.</CardDescription>
             </CardHeader>
             <CardContent>
-              {sp.error ? <p className="mb-3 text-sm text-destructive">Курс с таким кодом не найден.</p> : null}
+              {sp.error ? <Notice kind="error" className="mb-3">Курс с таким кодом не найден.</Notice> : null}
               <form action={joinCourseAction} className="flex gap-2">
-                <Input name="code" required placeholder="ABC234" className="font-mono uppercase" maxLength={6} />
+                <Input name="code" required placeholder="ABC234" aria-label="Код курса" className="font-mono uppercase tracking-widest" maxLength={6} />
                 <Button type="submit">Записаться</Button>
               </form>
             </CardContent>
           </Card>
-          <Card className="mt-4">
+          <Card size="sm" className="bg-surface">
             <CardHeader>
               <CardTitle>Письмо с уроком дня</CardTitle>
               <CardDescription>Каждое утро на {user.email}: какой урок ждёт и сколько карточек пора повторить.</CardDescription>
             </CardHeader>
             <CardContent>
               <form action={setDailyEmailAction} className="flex items-center justify-between gap-3 text-sm">
-                <span>{user.daily_email ? "Включено" : "Выключено"}</span>
+                <span className="flex items-center gap-2">
+                  <span aria-hidden className={`size-2 rounded-full ${user.daily_email ? "bg-primary" : "bg-border"}`} />
+                  {user.daily_email ? "Включено" : "Выключено"}
+                </span>
                 <input type="hidden" name="enabled" value={user.daily_email ? "0" : "1"} />
                 <Button type="submit" variant="outline" size="sm">{user.daily_email ? "Выключить" : "Включить"}</Button>
               </form>
             </CardContent>
           </Card>
-          <Card className="mt-4">
-            <CardHeader>
-              <CardTitle>Мои данные</CardTitle>
-              <CardDescription>Скачать всё, что мы храним о вас, или удалить аккаунт.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button nativeButton={false} render={<Link href="/account/data" />} variant="outline" size="sm">Открыть</Button>
-            </CardContent>
-          </Card>
+          <p className="px-1 type-caption text-muted-foreground">
+            <Link href="/account/data" className="underline underline-offset-4 hover:text-foreground">Мои данные</Link>: скачать всё, что мы храним о вас, или удалить аккаунт.
+          </p>
         </aside>
       </div>
     </AppShell>
