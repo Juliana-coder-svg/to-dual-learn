@@ -77,8 +77,8 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
                       )
                     ) : null}
                   </div>
-                  {/* До lg действия занимают отдельную строку: иначе кнопки сжимают заголовок урока в узкую колонку. */}
-                  <div className="flex basis-full flex-wrap items-center gap-1 lg:basis-auto">
+                  {/* До xl действия занимают отдельную строку: на lg колонка рядом с боковой панелью ещё узкая, и кнопки сжимают заголовок урока. */}
+                  <div className="flex basis-full flex-wrap items-center gap-1 xl:basis-auto">
                     <form action={moveLessonAction.bind(null, courseId, l.id, -1)}><Button type="submit" variant="ghost" size="icon-sm" disabled={i === 0} aria-label="Выше">↑</Button></form>
                     <form action={moveLessonAction.bind(null, courseId, l.id, 1)}><Button type="submit" variant="ghost" size="icon-sm" disabled={i === lessons.length - 1} aria-label="Ниже">↓</Button></form>
                     <Button nativeButton={false} render={<Link href={`/teach/${courseId}/lessons/${l.id}/edit`} />} variant="outline" size="sm">Править</Button>
