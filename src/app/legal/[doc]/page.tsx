@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { Markdown } from "@/components/shared/Markdown";
+import { PublicShell } from "@/components/shared/PublicShell";
+import { Notice } from "@/components/shared/Notice";
 import { loadLegalDocument } from "@/lib/legal/documents";
 import { LEGAL_VERSIONS, type LegalSlug } from "@/lib/legal/versions";
 
@@ -33,22 +35,33 @@ export default async function LegalPage({ params }: { params: Promise<{ doc: str
   const document = loadLegalDocument(doc);
 
   return (
-    <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-10">
-      <nav className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-        <Link href="/" className="hover:text-foreground">← На главную</Link>
-        {SLUGS.filter((s) => s !== doc).map((s) => (
-          <Link key={s} href={`/legal/${s}`} className="hover:text-foreground">{LEGAL_TITLES[s]}</Link>
-        ))}
-      </nav>
-      <h1 className="mt-6 text-2xl font-semibold tracking-tight">{document.title}</h1>
-      <p className="mt-2 text-sm text-muted-foreground">Версия {document.version}.</p>
-      <p className="mt-4 rounded-md border border-dashed px-3 py-2 text-xs text-muted-foreground">
-        Проект документа. Реквизиты оператора пока стоят в квадратных скобках, впишем их после проверки юристом.
-      </p>
-      <article className="mt-6">
-        <Markdown text={document.body} />
-      </article>
-    </main>
+    <PublicShell
+      action={
+        <nav aria-label="Документы" className="flex gap-1">
+          {SLUGS.map((s) => (
+            <Link
+              key={s}
+              href={`/legal/${s}`}
+              aria-current={s === doc ? "page" : undefined}
+              className={`inline-flex h-8 items-center rounded-lg px-3 text-sm ${s === doc ? "bg-muted font-medium" : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"}`}
+            >
+              {LEGAL_TITLES[s]}
+            </Link>
+          ))}
+        </nav>
+      }
+    >
+      <div className="w-full py-10 md:py-14">
+        <p className="eyebrow">Версия {document.version}</p>
+        <h1 className="mt-1 type-title">{document.title}</h1>
+        <Notice className="mt-5">
+          Проект документа. Реквизиты оператора пока стоят в квадратных скобках, впишем их после проверки юристом.
+        </Notice>
+        <article className="mt-8">
+          <Markdown text={document.body} />
+        </article>
+      </div>
+    </PublicShell>
   );
 }
 

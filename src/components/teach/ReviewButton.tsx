@@ -30,7 +30,7 @@ export function ReviewButton({ courseId }: { courseId: string }) {
       <Button onClick={review} disabled={busy} variant="outline" size="sm" title="ИИ-методист сверит уроки с материалами и результатами курса и предложит правки. Что принять, решаете вы">
         {busy ? "Проверяю…" : "Проверить методистом"}
       </Button>
-      {msg ? <p className="max-w-xs text-right text-xs text-muted-foreground">{msg}</p> : null}
+      {msg ? <p role="status" className="max-w-xs text-right type-caption text-muted-foreground">{msg}</p> : null}
     </div>
   );
 }

@@ -4,36 +4,52 @@ import type { User } from "@/lib/db/queries";
 import { logout, switchRole } from "@/lib/actions/auth";
 import { currentUserConsented } from "@/lib/auth/session";
 import { Button } from "@/components/ui/button";
+import { Brand } from "@/components/shared/Brand";
+import { NavLinks, type NavItem } from "@/components/shared/NavLinks";
+
+const TEACHER_NAV: NavItem[] = [{ href: "/teach", label: "Мои курсы" }];
+
+const STUDENT_NAV: NavItem[] = [
+  { href: "/learn", label: "Учиться", exact: true },
+  { href: "/learn/review", label: "Повторение" },
+  { href: "/learn/history", label: "Мои ответы" },
+];
 
 /** Каркас страниц с сессией. Без действующего согласия на обработку данных (старая сессия,
  *  новая версия документов) уводит на /consent; requireConsent={false} только для «Моих данных»,
  *  где человек без согласия должен иметь возможность удалить аккаунт. */
-export async function AppShell({ user, requireConsent = true, children }: { user: User; requireConsent?: boolean; children: React.ReactNode }) {
+export async function AppShell({
+  user,
+  requireConsent = true,
+  width = "default",
+  children,
+}: {
+  user: User;
+  requireConsent?: boolean;
+  /** narrow — тексты и формы (урок, история, настройки аккаунта); default — рабочие экраны с колонками. */
+  width?: "default" | "narrow";
+  children: React.ReactNode;
+}) {
   if (requireConsent && !(await currentUserConsented())) redirect("/consent");
   const isTeacher = user.role === "teacher";
+  const nav = isTeacher ? TEACHER_NAV : STUDENT_NAV;
+
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="border-b">
-        <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-4 py-3">
-          <div className="flex items-center gap-6">
-            <Link href={isTeacher ? "/teach" : "/learn"} className="whitespace-nowrap text-base font-semibold tracking-tight">
-              <span className="text-primary">To Dual</span> Learn
-            </Link>
-            <nav className="hidden gap-4 text-sm text-muted-foreground sm:flex">
-              {isTeacher ? (
-                <Link href="/teach" className="hover:text-foreground">Мои курсы</Link>
-              ) : (
-                <>
-                  <Link href="/learn" className="hover:text-foreground">Учиться</Link>
-                  <Link href="/learn/review" className="hover:text-foreground">Повторение</Link>
-                  <Link href="/learn/history" className="hover:text-foreground">Мои ответы</Link>
-                </>
-              )}
-            </nav>
+      <header className="border-b bg-background">
+        <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-4 px-4">
+          <div className="flex min-w-0 items-center gap-5">
+            <Brand href={isTeacher ? "/teach" : "/learn"} />
+            <NavLinks items={nav} className="hidden sm:flex" />
           </div>
-          <div className="flex items-center gap-2 text-sm">
-            <Link href="/account/data" className="hidden text-muted-foreground hover:text-foreground sm:inline">Мои данные</Link>
-            <span className="hidden text-muted-foreground sm:inline">{user.name}</span>
+          <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+            <Link
+              href="/account/data"
+              className="hidden h-9 items-center rounded-lg px-3 text-sm text-muted-foreground hover:bg-muted/60 hover:text-foreground md:inline-flex"
+              title={`${user.name} · ${user.email}`}
+            >
+              {user.name}
+            </Link>
             <form action={switchRole}>
               <Button type="submit" variant="ghost" size="sm">
                 {isTeacher ? "Режим студента" : "Режим преподавателя"}
@@ -44,11 +60,14 @@ export async function AppShell({ user, requireConsent = true, children }: { user
             </form>
           </div>
         </div>
+        <div className="border-t sm:hidden">
+          <NavLinks items={nav} className="mx-auto w-full max-w-5xl overflow-x-auto px-3 py-1.5" />
+        </div>
       </header>
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">{children}</main>
-      <footer className="border-t py-4 text-center text-xs text-muted-foreground">
-        <div className="mx-auto flex w-full max-w-5xl flex-wrap justify-center gap-x-4 gap-y-1 px-4">
-          <span>To Dual Education</span>
+      <main className={`mx-auto w-full flex-1 px-4 py-8 md:py-10 ${width === "narrow" ? "max-w-2xl" : "max-w-5xl"}`}>{children}</main>
+      <footer className="border-t py-5 type-caption text-muted-foreground">
+        <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center gap-x-5 gap-y-2 px-4">
+          <span className="font-medium text-foreground/70">To Dual Education</span>
           <Link href="/legal/privacy" className="hover:text-foreground">Политика</Link>
           <Link href="/legal/terms" className="hover:text-foreground">Соглашение</Link>
           <Link href="/legal/consent" className="hover:text-foreground">Согласие</Link>
