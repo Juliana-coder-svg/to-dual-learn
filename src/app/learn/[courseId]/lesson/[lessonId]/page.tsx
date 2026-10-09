@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { studentCourse } from "@/lib/auth/access";
+import { studentCourse, noCourseAccess } from "@/lib/auth/access";
 import { requireUserId } from "@/lib/auth/session";
 import { countLessonsStartedToday, getLatestSubmission, getLesson, listLessonSummaries } from "@/lib/db/queries";
 import { AppShell } from "@/components/shared/AppShell";
@@ -21,7 +21,7 @@ export default async function LessonPage({ params }: { params: Promise<{ courseI
     countLessonsStartedToday(userId, courseId),
     listLessonSummaries(courseId, { publishedOnly: true }),
   ]);
-  if (!ctx) notFound();
+  if (!ctx) return noCourseAccess(`/learn/${courseId}/lesson/${lessonId}`);
   if (!lesson || lesson.course_id !== courseId) notFound();
   if (lesson.status !== "published" && ctx.course.owner_id !== ctx.user.id) notFound();
   const isOwner = ctx.course.owner_id === ctx.user.id;

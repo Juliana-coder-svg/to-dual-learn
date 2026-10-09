@@ -1,5 +1,4 @@
-import { notFound } from "next/navigation";
-import { teacherCourse } from "@/lib/auth/access";
+import { teacherCourse, noCourseAccess } from "@/lib/auth/access";
 import { listHomeworkChecks } from "@/lib/db/queries";
 import { HomeworkChecker } from "@/components/teach/HomeworkChecker";
 import { HomeworkResultsView } from "@/components/teach/HomeworkResultsView";
@@ -9,7 +8,7 @@ import { formatDateTime, plural } from "@/lib/utils/format";
 export default async function HomeworkPage({ params }: { params: Promise<{ courseId: string }> }) {
   const { courseId } = await params;
   const [ctx, history] = await Promise.all([teacherCourse(courseId), listHomeworkChecks(courseId)]);
-  if (!ctx) notFound();
+  if (!ctx) return noCourseAccess(`/teach/${courseId}/homework`);
 
   return (
     <div className="space-y-10">

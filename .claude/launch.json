@@ -45,18 +45,6 @@
         "NEXT_DIST_DIR=.next-3002 PORT=3002 npm run dev -- -p 3002"
       ],
       "port": 3002
-    },
-    {
-      "name": "city-preview",
-      "runtimeExecutable": "python3",
-      "runtimeArgs": [
-        "-m",
-        "http.server",
-        "8787",
-        "--directory",
-        "/private/tmp/claude-501/-Users-user-Projects-to-dual-daily/1712fd1d-ad56-4c04-93ed-1bba83836216/scratchpad"
-      ],
-      "port": 8787
     }
   ]
 }
