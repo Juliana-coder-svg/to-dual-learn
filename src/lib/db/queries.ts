@@ -420,39 +420,66 @@ async function getLessonReview(id: string, courseId: string): Promise<LessonRevi
   return row?.review ? (row.review as unknown as LessonReviewRecord) : null;
 }
 
+/** Запись без ключа proposal. Ключ именно удаляется, а не ставится в null: для Postgres `review->'proposal'`
+ *  с JSON null — это не SQL NULL, и фильтр «предложение ещё на месте» его бы пропустил. */
+function withoutProposal(review: LessonReviewRecord, decision: "accepted" | "rejected"): LessonReviewRecord {
+  const { proposal: _dropped, ...rest } = review;
+  void _dropped;
+  return { ...rest, decision };
+}
+
+/** Фильтр «предложение ещё не решено»: `->>` отдаёт текст, для JSON null и отсутствующего ключа это SQL NULL. */
+const PROPOSAL_PENDING = "review->>proposal";
+
 /** Преподаватель принял правку методиста: предложенный текст становится текущим, заметка остаётся с пометкой.
- *  Одним update с условием, что предложение ещё на месте: два клика или две вкладки не разойдутся. */
+ *  Один update с условием, что предложение ещё на месте: два клика или две вкладки не разойдутся.
+ *  Текст написала модель, поэтому отметка «проверено преподавателем» снимается, как при переписывании. */
 export async function acceptLessonProposal(id: string, courseId: string): Promise<boolean> {
   const review = await getLessonReview(id, courseId);
   if (!review?.proposal) return false;
-  const content = normalizeLessonContent(review.proposal);
-  const record: LessonReviewRecord = { ...review, title: content.title, proposal: null, decision: "accepted" };
+  let content: LessonContent;
+  try {
+    content = normalizeLessonContent(review.proposal);
+  } catch {
+    await rejectLessonProposal(id, courseId);
+    return false;
+  }
+  const record = withoutProposal({ ...review, title: content.title }, "accepted");
   const sb = await getSupabase();
-  check(
+  const rows = unwrap(
     await sb
       .from("lessons")
       .update({ title: content.title, concept: content.concept, content: content as unknown as Json, review: record as unknown as Json, reviewed_at: null, reviewed_by: null })
       .eq("id", id)
       .eq("course_id", courseId)
-      .not("review->proposal", "is", null),
+      .not(PROPOSAL_PENDING, "is", null)
+      .select("id"),
     "lesson proposal accept",
   );
-  return true;
-}
-
-/** Преподаватель поправил урок руками: предложение методиста посчитано от старого текста и больше не годится. */
-export async function dropStaleLessonProposal(id: string, courseId: string): Promise<void> {
-  const review = await getLessonReview(id, courseId);
-  if (!review?.proposal) return;
-  await setLessonReview(id, courseId, { ...review, proposal: null, decision: "rejected" });
+  return rows.length > 0;
 }
 
 /** Преподаватель оставил свой текст: предложение убираем, заметку и замечания сохраняем. */
 export async function rejectLessonProposal(id: string, courseId: string): Promise<boolean> {
   const review = await getLessonReview(id, courseId);
   if (!review?.proposal) return false;
-  await setLessonReview(id, courseId, { ...review, proposal: null, decision: "rejected" });
-  return true;
+  const sb = await getSupabase();
+  const rows = unwrap(
+    await sb
+      .from("lessons")
+      .update({ review: withoutProposal(review, "rejected") as unknown as Json })
+      .eq("id", id)
+      .eq("course_id", courseId)
+      .not(PROPOSAL_PENDING, "is", null)
+      .select("id"),
+    "lesson proposal reject",
+  );
+  return rows.length > 0;
+}
+
+/** Преподаватель поправил урок руками: предложение методиста посчитано от старого текста и больше не годится. */
+export async function dropStaleLessonProposal(id: string, courseId: string): Promise<void> {
+  await rejectLessonProposal(id, courseId);
 }
 
 /** Принять или отклонить все предложения методиста по курсу разом. Возвращает число обработанных уроков. */

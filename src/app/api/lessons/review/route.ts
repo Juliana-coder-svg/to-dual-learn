@@ -20,22 +20,30 @@ export async function POST(req: Request) {
     const materials = await listMaterials(ctx.course.id);
     const review = await reviewLessons({ userId: ctx.user.id, courseId: ctx.course.id }, ctx.course, materials, lessons.map((l) => l.content));
     // Методист ничего не переписывает сам: его версия ложится рядом с текущей, преподаватель принимает или отклоняет.
+    // Проверка идёт минуты: урок, который за это время поправили руками, пропускаем, его предложение посчитано от старого текста.
+    const fresh = new Map((await listLessons(ctx.course.id)).map((l) => [l.id, JSON.stringify(l.content)]));
     let proposals = 0;
     let flagged = 0;
+    let skipped = 0;
     for (const [i, l] of lessons.entries()) {
+      if (fresh.get(l.id) !== JSON.stringify(l.content)) {
+        skipped += 1;
+        continue;
+      }
       const note = review.notes[i] ?? { title: l.title, changed: false, flags: [] };
       const proposed = review.lessons[i];
       const differs = lessonContentChanges(l.content, proposed).length > 0;
       if (differs) proposals += 1;
       else if (note.flags.length > 0) flagged += 1;
-      await setLessonReview(l.id, ctx.course.id, { ...note, changed: differs, proposal: differs ? proposed : null, decision: null });
+      await setLessonReview(l.id, ctx.course.id, differs ? { ...note, changed: true, proposal: proposed } : { ...note, changed: false });
     }
     const tail =
       proposals > 0
         ? ` Предложены правки в ${proposals} ${plural(proposals, "уроке", "уроках", "уроках")}: примите или оставьте свой текст под каждым уроком.`
         : " Правок не предложено.";
     const flaggedTail = flagged > 0 ? ` Замечания без правок: ${flagged}.` : "";
-    return NextResponse.json({ ok: true, summary: `${review.summary}${tail}${flaggedTail}` });
+    const skippedTail = skipped > 0 ? ` ${plural(skipped, "урок", "урока", "уроков")} вы изменили во время проверки, для них предложения не записаны.` : "";
+    return NextResponse.json({ ok: true, summary: `${review.summary}${tail}${flaggedTail}${skippedTail}` });
   } catch (e) {
     return handleRouteError(e);
   }
