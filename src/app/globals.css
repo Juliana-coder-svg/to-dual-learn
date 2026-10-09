@@ -6,7 +6,7 @@
 
 /*
   Дизайн-токены To Dual Learn. Словарь и правила: docs/design.md.
-  Плоский минимализм: один акцент (фирменный оранжевый), системный шрифт,
+  Плоский минимализм: один акцент (фирменный оранжевый), шрифт Onest с системным запасным,
   рамки и воздух вместо теней и градиентов. Радиусов два: 8 px для блоков и
   полный круг для бейджей, шагов и аватаров.
 */
@@ -61,7 +61,8 @@
 }
 
 :root {
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  /* Onest подключён через next/font в layout.tsx; пока он не загрузился или его нет, работает системный. */
+  --font-sans: var(--font-onest), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --background: oklch(1 0 0);
   --foreground: oklch(0.17 0.005 60);
   --card: oklch(1 0 0);
