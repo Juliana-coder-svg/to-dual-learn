@@ -4,7 +4,7 @@
 
 Как читать. «Проверено» — дата, когда страница открыта; «сниппет» — факт взят из выдачи поиска, страница не открылась; «вторичный» — пересказ или обзор, не страница самого продукта. Чего не нашёл, так и написано. Цены в валюте источника, с названием тарифа.
 
-Разборы трёх продуктов на страницу каждый: [MagicSchool](competitors/magicschool.md), [Duolingo](competitors/duolingo.md), [Яндекс Учебник](competitors/yandex-uchebnik.md). Приёмы, которые стоит перенять, со сроками и метриками: [competitors/borrow-list.md](competitors/borrow-list.md).
+Разборы трёх продуктов на страницу каждый: [MagicSchool](competitors/magicschool.md), [Duolingo](competitors/duolingo.md), [Яндекс Учебник](competitors/yandex-uchebnik.md). Приёмы, которые стоит перенять, со сроками и метриками: [competitors/borrow-list.md](competitors/borrow-list.md). Какие настройки тона, голоса, строгости и правил контента дают автору курса 25 продуктов и общих инструментов: [competitors/tone-settings.md](competitors/tone-settings.md).
 
 ## Где мы стоим, одним абзацем
 
@@ -77,3 +77,4 @@ Arist (микрообучение в мессенджерах) проверен 
 ## Журнал изменений
 
 - 2026-10-08: первая версия карты, три разбора, список приёмов.
+- 2026-10-09: сравнение настроек тона и правил у автора курса, [competitors/tone-settings.md](competitors/tone-settings.md); карта не менялась.
