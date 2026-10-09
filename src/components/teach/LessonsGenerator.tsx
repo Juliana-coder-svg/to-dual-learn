@@ -128,7 +128,7 @@ export function LessonsGenerator({ courseId, disabled }: { courseId: string; dis
             <input type="checkbox" checked={review} onChange={(e) => setReview(e.target.checked)} className="mt-0.5 size-4 shrink-0" />
             <span>
               <span className="font-medium">Проверить методистом</span>
-              <span className="mt-0.5 block type-caption text-muted-foreground">Второй проход: ИИ-методист сверяет уроки с материалами и результатами курса и правит критерии. Удваивает время и расход.</span>
+              <span className="mt-0.5 block type-caption text-muted-foreground">Второй проход до публикации: ИИ-методист сверяет уроки с материалами и результатами курса и правит их сразу, вы ещё не видели черновик. Удваивает время и расход.</span>
             </span>
           </label>
           <Button onClick={generate} disabled={working || disabled} className="w-full">{busy ? (review ? "Собираю и проверяю…" : "Собираю…") : "Собрать уроки"}</Button>

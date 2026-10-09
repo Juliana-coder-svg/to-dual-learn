@@ -1,7 +1,16 @@
 import Link from "next/link";
 import { teacherCourse, noCourseAccess } from "@/lib/auth/access";
 import { countMaterials, listLessons } from "@/lib/db/queries";
-import { deleteLessonAction, moveLessonAction, publishAllAction, setLessonStatusAction } from "@/lib/actions/courses";
+import {
+  acceptProposalAction,
+  decideAllProposalsAction,
+  deleteLessonAction,
+  moveLessonAction,
+  publishAllAction,
+  rejectProposalAction,
+  setLessonStatusAction,
+} from "@/lib/actions/courses";
+import { lessonContentChanges } from "@/lib/lessons/diff";
 import { LessonsGenerator } from "@/components/teach/LessonsGenerator";
 import { ReviewButton } from "@/components/teach/ReviewButton";
 import { SectionHeader } from "@/components/shared/PageHeader";
@@ -18,6 +27,7 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
   const hasMaterials = materialsCount > 0;
   const drafts = lessons.filter((l) => l.status === "draft").length;
   const published = lessons.length - drafts;
+  const proposals = lessons.filter((l) => l.review?.proposal).length;
 
   return (
     <div className="grid gap-10 lg:grid-cols-[1fr_340px]">
@@ -40,6 +50,15 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
             </>
           }
         />
+        {proposals > 0 ? (
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary px-4 py-3 text-sm">
+            <span>Методист предлагает правки в {plural(proposals, "уроке", "уроках", "уроках")}. Под каждым уроком видно, что меняется и почему.</span>
+            <div className="flex gap-2">
+              <form action={decideAllProposalsAction.bind(null, courseId, "accepted")}><Button type="submit" size="sm">Принять все</Button></form>
+              <form action={decideAllProposalsAction.bind(null, courseId, "rejected")}><Button type="submit" size="sm" variant="outline">Оставить всё как есть</Button></form>
+            </div>
+          </div>
+        ) : null}
         {lessons.length === 0 ? (
           <EmptyState
             className="mt-6"
@@ -66,13 +85,16 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
                     <h3 className="mt-2 text-base font-semibold">{l.title}</h3>
                     <p className="text-sm text-muted-foreground">{l.concept}</p>
                     {l.reviewed_at ? null : <AiNote kind="teacherDraft" className="mt-2" />}
-                    {l.review ? (
+                    {l.review && !l.review.proposal ? (
                       l.review.flags.length > 0 ? (
                         <ul className="mt-3 space-y-1 type-caption text-muted-foreground">
                           {l.review.flags.map((f, j) => <li key={j} className="flex gap-2"><span aria-hidden className="font-semibold text-primary-strong">!</span><span>{f}</span></li>)}
+                          {l.review.decision ? <li>{l.review.decision === "accepted" ? "Правки методиста приняты." : "Правки методиста отклонены, оставлен ваш текст."}</li> : null}
                         </ul>
                       ) : (
-                        <p className="mt-3 type-caption text-muted-foreground">Методист: замечаний нет{l.review.changed ? ", текст подправлен" : ""}.</p>
+                        <p className="mt-3 type-caption text-muted-foreground">
+                          Методист: замечаний нет{l.review.decision === "accepted" ? ", правки приняты" : l.review.decision === "rejected" ? ", правки отклонены" : l.review.changed ? ", текст подправлен" : ""}.
+                        </p>
                       )
                     ) : null}
                   </div>
@@ -88,6 +110,36 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
                     </form>
                   </div>
                 </div>
+                {l.review?.proposal ? (
+                  <div className="mt-4 rounded-lg border border-primary p-4 text-sm">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="font-semibold">Методист предлагает правки</div>
+                        {l.status === "published" ? <p className="mt-1 type-caption text-muted-foreground">Урок уже открыт студентам: принятая правка сразу изменит задачу и критерии у них.</p> : null}
+                        {l.review.flags.length > 0 ? (
+                          <ul className="mt-2 space-y-1 type-caption text-muted-foreground">
+                            {l.review.flags.map((f, j) => <li key={j} className="flex gap-2"><span aria-hidden className="font-semibold text-primary-strong">!</span><span>{f}</span></li>)}
+                          </ul>
+                        ) : null}
+                      </div>
+                      <div className="flex gap-2">
+                        <form action={acceptProposalAction.bind(null, courseId, l.id)}><Button type="submit" size="sm">Принять</Button></form>
+                        <form action={rejectProposalAction.bind(null, courseId, l.id)}><Button type="submit" size="sm" variant="outline">Оставить как есть</Button></form>
+                      </div>
+                    </div>
+                    <dl className="mt-4 grid gap-4">
+                      {lessonContentChanges(l.content, l.review.proposal).map((c) => (
+                        <div key={c.key}>
+                          <dt className="eyebrow">{c.label}</dt>
+                          <dd className="mt-1 grid gap-2 sm:grid-cols-2">
+                            <div className="whitespace-pre-wrap rounded-lg bg-surface p-3 text-muted-foreground"><span className="eyebrow">Сейчас</span><br />{c.before || "—"}</div>
+                            <div className="whitespace-pre-wrap rounded-lg border border-primary p-3"><span className="eyebrow">Предлагается</span><br />{c.after || "—"}</div>
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </div>
+                ) : null}
                 <details className="group mt-3 text-sm">
                   <summary className="inline-flex min-h-8 cursor-pointer list-none items-center gap-1 text-muted-foreground hover:text-foreground [&::-webkit-details-marker]:hidden">
                     <span aria-hidden className="transition-transform group-open:rotate-90">›</span> Содержимое урока
