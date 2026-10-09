@@ -12,13 +12,13 @@ const FIELDS: { key: keyof LessonContent; label: string }[] = [
   { key: "title", label: "Название" },
   { key: "concept", label: "Навык" },
   { key: "intro", label: "Зачем" },
-  { key: "keyIdea", label: "Ключевая идея" },
+  { key: "keyIdea", label: "Идея урока" },
   { key: "signals", label: "Признаки" },
   { key: "task", label: "Задача" },
-  { key: "sample", label: "Материал для разбора" },
+  { key: "sample", label: "Данные к задаче" },
   { key: "rubricCriteria", label: "Критерии" },
   { key: "keyTakeaway", label: "Вывод" },
-  { key: "flashcards", label: "Карточки" },
+  { key: "flashcards", label: "Карточки для повторения" },
 ];
 
 function fieldText(content: LessonContent, key: keyof LessonContent): string {
