@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { SectionHeader } from "@/components/shared/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Notice } from "@/components/shared/Notice";
 import { formatRub, usdRubRate, usdToRub } from "@/lib/utils/money";
@@ -39,13 +39,10 @@ export default async function SettingsPage({ params, searchParams }: { params: P
   const totalRub = usage.reduce((s, u) => s + usdToRub(u.cost_usd), 0);
 
   return (
-    <div className="grid items-start gap-6 lg:grid-cols-2">
-      <Card>
-        <CardHeader>
-          <CardTitle>Курс</CardTitle>
-          <CardDescription>ИИ учитывает образовательные результаты и обращение везде: когда собирает уроки, проверяет их и оценивает ответы.</CardDescription>
-        </CardHeader>
-        <CardContent>
+    <div className="grid items-start gap-12 lg:grid-cols-[1fr_1fr] lg:gap-16">
+      <section>
+        <SectionHeader title="Курс" description="ИИ учитывает образовательные результаты и обращение везде: когда собирает уроки, проверяет их и оценивает ответы." />
+        <div className="mt-6">
           {sp.saved ? <Notice kind="success" className="mb-4">Сохранено.</Notice> : null}
           {sp.error === "title" ? <Notice kind="error" className="mb-4">Нужно название.</Notice> : null}
           <form action={updateCourseSettingsAction.bind(null, courseId)} className="space-y-5">
@@ -73,40 +70,28 @@ export default async function SettingsPage({ params, searchParams }: { params: P
             </div>
             <Button type="submit">Сохранить</Button>
           </form>
-        </CardContent>
-      </Card>
+        </div>
+      </section>
 
-      <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Приглашение</CardTitle>
-            <CardDescription>Ссылка ведёт на вход и сразу записывает на курс.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <dl className="grid gap-3 text-sm">
-              <div className="flex items-center justify-between gap-3 rounded-lg bg-surface px-3 py-2">
-                <dt className="text-muted-foreground">Код курса</dt>
-                <dd className="font-mono text-base font-semibold tracking-widest">{course.join_code}</dd>
-              </div>
-              <div className="rounded-lg bg-surface px-3 py-2">
-                <dt className="text-muted-foreground">Ссылка</dt>
-                <dd className="mt-0.5 break-all font-mono type-caption">{site}/join/{course.join_code}</dd>
-              </div>
-            </dl>
-          </CardContent>
-        </Card>
+      <div className="divide-y">
+        <section className="pb-10">
+          <SectionHeader title="Приглашение" description="Ссылка ведёт на вход и сразу записывает на курс." />
+          <dl className="mt-5 rounded-lg bg-surface p-5">
+            <dt className="eyebrow">Код курса</dt>
+            <dd className="mt-2 font-mono type-counter tracking-[0.12em]">{course.join_code}</dd>
+            <dt className="mt-5 eyebrow">Ссылка</dt>
+            <dd className="mt-1 break-all font-mono text-sm">{site}/join/{course.join_code}</dd>
+          </dl>
+        </section>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Образцы оценок</CardTitle>
-            <CardDescription>Покажите наставнику, что для вас «5» и что «2». ИИ сверяется с образцами, когда оценивает ответы.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <section className="py-10">
+          <SectionHeader title="Образцы оценок" description="Покажите наставнику, что для вас «5» и что «2». ИИ сверяется с образцами, когда оценивает ответы." />
+          <div className="mt-5 space-y-4">
             {sp.error === "sample" ? <Notice kind="error">Нужен ответ длиннее 10 символов и балл от 1 до 5.</Notice> : null}
             {samples.length > 0 ? (
-              <ul className="divide-y rounded-lg border">
+              <ul className="divide-y border-y">
                 {samples.map((s) => (
-                  <li key={s.id} className="p-3 text-sm">
+                  <li key={s.id} className="py-3 text-sm">
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2"><Badge>{s.score}/5</Badge><span className="type-caption text-muted-foreground">{s.lesson_id ? lessons.find((l) => l.id === s.lesson_id)?.title ?? "Урок удалён" : "Весь курс"}</span></div>
                       <form action={deleteCalibrationSampleAction.bind(null, courseId, s.id)}><Button type="submit" variant="ghost" size="sm" className="text-muted-foreground">Удалить</Button></form>
@@ -131,15 +116,12 @@ export default async function SettingsPage({ params, searchParams }: { params: P
               <Input name="comment" placeholder="Почему такой балл (необязательно)" aria-label="Комментарий к баллу" />
               <Button type="submit" variant="outline">Добавить образец</Button>
             </form>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Расход по курсу</CardTitle>
-            <CardDescription>Оценка в рублях по курсу {usdRubRate()} ₽ за доллар (переменная USD_RUB_RATE). Точная сумма: в кабинете поставщика модели.</CardDescription>
-          </CardHeader>
-          <CardContent>
+        <section className="pt-10">
+          <SectionHeader title="Расход по курсу" description={`Оценка в рублях по курсу ${usdRubRate()} ₽ за доллар (переменная USD_RUB_RATE). Точная сумма: в кабинете поставщика модели.`} />
+          <div className="mt-5">
             {usage.length === 0 ? <p className="text-sm text-muted-foreground">Запросов к ИИ пока не было.</p> : (
               <div className="overflow-x-auto">
                 <table className="data-table">
@@ -156,8 +138,8 @@ export default async function SettingsPage({ params, searchParams }: { params: P
                 </table>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </section>
       </div>
     </div>
   );
