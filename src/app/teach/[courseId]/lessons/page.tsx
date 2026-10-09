@@ -70,8 +70,8 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
           <ol className="mt-6 space-y-3">
             {lessons.map((l, i) => (
               <li key={l.id} className="rounded-lg border p-4 md:p-5">
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div className="min-w-0 flex-1">
+                <div className="grid gap-4">
+                  <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="eyebrow">Урок {l.position}</span>
                       <Badge variant={l.status === "published" ? "default" : "secondary"}>{l.status === "published" ? "Опубликован" : "Черновик"}</Badge>
@@ -98,7 +98,7 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
                       )
                     ) : null}
                   </div>
-                  <div className="flex flex-wrap items-center gap-1">
+                  <div className="flex flex-wrap items-center gap-1 border-t pt-3">
                     <form action={moveLessonAction.bind(null, courseId, l.id, -1)}><Button type="submit" variant="ghost" size="icon-sm" disabled={i === 0} aria-label="Выше">↑</Button></form>
                     <form action={moveLessonAction.bind(null, courseId, l.id, 1)}><Button type="submit" variant="ghost" size="icon-sm" disabled={i === lessons.length - 1} aria-label="Ниже">↓</Button></form>
                     <Button nativeButton={false} render={<Link href={`/teach/${courseId}/lessons/${l.id}/edit`} />} variant="outline" size="sm">Править</Button>

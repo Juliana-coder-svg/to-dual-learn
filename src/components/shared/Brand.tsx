@@ -7,7 +7,7 @@ export function Brand({ href = "/", className }: { href?: string; className?: st
     <Link href={href} className={cn("inline-flex items-center gap-2 whitespace-nowrap text-base font-semibold tracking-tight", className)}>
       <span aria-hidden className="size-3 rounded-[3px] bg-primary" />
       <span>
-        To Dual <span className="font-normal text-muted-foreground">Learn</span>
+        To Dual <span className="hidden font-normal text-muted-foreground sm:inline">Learn</span>
       </span>
     </Link>
   );
