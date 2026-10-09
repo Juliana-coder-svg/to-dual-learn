@@ -60,7 +60,7 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
     <AppShell user={user}>
       <PageHeader title={`Привет, ${user.name}`} description="Один урок в день и карточки на повторение. Пять минут, и свободны." />
 
-      <div className="mt-10 grid gap-6 sm:grid-cols-3 sm:gap-8">
+      <div className="mt-10 grid grid-cols-3 gap-4 sm:gap-8">
         <Stat label="Дней подряд" value={String(user.streak)} hint={user.streak > 0 ? "не прерывайте серию" : "начните сегодня"} />
         <Stat label="Баллы" value={String(user.xp)} hint="за уроки и повторение" />
         <Stat label="Повторение" value={String(due)} hint={due > 0 ? `${plural(due, "карточка ждёт", "карточки ждут", "карточек ждут")} · открыть` : "на сегодня пусто"} href="/learn/review" accent={due > 0} />

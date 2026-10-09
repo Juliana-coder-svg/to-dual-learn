@@ -35,7 +35,8 @@ export function PageHeader({
         <h1 className={cn("text-balance", size === "lg" ? "type-display" : "type-title", back || eyebrow ? "mt-2" : "")}>{title}</h1>
         {description ? <p className="mt-3 max-w-prose type-body text-muted-foreground">{description}</p> : null}
       </div>
-      {actions ? <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div> : null}
+      {/* Без shrink-0: на телефоне блок действий должен переноситься, а не вылезать за экран. */}
+      {actions ? <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">{actions}</div> : null}
     </header>
   );
 }
