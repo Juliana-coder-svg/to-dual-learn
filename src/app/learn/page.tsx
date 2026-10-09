@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { requireUser, requireUserId } from "@/lib/auth/session";
-import { countDueFlashcards, countLessonsStartedToday, latestScoresByCourse, listCoursesForStudentWithLessons } from "@/lib/db/queries";
+import { countDueFlashcards, countLessonsStartedToday, latestScoresByCourse, listCoursesForStudentWithLessons, listOwnedCoursesWithLessons } from "@/lib/db/queries";
 import { joinCourseAction } from "@/lib/actions/courses";
 import { setDailyEmailAction } from "@/lib/actions/auth";
 import { AppShell } from "@/components/shared/AppShell";
@@ -28,13 +28,17 @@ function Stat({ label, value, hint, href, accent }: { label: string; value: stri
 export default async function LearnPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   // Четыре независимых запроса одним кругом до базы: профиль, курсы с уроками, карточки, баллы по всем курсам.
   const userId = await requireUserId();
-  const [user, sp, enrolled, due, scores] = await Promise.all([
+  const [user, sp, joined, owned, due, scores] = await Promise.all([
     requireUser(),
     searchParams,
     listCoursesForStudentWithLessons(userId),
+    listOwnedCoursesWithLessons(userId),
     countDueFlashcards(userId),
     latestScoresByCourse(userId),
   ]);
+  // Свои курсы преподаватель видит здесь без записи кодом: страница курса и урок ему и так открыты.
+  const joinedIds = new Set(joined.map((e) => e.course.id));
+  const enrolled = [...joined, ...owned.filter((o) => !joinedIds.has(o.course.id))];
   // Дневной лимит считает та же RPC, что и /api/evaluate, чтобы страница и проверка ответа не расходились.
   // Второй круг до базы только для курсов с лимитом, параллельно по курсам.
   const startedToday = await Promise.all(
@@ -71,7 +75,7 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
                 return (
                   <Card key={c.id}>
                     <CardHeader>
-                      <CardTitle className="text-balance"><Link href={`/learn/${c.id}`} className="hover:text-primary-strong">{c.title}</Link></CardTitle>
+                      <CardTitle className="text-balance"><Link href={`/learn/${c.id}`} className="hover:text-primary-strong">{c.title}</Link>{c.owner_id === user.id ? <span className="ml-2 align-middle type-caption font-normal text-muted-foreground">ваш курс</span> : null}</CardTitle>
                       <CardDescription className="line-clamp-2">{c.description || "Без описания"}</CardDescription>
                     </CardHeader>
                     <CardContent>

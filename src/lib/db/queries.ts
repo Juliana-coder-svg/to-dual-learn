@@ -274,6 +274,25 @@ export async function listCoursesForStudentWithLessons(userId: string): Promise<
   });
 }
 
+/** Курсы, которыми пользователь владеет, с опубликованными уроками: преподаватель проходит свой курс
+ *  как студент с экрана /learn, не записываясь на него кодом. */
+export async function listOwnedCoursesWithLessons(ownerId: string): Promise<Array<{ course: Course; lessons: LessonSummary[] }>> {
+  const sb = await getSupabase();
+  const rows = unwrap(
+    await sb
+      .from("courses")
+      .select(`*, lessons(${LESSON_SUMMARY_COLUMNS})`)
+      .eq("owner_id", ownerId)
+      .order("created_at", { ascending: false })
+      .overrideTypes<Array<CourseRow & { lessons: LessonSummary[] }>, { merge: false }>(),
+    "owned courses with lessons",
+  );
+  return rows.map((r) => {
+    const { lessons, ...course } = r;
+    return { course, lessons: lessons.filter((l) => l.status === "published").sort((a, b) => a.position - b.position) };
+  });
+}
+
 export async function listCoursesForStudent(userId: string): Promise<Course[]> {
   const sb = await getSupabase();
   const rows = unwrap(

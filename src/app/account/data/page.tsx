@@ -27,6 +27,14 @@ const KIND_LABELS = {
 
 /** «Мои данные»: что храним, согласия, выгрузка в JSON и удаление аккаунта (ст. 14 152-ФЗ).
  *  Открыта и без действующего согласия, чтобы человек мог отозвать его и удалить аккаунт. */
+/** Версия согласия хранится ключом вида consent:0.2;privacy:0.2; человеку показываем названия документов. */
+const DOC_NAMES: Record<string, string> = { consent: "Согласие", privacy: "Политика", terms: "Соглашение" };
+function describeVersion(version: string): string {
+  const parts = version.split(";").map((p) => p.split(":")).filter(([k, v]) => k && v);
+  if (parts.length === 0) return `версия ${version}`;
+  return parts.map(([k, v]) => `${DOC_NAMES[k] ?? k} ${v}`).join(", ");
+}
+
 export default async function MyDataPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const user = await requireUser();
   const sp = await searchParams;
@@ -81,7 +89,7 @@ export default async function MyDataPage({ searchParams }: { searchParams: Promi
               <ul className="divide-y text-sm">
                 {consents.map((c) => (
                   <li key={c.id} className="flex flex-wrap justify-between gap-2 py-2 first:pt-0">
-                    <span>{KIND_LABELS[c.kind]} <span className="text-muted-foreground">· версия {c.version}</span></span>
+                    <span>{KIND_LABELS[c.kind]} <span className="text-muted-foreground">· {describeVersion(c.version)}</span></span>
                     <span className={c.withdrawn_at ? "text-muted-foreground" : "text-foreground"}>{c.withdrawn_at ? `отозвано ${formatDateTime(c.withdrawn_at)}` : `принято ${formatDateTime(c.accepted_at)}`}</span>
                   </li>
                 ))}
