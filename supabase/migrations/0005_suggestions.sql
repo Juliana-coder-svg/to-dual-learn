@@ -59,9 +59,13 @@ alter table public.suggestion_excerpts enable row level security;
 create policy "suggestions owner select" on public.course_suggestions
   for select to authenticated
   using (public.is_course_owner(course_id));
+-- Урок должен принадлежать этому же курсу: иначе владелец двух курсов мог бы привязать предложение к чужому для курса уроку.
 create policy "suggestions owner insert" on public.course_suggestions
   for insert to authenticated
-  with check (public.is_course_owner(course_id) and public.owns_lesson_course(lesson_id));
+  with check (
+    public.is_course_owner(course_id)
+    and exists (select 1 from public.lessons l where l.id = lesson_id and l.course_id = course_suggestions.course_id)
+  );
 create policy "suggestions owner update" on public.course_suggestions
   for update to authenticated
   using (public.is_course_owner(course_id))
@@ -76,7 +80,13 @@ create policy "excerpts owner insert" on public.suggestion_excerpts
   for insert to authenticated
   with check (
     exists (select 1 from public.course_suggestions s where s.id = suggestion_id and public.is_course_owner(s.course_id))
-    and exists (select 1 from public.submissions sub where sub.id = submission_id and public.owns_lesson_course(sub.lesson_id))
+    and exists (
+      select 1
+      from public.submissions sub
+      join public.lessons l on l.id = sub.lesson_id
+      join public.course_suggestions s on s.id = suggestion_id
+      where sub.id = submission_id and l.course_id = s.course_id
+    )
   );
 
 -- Supabase выдаёт all на новые таблицы ролям anon и authenticated: сужаем до нужного.
@@ -112,6 +122,7 @@ as $$
   where s.course_id = c
     and s.status = 'accepted'
     and s.decided_at >= now() - interval '7 days'
+    and l.status = 'published'
     and (public.is_enrolled(c) or public.is_course_owner(c))
   order by s.decided_at desc;
 $$;

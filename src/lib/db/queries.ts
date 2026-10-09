@@ -908,6 +908,7 @@ export async function listLessonAnswersForSignals(courseId: string): Promise<Les
         .eq("lesson.course_id", courseId)
         .eq("lesson.status", "published")
         .order("created_at")
+        .order("id")
         .range(from, to)
         .overrideTypes<Array<SubmissionRow & { lesson: { course_id: string; status: LessonStatus } }>, { merge: false }>(),
     "answers for signals",
