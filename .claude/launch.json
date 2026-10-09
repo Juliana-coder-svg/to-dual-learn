@@ -45,15 +45,6 @@
         "NEXT_DIST_DIR=.next-3002 PORT=3002 npm run dev -- -p 3002"
       ],
       "port": 3002
-    },
-    {
-      "name": "dev-3012",
-      "runtimeExecutable": "sh",
-      "runtimeArgs": [
-        "-c",
-        "NEXT_DIST_DIR=.next-3012 PORT=3012 npm run dev -- -p 3012"
-      ],
-      "port": 3012
     }
   ]
 }
