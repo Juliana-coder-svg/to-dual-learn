@@ -154,6 +154,52 @@ export type AiCallRow = {
   created_at: string;
 };
 
+/** Предложение ИИ-методиста по уроку (supabase/migrations/0005_suggestions.sql). */
+export type SuggestionType = "add_flashcard" | "clarify_criterion";
+export type SuggestionStatus = "pending" | "accepted" | "rejected" | "reverted";
+
+export type CourseSuggestionRow = {
+  id: string;
+  course_id: string;
+  lesson_id: string;
+  type: SuggestionType;
+  status: SuggestionStatus;
+  /** Урок + вид сигнала + номер критерия: по нему не повторяем отклонённое. */
+  signal_key: string;
+  signal: Json;
+  evidence: Json;
+  change: Json;
+  previous_content: Json | null;
+  created_at: string;
+  decided_at: string | null;
+};
+
+/** Обезличенная выдержка из ответа студента под предложением; уходит каскадом вместе с ответом. */
+export type SuggestionExcerptRow = {
+  id: string;
+  suggestion_id: string;
+  submission_id: string;
+  excerpt: string;
+  created_at: string;
+};
+
+/** Ответ RPC course_flashcard_signals: карточки урока по всем студентам курса, для сигнала «карточку забывают».
+ *  old_* считаются по карточкам старше 9 дней: первый круг (через день) у них уже пройден. */
+export type FlashcardSignalRow = {
+  lesson_id: string;
+  reviewed: number;
+  forgot: number;
+  old_reviewed: number;
+  old_forgot: number;
+};
+
+/** Ответ RPC course_updates для студента: что приняли за 7 дней, без выдержек и текста изменения. */
+export type CourseUpdateRow = {
+  lesson_position: number;
+  type: SuggestionType;
+  decided_at: string;
+};
+
 export type StudentStatsRow = {
   user_id: string;
   name: string;
@@ -220,6 +266,21 @@ export type Database = {
       homework_checks: Table<HomeworkCheckRow, "id" | "created_at">;
       ai_calls: Table<AiCallRow, "id" | "created_at">;
       consents: Table<ConsentRow, "id" | "accepted_at" | "withdrawn_at">;
+      course_suggestions: Table<
+        CourseSuggestionRow,
+        "id" | "created_at" | "status" | "previous_content" | "decided_at",
+        [
+          { foreignKeyName: "course_suggestions_lesson_id_fkey"; columns: ["lesson_id"]; isOneToOne: false; referencedRelation: "lessons"; referencedColumns: ["id"] },
+        ]
+      >;
+      suggestion_excerpts: Table<
+        SuggestionExcerptRow,
+        "id" | "created_at",
+        [
+          { foreignKeyName: "suggestion_excerpts_suggestion_id_fkey"; columns: ["suggestion_id"]; isOneToOne: false; referencedRelation: "course_suggestions"; referencedColumns: ["id"] },
+          { foreignKeyName: "suggestion_excerpts_submission_id_fkey"; columns: ["submission_id"]; isOneToOne: false; referencedRelation: "submissions"; referencedColumns: ["id"] },
+        ]
+      >;
     };
     Views: Record<string, never>;
     Functions: {
@@ -228,6 +289,8 @@ export type Database = {
       count_lessons_started_today: { Args: { u: string; c: string; since: string }; Returns: number };
       course_usage: { Args: { c: string }; Returns: UsageSummaryRow[] };
       course_usage_by_kind: { Args: { c: string }; Returns: UsageByKindRow[] };
+      course_updates: { Args: { c: string }; Returns: CourseUpdateRow[] };
+      course_flashcard_signals: { Args: { c: string }; Returns: FlashcardSignalRow[] };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

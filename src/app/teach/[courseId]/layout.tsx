@@ -51,7 +51,7 @@ export default async function CourseLayout({ children, params }: { children: Rea
           Пробный режим: ключ модели не задан, поэтому вместо ответов ИИ сервис показывает примеры. Добавьте ключ в .env.local и перезапустите сервер.
         </Notice>
       ) : null}
-      <CourseTabs courseId={course.id} />
+      <CourseTabs courseId={course.id} showSignals={process.env.CONCEPT_SIGNALS === "1"} />
       <div className="mt-8">{children}</div>
     </AppShell>
   );

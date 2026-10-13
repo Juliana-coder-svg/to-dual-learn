@@ -15,13 +15,13 @@ const TABS = [
 ];
 
 /** Вкладки курса: подчёркивание акцентом, на телефоне прокручиваются в край экрана. Высота 44 px под палец. */
-export function CourseTabs({ courseId }: { courseId: string }) {
+export function CourseTabs({ courseId, showSignals = false }: { courseId: string; showSignals?: boolean }) {
   const pathname = usePathname();
   const base = `/teach/${courseId}`;
   return (
     <nav aria-label="Разделы курса" className="-mx-4 mt-6 overflow-x-auto border-b px-4 md:mx-0 md:px-0">
       <ul className="flex gap-1">
-        {TABS.map((t) => {
+        {(showSignals ? [...TABS.slice(0, 5), { href: "/signals", label: "Сигналы" }, ...TABS.slice(5)] : TABS).map((t) => {
           const href = base + t.href;
           const active = t.href === "" ? pathname === base : pathname.startsWith(href);
           return (

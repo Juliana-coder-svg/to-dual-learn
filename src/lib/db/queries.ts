@@ -8,6 +8,9 @@ import type {
   ConsentKind,
   ConsentRow,
   CourseRow,
+  CourseSuggestionRow,
+  CourseUpdateRow,
+  FlashcardSignalRow,
   FlashcardRow,
   GenerationRow,
   HomeworkCheckRow,
@@ -19,6 +22,8 @@ import type {
   Role,
   StudentStatsRow,
   SubmissionRow,
+  SuggestionExcerptRow,
+  SuggestionStatus,
   Tone,
   UsageByKindRow,
   UsageSummaryRow,
@@ -47,7 +52,7 @@ export type Material = MaterialRow;
 export type Flashcard = FlashcardRow;
 export type Generation = GenerationRow;
 export type ChatMessage = ChatMessageRow;
-export type { CalibrationSampleRow };
+export type { CalibrationSampleRow, CourseSuggestionRow, SuggestionExcerptRow, CourseUpdateRow, FlashcardSignalRow };
 
 export interface Lesson extends Omit<LessonRow, "content" | "review"> {
   content: LessonContent;
@@ -992,6 +997,197 @@ export async function listCalibrationSamples(courseId: string, lessonId?: string
 export async function deleteCalibrationSample(id: string, courseId: string): Promise<void> {
   const sb = await getSupabase();
   check(await sb.from("calibration_samples").delete().eq("id", id).eq("course_id", courseId), "calibration delete");
+}
+
+// ---------- сигналы и предложения («курс учится у студентов») ----------
+
+export interface LessonAnswerForSignals extends Submission {
+  course_id: string;
+}
+
+/** Все сдачи по опубликованным урокам курса, без лимита в 200 строк (listSubmissionsByCourse его имеет):
+ *  функция сигналов сама выбирает первую сдачу каждого студента и считает возражения.
+ *  Идёт от сессии преподавателя: RLS отдаёт ответы по его урокам. */
+export async function listLessonAnswersForSignals(courseId: string): Promise<LessonAnswerForSignals[]> {
+  const sb = await getSupabase();
+  const rows = await fetchAll<SubmissionRow & { lesson: { course_id: string; status: LessonStatus } }>(
+    (from, to) =>
+      sb
+        .from("submissions")
+        .select("*, lesson:lessons!inner(course_id, status)")
+        .eq("lesson.course_id", courseId)
+        .eq("lesson.status", "published")
+        .order("created_at")
+        .order("id")
+        .range(from, to)
+        .overrideTypes<Array<SubmissionRow & { lesson: { course_id: string; status: LessonStatus } }>, { merge: false }>(),
+    "answers for signals",
+  );
+  return rows.map((r) => ({ ...rowToSubmission(r), course_id: r.lesson.course_id }));
+}
+
+/** Сводка по карточкам студентов для сигнала «карточку забывают». Чужие строки flashcards RLS
+ *  не отдаёт, поэтому числа считает RPC с проверкой владельца курса. */
+export async function listFlashcardSignals(courseId: string): Promise<FlashcardSignalRow[]> {
+  const sb = await getSupabase();
+  return unwrap(await sb.rpc("course_flashcard_signals", { c: courseId }), "flashcard signals");
+}
+
+export interface Suggestion extends Omit<CourseSuggestionRow, "previous_content"> {
+  previous_content: LessonContent | null;
+  excerpts: SuggestionExcerptRow[];
+}
+
+function rowToSuggestion(r: CourseSuggestionRow & { excerpts?: SuggestionExcerptRow[] }): Suggestion {
+  return {
+    id: r.id,
+    course_id: r.course_id,
+    lesson_id: r.lesson_id,
+    type: r.type,
+    status: r.status,
+    signal_key: r.signal_key,
+    signal: r.signal,
+    evidence: r.evidence,
+    change: r.change,
+    previous_content: r.previous_content ? normalizeLessonContent(r.previous_content) : null,
+    created_at: r.created_at,
+    decided_at: r.decided_at,
+    excerpts: r.excerpts ?? [],
+  };
+}
+
+export async function listSuggestions(courseId: string): Promise<Suggestion[]> {
+  const sb = await getSupabase();
+  const rows = unwrap(
+    await sb
+      .from("course_suggestions")
+      .select("*, excerpts:suggestion_excerpts(*)")
+      .eq("course_id", courseId)
+      .order("created_at", { ascending: false })
+      .overrideTypes<Array<CourseSuggestionRow & { excerpts: SuggestionExcerptRow[] }>, { merge: false }>(),
+    "suggestions",
+  );
+  return rows.map(rowToSuggestion);
+}
+
+export async function getSuggestion(id: string, courseId: string): Promise<Suggestion | undefined> {
+  const sb = await getSupabase();
+  const r = unwrapMaybe(
+    await sb
+      .from("course_suggestions")
+      .select("*, excerpts:suggestion_excerpts(*)")
+      .eq("id", id)
+      .eq("course_id", courseId)
+      .maybeSingle()
+      .overrideTypes<CourseSuggestionRow & { excerpts: SuggestionExcerptRow[] }, { merge: false }>(),
+    "suggestion",
+  );
+  return r ? rowToSuggestion(r) : undefined;
+}
+
+export interface SuggestionInput {
+  courseId: string;
+  lessonId: string;
+  type: CourseSuggestionRow["type"];
+  signalKey: string;
+  signal: Json;
+  evidence: Json;
+  change: Json;
+  /** Каждая выдержка дословно входит в ответ submission_id: маршрут проверяет это до записи. */
+  excerpts: Array<{ submissionId: string; excerpt: string }>;
+}
+
+/** Вставляет предложения и их выдержки. Предложение с signal_key, по которому уже есть
+ *  ожидающее или отклонённое, отсекает уникальный индекс: такое пропускаем, остальные пишем. */
+export async function insertSuggestions(inputs: SuggestionInput[]): Promise<Suggestion[]> {
+  const sb = await getSupabase();
+  const out: Suggestion[] = [];
+  for (const input of inputs) {
+    const res = await sb
+      .from("course_suggestions")
+      .insert({
+        course_id: input.courseId,
+        lesson_id: input.lessonId,
+        type: input.type,
+        signal_key: input.signalKey,
+        signal: input.signal,
+        evidence: input.evidence,
+        change: input.change,
+      })
+      .select("*")
+      .single();
+    if (res.error?.code === "23505") continue;
+    const row = unwrap(res, "suggestion insert");
+    if (input.excerpts.length > 0) {
+      check(
+        await sb.from("suggestion_excerpts").insert(input.excerpts.map((e) => ({ suggestion_id: row.id, submission_id: e.submissionId, excerpt: e.excerpt }))),
+        "excerpts insert",
+      );
+    }
+    out.push(rowToSuggestion(row));
+  }
+  return out;
+}
+
+/** Решение по предложению. previousContent передаётся при принятии: контент урока до изменения. */
+export async function decideSuggestion(
+  id: string,
+  courseId: string,
+  from: SuggestionStatus,
+  status: Exclude<SuggestionStatus, "pending">,
+  previousContent?: LessonContent,
+): Promise<void> {
+  const sb = await getSupabase();
+  // Меняем только из ожидаемого статуса: двойной клик или две вкладки не затрут previous_content.
+  const rows = unwrap(
+    await sb
+      .from("course_suggestions")
+      .update({
+        status,
+        decided_at: nowIso(),
+        ...(previousContent ? { previous_content: previousContent as unknown as Json } : {}),
+      })
+      .eq("id", id)
+      .eq("course_id", courseId)
+      .eq("status", from)
+      .select("id"),
+    "suggestion decide",
+  );
+  if (rows.length === 0) throw new Error("Предложение уже обработано или не найдено");
+}
+
+/** Кто сдавал урок: уникальные user_id. Нужно, чтобы раздать принятую карточку тем, кто урок уже прошёл. */
+export async function listLessonLearners(lessonId: string): Promise<string[]> {
+  const sb = await getSupabase();
+  const rows = await fetchAll<{ user_id: string }>(
+    (from, to) => sb.from("submissions").select("user_id").eq("lesson_id", lessonId).order("created_at").range(from, to),
+    "lesson learners",
+  );
+  return [...new Set(rows.map((r) => r.user_id))];
+}
+
+/** Когда по курсу в последний раз запускали разбор ответов группы: по ai_calls, kind weekly_review. */
+export async function lastWeeklyReviewAt(courseId: string): Promise<string | null> {
+  const sb = await getSupabase();
+  const row = unwrapMaybe(
+    await sb
+      .from("ai_calls")
+      .select("created_at")
+      .eq("course_id", courseId)
+      .eq("kind", "weekly_review")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .overrideTypes<{ created_at: string }, { merge: false }>(),
+    "last weekly review",
+  );
+  return row?.created_at ?? null;
+}
+
+/** Для студента: что в курсе приняли по ответам группы за 7 дней. Без выдержек и текста изменения. */
+export async function courseUpdates(courseId: string): Promise<CourseUpdateRow[]> {
+  const sb = await getSupabase();
+  return unwrap(await sb.rpc("course_updates", { c: courseId }), "course updates");
 }
 
 // ---------- мои данные: выгрузка и удаление ----------
