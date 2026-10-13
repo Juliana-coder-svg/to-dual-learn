@@ -19,7 +19,7 @@ export function ConsentFields({ showMarketing = true }: { showMarketing?: boolea
         <label className={row}>
           <input type="checkbox" name="consent_marketing" value="1" className="mt-0.5 size-4 shrink-0" />
           <span>
-            Присылайте мне письма о программах To Dual.{" "}
+            Хочу получать письма о программах To Dual.{" "}
             <span className="text-muted-foreground">Необязательно. Согласие можно отозвать в любой момент в разделе «Мои данные».</span>
           </span>
         </label>

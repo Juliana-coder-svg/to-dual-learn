@@ -48,7 +48,7 @@ export default async function MyDataPage({ searchParams }: { searchParams: Promi
         description={
           <>
             Мы храним вашу почту, имя, роль, ответы на задачи с разборами, карточки для повторения и записи на курсы.
-            Если вы преподаватель, ещё храним материалы, уроки, документы, вопросы по материалам и проверки работ. Подробнее в{" "}
+            Если вы преподаватель, храним также материалы, уроки, документы, вопросы по материалам и проверки работ. Подробнее в{" "}
             <Link href="/legal/privacy" className="underline underline-offset-4 hover:text-foreground">Политике</Link>.
           </>
         }
@@ -122,7 +122,7 @@ export default async function MyDataPage({ searchParams }: { searchParams: Promi
                 <ul className="list-disc pl-5 text-muted-foreground">
                   {blockingCourses.map((c) => <li key={c.id}>{c.title}: {plural(c.students, "студент", "студента", "студентов")}</li>)}
                 </ul>
-                <p className="text-muted-foreground">Отчислить студентов или передать курс другому преподавателю в интерфейсе пока нельзя. Напишите нам, решим вручную.</p>
+                <p className="text-muted-foreground">Убрать студентов с курса или передать курс другому преподавателю в сервисе пока нельзя. Напишите нам, решим вручную.</p>
               </div>
             ) : (
               <form action={deleteAccountAction} className="space-y-4">
