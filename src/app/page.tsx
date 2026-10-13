@@ -98,22 +98,27 @@ export default async function Home() {
 
   return (
     <PublicShell width="wide" action={<Button nativeButton={false} render={<Link href="/login" />} size="sm" variant="outline">Войти</Button>}>
-      <section className="grid items-center gap-12 py-16 md:grid-cols-[1.15fr_1fr] md:gap-16 md:py-28">
-        <div className="flex flex-col">
-          <p className="eyebrow text-primary-strong">Микрообучение по вашим материалам</p>
-          <h1 className="mt-5 max-w-3xl text-balance type-display">
-            Студенты практикуются по вашим материалам по&nbsp;пять минут в&nbsp;день
-          </h1>
-          <p className="mt-6 max-w-lg text-lg leading-relaxed text-muted-foreground max-md:order-last max-md:mt-8">
-            Загрузите программу, методичку или конспект лекции. To Dual Learn соберёт из них короткие уроки с задачей
-            и разберёт ответы студентов по критериям. Через день, неделю и месяц пройденное вернётся карточками.
-          </p>
-          <div className="mt-8 max-md:mt-6">
-            <EntryButtons />
-            <p className="mt-3 text-sm text-muted-foreground">Бесплатно. Пароль не нужен: войдите по почте и имени.</p>
+      <section className="pt-16 pb-12 md:pt-24 md:pb-20">
+        <p className="eyebrow text-primary-strong">Микрообучение по вашим материалам</p>
+        <h1 className="mt-6 text-balance type-mega">
+          Студенты практикуются по вашим материалам по&nbsp;пять минут в&nbsp;день
+        </h1>
+        {/* Асимметрия: текст в левых пяти колонках, экран урока сдвинут вправо и вниз. */}
+        <div className="mt-10 grid gap-12 md:mt-16 md:grid-cols-12 md:gap-8">
+          <div className="flex flex-col md:col-span-5 md:pt-8">
+            <p className="max-w-lg text-lg leading-relaxed text-muted-foreground max-md:order-last max-md:mt-8">
+              Загрузите программу, методичку или конспект лекции. To Dual Learn соберёт из них короткие уроки с задачей
+              и разберёт ответы студентов по критериям. Через день, неделю и месяц пройденное вернётся карточками.
+            </p>
+            <div className="mt-8 max-md:mt-0">
+              <EntryButtons />
+              <p className="mt-3 text-sm text-muted-foreground">Бесплатно. Пароль не нужен: войдите по почте и имени.</p>
+            </div>
+          </div>
+          <div className="md:col-span-6 md:col-start-7 md:mt-24">
+            <LessonTaskScreen />
           </div>
         </div>
-        <LessonTaskScreen />
       </section>
 
       {/* Знак как графика: три сегмента во всю ширину отделяют героя от остального. */}
@@ -123,7 +128,7 @@ export default async function Home() {
         <h2 className="max-w-2xl type-title">Как это работает</h2>
         <ol className="mt-10 grid gap-10 md:grid-cols-3 md:gap-8">
           {STEPS.map((step, i) => (
-            <li key={step.title}>
+            <li key={step.title} className={i === 1 ? "md:mt-12" : i === 2 ? "md:mt-24" : ""}>
               <span aria-hidden className="block h-3 bg-primary md:h-5" />
               <span className="mt-5 block type-counter text-primary">{String(i + 1).padStart(2, "0")}</span>
               <h3 className="mt-4 type-heading">{step.title}</h3>
@@ -138,7 +143,7 @@ export default async function Home() {
         <p className="mt-3 max-w-prose text-sm text-muted-foreground">Экраны из курса-примера «Критическое мышление в эпоху ИИ». Преподаватель собирает такие же из своих материалов.</p>
         <div className="mt-10 grid gap-10 md:grid-cols-2 md:gap-8">
           <LessonIdeaScreen />
-          <LessonFeedbackScreen />
+          <div className="md:mt-20"><LessonFeedbackScreen /></div>
         </div>
       </section>
 
