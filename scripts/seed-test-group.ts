@@ -8,7 +8,7 @@
  * ANTHROPIC_BASE_URL перекрывает --env-file, поэтому её снимаем):
  *
  *   env -u ANTHROPIC_BASE_URL ALLOW_TEST_GROUP=1 node --env-file=../../../.env.local \
- *     --import ./scripts/register.mjs scripts/seed-test-group.ts <команда> [--course <uuid>]
+ *     --import ./scripts/register.mjs scripts/seed-test-group.ts <команда> --supabase-host <хост из plan> [--course <uuid>]
  *
  * Команды:
  *   plan      что будет сделано: курс, число новых студентов и оценок, оценка расхода. Базу не меняет.
@@ -100,6 +100,9 @@ function guard(): void {
   if (process.env.ALLOW_TEST_GROUP !== "1") fail("Нужна переменная ALLOW_TEST_GROUP=1: сценарий пишет тестовых пользователей в базу.");
   if (process.env.NODE_ENV === "production") fail("В production тестовую группу не загружаем.");
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) fail("Не задан SUPABASE_SERVICE_ROLE_KEY (см. .env.local основного чекаута).");
+  // NODE_ENV для обычного node не задан, поэтому проверки production мало: хост базы называем явно.
+  const host = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").replace(/^https?:\/\//, "");
+  if (process.argv[2] !== "plan" && arg("supabase-host") !== host) fail(`Запись только с явным --supabase-host ${host || "<хост>"}: так вы подтверждаете, в какую базу пишем. Сначала команда plan.`);
 }
 
 function fail(msg: string): never {
@@ -148,6 +151,7 @@ async function findOrCreateCourse(teacherId: string, slug: string, courseId: str
   if (courseId) {
     const course = await getCourse(courseId);
     if (!course) fail(`Курс ${courseId} не найден.`);
+    if (course.owner_id !== teacherId) fail(`Курс ${courseId} принадлежит не тестовому преподавателю ${TEACHER_EMAIL}. В чужой курс не пишем.`);
     if (course.title !== seed.title) fail(`Курс ${courseId} называется «${course.title}», а ожидался «${seed.title}». В чужой курс не пишем.`);
     return { course, created: false };
   }
@@ -290,7 +294,9 @@ async function report(group: Group): Promise<void> {
   const existing = await listTestUsers();
   const teacherId = existing.get(TEACHER_EMAIL);
   await runAsService(async () => {
-    const courseId = arg("course") ?? (teacherId ? (await findOrCreateCourse(teacherId, group.course, undefined)).course.id : fail("Нет --course и нет тестового преподавателя: сначала run."));
+    const sbc = createServiceClient();
+    const found = teacherId ? (await sbc.from("courses").select("id").eq("owner_id", teacherId).order("created_at").limit(1)).data?.[0]?.id : undefined;
+    const courseId = arg("course") ?? found ?? fail("Нет --course и курса тестового преподавателя: сначала run.");
     const course = await getCourse(courseId);
     if (!course) fail(`Курс ${courseId} не найден.`);
     const [lessons, answers, calibration] = await Promise.all([listLessons(course.id, { publishedOnly: true }), listLessonAnswersForSignals(course.id), listCalibrationSamples(course.id)]);

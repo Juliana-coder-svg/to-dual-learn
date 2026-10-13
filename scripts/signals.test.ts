@@ -81,12 +81,15 @@ test("мало данных: меньше 10 сдавших на каждом у
   assert.equal(r.top.length, 0);
 });
 
-test("критерий с другим текстом не учитывается и попадает в mismatched", () => {
+test("критерий с другим текстом при той же длине разбора учитывается по номеру и считается в mismatched", () => {
   const answers = buildGroup().map((a) => (a.lesson_id === "L2" ? { ...a, feedback: { ...a.feedback, criteria: a.feedback.criteria.map((c, i) => (i === 1 ? { ...c, criterion: "Другой текст" } : c)) } } : a));
   const r = computeSignals({ lessons, answers, excludeUserIds: ["owner"] });
   const l2 = r.lessons[1];
   assert.equal(l2.mismatched, 12);
-  assert.ok(!l2.signals.some((s) => s.kind === "criterion_failed"));
+  assert.ok(l2.signals.some((s) => s.kind === "criterion_failed"));
+  const shorter = answers.map((a) => (a.lesson_id === "L2" ? { ...a, feedback: { ...a.feedback, criteria: a.feedback.criteria.slice(0, 3).map((c, i) => (i === 1 ? { ...c, criterion: "Другой текст" } : c)) } } : a));
+  const r2 = computeSignals({ lessons, answers: shorter, excludeUserIds: ["owner"] });
+  assert.ok(!r2.lessons[1].signals.some((s) => s.kind === "criterion_failed"), "урок правили: без точного совпадения текста строка не берётся");
 });
 
 test("уровень предложения зависит от размера группы", () => {

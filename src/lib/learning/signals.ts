@@ -31,7 +31,7 @@ export const THRESHOLDS = {
   /** Сигнал 4: одно и то же замечание наставника в improvements у доли сдавших. */
   repeatedImprovementShare: 0.4,
   /** Насколько похожи два замечания, чтобы считаться одним (Жаккар по основам слов). */
-  improvementSimilarity: 0.3,
+  improvementSimilarity: 0.2,
   /** Сигнал 2: доля «забыл» среди карточек, у которых первый круг пройден (старше 9 дней). */
   flashcardForgotShare: 0.3,
   flashcardFirstRoundForgotShare: 0.4,
@@ -207,7 +207,11 @@ function criterionStats(d: LessonData): CriterionStat[] {
     const failedIds: string[] = [];
     for (const a of d.first.values()) {
       const c = a.feedback.criteria[index];
-      if (!c || normalize(c.criterion) !== want) continue;
+      if (!c) continue;
+      // Длина разбора равна длине рубрики: доверяем номеру, модель могла только перефразировать текст.
+      // Длина другая (урок правили после ответа): без точного совпадения текста строку не берём.
+      const sameShape = a.feedback.criteria.length === d.lesson.rubricCriteria.length;
+      if (!sameShape && normalize(c.criterion) !== want) continue;
       of += 1;
       if (!c.met) {
         failed += 1;
@@ -226,15 +230,17 @@ function criterionLevel(n: number, share: number, hasSecondSignal: boolean): Sig
   return "observation";
 }
 
-/** У скольких возразивших балл записи с возражением отличается от предыдущей записи того же студента. */
+/** У скольких возразивших после переоценки поменялось выполнение хотя бы одного критерия.
+ *  Смена одного балла при тех же отметках met считается арифметикой наставника, а не двоякостью критерия. */
 function scoreChangedAfterObjection(d: LessonData, answers: SignalAnswer[]): number {
   const mine = answers.filter((a) => a.lesson_id === d.lesson.id && d.objectors.has(a.user_id)).sort((a, b) => a.created_at.localeCompare(b.created_at));
   const changed = new Set<string>();
-  const last = new Map<string, number>();
+  const last = new Map<string, boolean[]>();
   for (const a of mine) {
+    const met = a.feedback.criteria.map((c) => c.met);
     const prev = last.get(a.user_id);
-    if (a.objection && prev !== undefined && prev !== a.score) changed.add(a.user_id);
-    last.set(a.user_id, a.score);
+    if (a.objection && prev && (prev.length !== met.length || prev.some((m, i) => m !== met[i]))) changed.add(a.user_id);
+    last.set(a.user_id, met);
   }
   return changed.size;
 }
@@ -323,6 +329,7 @@ export function computeSignals(input: SignalsInput): CourseSignals {
     const firsts = [...d.first.values()];
     const avgScore = n > 0 ? round(firsts.reduce((s, a) => s + a.score, 0) / n, 1) : null;
     const stats = criterionStats(d);
+    // Перефразированные моделью критерии учтены по номеру; здесь считаем, сколько их, чтобы методист видел масштаб.
     const mismatched = firsts.reduce((sum, a) => sum + a.feedback.criteria.filter((c, idx) => d.lesson.rubricCriteria[idx] !== undefined && normalize(c.criterion) !== normalize(d.lesson.rubricCriteria[idx])).length, 0);
     const objectionsScoreChanged = scoreChangedAfterObjection(d, input.answers);
     const worst = stats.filter((s) => s.of > 0).sort((x, y) => y.share - x.share)[0] ?? null;
@@ -347,7 +354,7 @@ export function computeSignals(input: SignalsInput): CourseSignals {
           share: round(objectionShare),
           text: `${plural(objections, "студент оспорил", "студента оспорили", "студентов оспорили")} оценку из ${n} сдавших`,
           detail: objectionsScoreChanged > 0
-            ? `После переоценки балл изменился у ${objectionsScoreChanged} из ${objections}: наставник что-то пропустил или критерий двоякий`
+            ? `После переоценки поменялось выполнение критериев у ${objectionsScoreChanged} из ${objections}: наставник что-то пропустил или критерий двоякий`
             : "Балл после переоценки не менялся: студенты не понимают, чего от них ждали в задаче или критерии",
           submissionIds: input.answers.filter((a) => a.lesson_id === d.lesson.id && a.objection && d.objectors.has(a.user_id)).map((a) => a.id),
         });

@@ -11,17 +11,14 @@ import { Notice } from "@/components/shared/Notice";
 export default async function SignalsPage({ params }: { params: Promise<{ courseId: string }> }) {
   if (process.env.CONCEPT_SIGNALS !== "1") notFound();
   const { courseId } = await params;
-  const [ctx, lessons, answers, calibration, flashcards] = await Promise.all([
-    teacherCourse(courseId),
+  const ctx = await teacherCourse(courseId);
+  if (!ctx) return noCourseAccess(`/teach/${courseId}/signals`);
+  const [lessons, answers, calibration, flashcards] = await Promise.all([
     listLessons(courseId, { publishedOnly: true }),
     listLessonAnswersForSignals(courseId),
     listCalibrationSamples(courseId),
-    listFlashcardSignals(courseId).catch((e: unknown) => {
-      if (String(e).includes("not a course owner")) return [];
-      throw e;
-    }),
+    listFlashcardSignals(courseId),
   ]);
-  if (!ctx) return noCourseAccess(`/teach/${courseId}/signals`);
 
   const r = computeSignals({
     lessons: lessons.map((l) => ({ id: l.id, position: l.position, title: l.title, rubricCriteria: l.content.rubricCriteria })),

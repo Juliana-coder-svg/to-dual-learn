@@ -1023,11 +1023,13 @@ export async function insertSuggestions(inputs: SuggestionInput[]): Promise<Sugg
 export async function decideSuggestion(
   id: string,
   courseId: string,
+  from: SuggestionStatus,
   status: Exclude<SuggestionStatus, "pending">,
   previousContent?: LessonContent,
 ): Promise<void> {
   const sb = await getSupabase();
-  check(
+  // Меняем только из ожидаемого статуса: двойной клик или две вкладки не затрут previous_content.
+  const rows = unwrap(
     await sb
       .from("course_suggestions")
       .update({
@@ -1036,9 +1038,12 @@ export async function decideSuggestion(
         ...(previousContent ? { previous_content: previousContent as unknown as Json } : {}),
       })
       .eq("id", id)
-      .eq("course_id", courseId),
+      .eq("course_id", courseId)
+      .eq("status", from)
+      .select("id"),
     "suggestion decide",
   );
+  if (rows.length === 0) throw new Error("Предложение уже обработано или не найдено");
 }
 
 /** Кто сдавал урок: уникальные user_id. Нужно, чтобы раздать принятую карточку тем, кто урок уже прошёл. */
