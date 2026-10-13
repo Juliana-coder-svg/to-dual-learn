@@ -4,6 +4,7 @@ import { getCurrentUser, homeFor } from "@/lib/auth/session";
 import { Button } from "@/components/ui/button";
 import { PublicShell } from "@/components/shared/PublicShell";
 import { StepMarks } from "@/components/shared/StepMarks";
+import { DEFAULT_TRY_SLUG } from "@/lib/try/catalog";
 
 interface Step {
   title: string;
@@ -81,11 +82,14 @@ const FINDINGS: Finding[] = [
 
 const TEAM = ["НИУ ВШЭ", "Яндекс", "ВТБ", "Сколково"];
 
-function EntryButtons({ size = "lg", tone = "default" }: { size?: "lg" | "default"; tone?: "default" | "inverse" }) {
+function EntryButtons({ size = "lg", tone = "default", trial = false }: { size?: "lg" | "default"; tone?: "default" | "inverse"; trial?: boolean }) {
   const inverse = tone === "inverse";
   return (
     <div className="flex flex-wrap gap-3">
-      <Button nativeButton={false} render={<Link href="/login?role=teacher" />} size={size} variant={inverse ? "inverse" : "default"}>Я преподаватель</Button>
+      {trial ? (
+        <Button nativeButton={false} render={<Link href={`/try/${DEFAULT_TRY_SLUG}/1`} />} size={size} variant={inverse ? "inverse" : "default"}>Попробовать урок</Button>
+      ) : null}
+      <Button nativeButton={false} render={<Link href="/login?role=teacher" />} size={size} variant={inverse ? (trial ? "inverse-outline" : "inverse") : trial ? "outline" : "default"}>Я преподаватель</Button>
       <Button nativeButton={false} render={<Link href="/login?role=student" />} size={size} variant={inverse ? "inverse-outline" : "outline"}>Я студент</Button>
     </div>
   );
@@ -136,8 +140,8 @@ export default async function Home() {
             и разберёт ответы студентов по критериям. Через день, неделю и месяц пройденное вернётся карточками.
           </p>
           <div className="mt-8 max-md:mt-6">
-            <EntryButtons />
-            <p className="mt-3 text-sm text-muted-foreground">Бесплатно. Пароль не нужен: войдите по почте и имени.</p>
+            <EntryButtons trial />
+            <p className="mt-3 text-sm text-muted-foreground">Бесплатно. Пробный урок без входа, пять минут. Дальше пароль не нужен: войдите по почте и имени.</p>
           </div>
         </div>
         <LessonSketch />
