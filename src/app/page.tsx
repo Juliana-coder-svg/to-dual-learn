@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { getCurrentUser, homeFor } from "@/lib/auth/session";
 import { Button } from "@/components/ui/button";
 import { PublicShell } from "@/components/shared/PublicShell";
+import { Building2, Compass, GraduationCap } from "lucide-react";
+import { Asterisk } from "@/components/shared/Asterisk";
 import { StepMarks } from "@/components/shared/StepMarks";
 import { LessonFeedbackScreen, LessonIdeaScreen, LessonTaskScreen } from "@/components/shared/LessonScreens";
 
@@ -112,13 +114,15 @@ export default async function Home() {
 
   return (
     <PublicShell width="wide" action={<Button nativeButton={false} render={<Link href="/login" />} size="sm" variant="outline">Войти</Button>}>
-      <section className="pt-16 pb-12 md:pt-24 md:pb-20">
-        <p className="eyebrow text-primary-strong">Микрообучение по вашим материалам</p>
-        <h1 className="mt-6 text-balance type-mega">
+      <section className="relative overflow-clip pt-16 pb-12 md:pt-24 md:pb-20">
+        {/* Фирменная звёздочка огромным бледным фоном, как на страницах брендбука. Плоская заливка линией, без градиента. */}
+        <Asterisk className="pointer-events-none absolute -right-24 -top-10 size-[460px] text-muted md:-right-16 md:size-[620px]" />
+        <p className="relative eyebrow text-primary-strong">Микрообучение по вашим материалам</p>
+        <h1 className="relative mt-6 text-balance type-mega">
           Студенты практикуются по вашим материалам по&nbsp;пять минут в&nbsp;день
         </h1>
         {/* Асимметрия: текст в левых пяти колонках, экран урока сдвинут вправо и вниз. */}
-        <div className="mt-10 grid gap-12 md:mt-16 md:grid-cols-12 md:gap-8">
+        <div className="relative mt-10 grid gap-12 md:mt-16 md:grid-cols-12 md:gap-8">
           <div className="flex flex-col md:col-span-5 md:pt-8">
             <p className="max-w-lg text-lg leading-relaxed text-muted-foreground max-md:order-last max-md:mt-8">
               Загрузите программу, методичку или конспект лекции. To Dual Learn соберёт из них короткие уроки с задачей
@@ -138,19 +142,22 @@ export default async function Home() {
       {/* Знак как графика: три сегмента во всю ширину отделяют героя от остального. */}
       <StepMarks total={3} filled={2} current={3} size="xl" />
 
-      <MagSection n="01" title="Как это работает">
-        <ol className="divide-y border-b">
+      <section className="rule py-16 md:py-24">
+        <p className="type-caption tabular-nums text-muted-foreground">01</p>
+        <h2 className="mt-2 max-w-2xl text-balance type-title">Как это работает</h2>
+        {/* Графитовые карточки с большой цифрой справа сверху, как шаги процесса в брендбуке. */}
+        <ol className="mt-10 grid gap-4 md:grid-cols-3">
           {STEPS.map((step, i) => (
-            <li key={step.title} className="grid gap-x-8 gap-y-2 py-7 md:grid-cols-[4.5rem_1fr]">
-              <span className="type-counter text-primary">{String(i + 1).padStart(2, "0")}</span>
+            <li key={step.title} className="flex min-h-72 flex-col justify-between rounded-2xl bg-ink p-6 text-ink-foreground">
+              <span className="type-counter self-end text-ink-foreground">{i + 1}</span>
               <div>
                 <h3 className="type-heading">{step.title}</h3>
-                <p className="mt-2 max-w-prose text-sm leading-relaxed text-muted-foreground">{step.text}</p>
+                <p className="mt-3 text-sm leading-relaxed text-ink-foreground/80">{step.text}</p>
               </div>
             </li>
           ))}
         </ol>
-      </MagSection>
+      </section>
 
       <section className="rule py-16 md:py-24">
         <p className="type-caption tabular-nums text-muted-foreground">02</p>
@@ -164,12 +171,18 @@ export default async function Home() {
 
       <MagSection n="03" title="Для кого">
         <ul className="divide-y border-b">
-          {SEGMENTS.map((segment) => (
-            <li key={segment.title} className="grid gap-x-8 gap-y-2 py-7 md:grid-cols-[13rem_1fr]">
-              <h3 className="type-heading">{segment.title}</h3>
+          {SEGMENTS.map((segment, i) => {
+            const Icon = [GraduationCap, Building2, Compass][i] ?? Compass;
+            return (
+            <li key={segment.title} className="grid gap-x-8 gap-y-3 py-7 md:grid-cols-[13rem_1fr]">
+              <div>
+                <span className="mb-3 flex size-10 items-center justify-center rounded-xl bg-primary-soft text-primary"><Icon aria-hidden className="size-5" /></span>
+                <h3 className="type-heading">{segment.title}</h3>
+              </div>
               <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">{segment.text}</p>
             </li>
-          ))}
+            );
+          })}
         </ul>
       </MagSection>
 
@@ -205,13 +218,14 @@ export default async function Home() {
         </p>
         <ul className="mt-5 flex flex-wrap gap-2">
           {TEAM.map((t) => (
-            <li key={t} className="rounded-none border px-3 py-1 text-sm">{t}</li>
+            <li key={t} className="rounded-full border px-3 py-1 text-sm">{t}</li>
           ))}
         </ul>
       </MagSection>
 
-      <section className="accent-panel mb-20 md:mb-24 md:p-12">
-        <div className="max-w-2xl">
+      <section className="accent-panel relative mb-20 overflow-clip md:mb-24 md:p-12">
+        <Asterisk className="pointer-events-none absolute -right-10 -bottom-10 size-72 text-primary-foreground/15 md:size-96" />
+        <div className="relative max-w-2xl">
           <StepMarks total={3} filled={3} size="xl" tone="inverse" />
           <h2 className="mt-6 text-balance type-title">Попробуйте на своём материале</h2>
           <p className="mt-3 max-w-lg type-body accent-panel-muted">

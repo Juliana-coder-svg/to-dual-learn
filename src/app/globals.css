@@ -48,6 +48,10 @@
   /* Фон страницы за карточками, когда нужно отделить колонку или шапку. */
   --color-surface: var(--surface);
   --color-paper: var(--paper);
+  /* Графит из брендбука: тёмные поверхности и карточки на них. Нейтраль, не акцент. */
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-foreground: var(--ink-foreground);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
@@ -55,7 +59,7 @@
   --radius-sm: calc(var(--radius) * 0.75);
   --radius-md: var(--radius);
   --radius-lg: var(--radius);
-  --radius-xl: var(--radius);
+  --radius-xl: 1rem;
   --radius-2xl: calc(var(--radius) * 1.5);
   --radius-3xl: calc(var(--radius) * 2);
   --radius-4xl: 9999px;
@@ -63,6 +67,7 @@
 
 :root {
   /* Onest подключён через next/font в layout.tsx; пока он не загрузился или его нет, работает системный. */
+  --font-display: var(--font-unbounded), var(--font-onest), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-onest), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --background: oklch(1 0 0);
   --foreground: oklch(0.17 0.005 60);
@@ -78,6 +83,9 @@
   --surface: oklch(0.985 0.002 60);
   /* Бумага разбора: тёплый светлый фон тетради. Не акцент, а нейтраль с оттенком. */
   --paper: oklch(0.975 0.014 85);
+  --ink: oklch(0.3 0.002 60);
+  --ink-soft: oklch(0.45 0.002 60);
+  --ink-foreground: oklch(0.99 0 0);
   --secondary: oklch(0.965 0.003 60);
   --secondary-foreground: oklch(0.21 0.005 60);
   --muted: oklch(0.965 0.003 60);
@@ -93,7 +101,7 @@
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --radius: 0.125rem;
+  --radius: 0.75rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -117,6 +125,9 @@
   --primary-soft: oklch(0.25 0.03 40);
   --surface: oklch(0.17 0 0);
   --paper: oklch(0.2 0.01 85);
+  --ink: oklch(0.3 0.002 60);
+  --ink-soft: oklch(0.45 0.002 60);
+  --ink-foreground: oklch(0.99 0 0);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
@@ -169,29 +180,33 @@
 /* Шкала текста. Утилиты, а не токены font-size: иначе cn() из shadcn принимает их за цвет и выкидывает при слиянии классов.
    display и title текучие: 44 → 72 px и 28 → 40 px от телефона к десктопу, поэтому без md:-префиксов. */
 @utility type-display {
-  font-size: clamp(2.75rem, 1.5rem + 4vw, 4.5rem);
+  font-family: var(--font-display) !important;
+  font-size: clamp(1.9rem, 1rem + 3.2vw, 3.5rem);
   line-height: 1.02;
   letter-spacing: -0.03em;
   font-weight: 600;
 }
 /* Мега: только герой лендинга. 44 → 104 px, плотный интерлиньяж, заголовок занимает всю ширину. */
 @utility type-mega {
-  font-size: clamp(2.75rem, 0.75rem + 7.4vw, 6.5rem);
+  font-family: var(--font-display) !important;
+  font-size: clamp(1.9rem, 0.6rem + 5.2vw, 4.5rem);
   line-height: 0.96;
-  letter-spacing: -0.045em;
+  letter-spacing: -0.03em;
   font-weight: 600;
 }
 @utility type-title {
-  font-size: clamp(1.75rem, 1.25rem + 1.6vw, 2.5rem);
+  font-family: var(--font-display) !important;
+  font-size: clamp(1.4rem, 1rem + 1.4vw, 2.1rem);
   line-height: 1.1;
   letter-spacing: -0.025em;
   font-weight: 600;
 }
 /* Счётчик: большие табличные цифры для номера урока, серии дней, баллов. Цифры одной ширины, чтобы не прыгали. */
 @utility type-counter {
-  font-size: clamp(2.5rem, 2rem + 1.5vw, 3.5rem);
+  font-family: var(--font-display) !important;
+  font-size: clamp(2rem, 1.6rem + 1.4vw, 3rem);
   line-height: 1;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.02em;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
@@ -213,7 +228,7 @@
 @layer components {
   /* Блок с акцентом: подложка без рамки, подпись тёмно-оранжевая. */
   .callout {
-    @apply rounded-lg bg-primary-soft p-4;
+    @apply rounded-xl bg-primary-soft p-4;
   }
   .callout-label {
     @apply type-caption font-semibold text-primary-strong;
@@ -224,7 +239,7 @@
   }
   /* Пустое состояние: рамка пунктиром, текст по центру, действие внутри. */
   .empty-state {
-    @apply flex flex-col items-center gap-3 rounded-lg border border-dashed px-6 py-10 text-center;
+    @apply flex flex-col items-center gap-3 rounded-xl border border-dashed px-6 py-10 text-center;
   }
   /* Таблица данных: числа табличные, шапка приглушена, на телефоне прокрутка. */
   .data-table {
@@ -242,7 +257,7 @@
   /* Оранжевая плашка: сплошной фирменный цвет как поверхность, а не только кнопка. Текст белый,
      подписи белые с прозрачностью. Один главный блок на экран: «Урок дня», финальный призыв на лендинге. */
   .accent-panel {
-    @apply rounded-lg bg-primary p-6 text-primary-foreground md:p-8;
+    @apply rounded-xl bg-primary p-6 text-primary-foreground md:p-8;
   }
   .accent-panel .eyebrow,
   .accent-panel-muted {

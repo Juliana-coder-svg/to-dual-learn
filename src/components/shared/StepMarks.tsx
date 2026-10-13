@@ -67,7 +67,7 @@ export function StepMarks({
         const text = labels?.[i];
         return (
           <div key={n} className={cn("flex min-w-0 flex-col gap-1", size === "lg" || size === "xl" ? "flex-1" : "")}>
-            <span className={cn("block", s.seg, state)} />
+            <span className={cn("block rounded-[3px]", s.seg, state)} />
             {text ? (
               <span className={cn("type-caption", n === current || (current === undefined && n === filled) ? "font-medium" : tone === "inverse" ? "text-primary-foreground/90" : "text-muted-foreground")}>
                 {text}

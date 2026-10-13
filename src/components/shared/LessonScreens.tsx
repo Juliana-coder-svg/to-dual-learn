@@ -11,7 +11,7 @@ const STEP_LABELS = ["Идея", "Задача", "Разбор"];
 function Frame({ step, caption, children }: { step: 1 | 2 | 3; caption: string; children: React.ReactNode }) {
   return (
     <figure className="flex h-full flex-col">
-      <div aria-hidden className="flex-1 border-2 border-foreground bg-card">
+      <div aria-hidden className="flex-1 overflow-hidden rounded-2xl border-2 border-foreground bg-card">
         <div className="flex items-end justify-between gap-4 border-b-2 border-foreground px-5 py-4">
           <span className="eyebrow">Урок 02 · шаг {step} из 3</span>
           <StepMarks total={3} filled={step} size="sm" labels={STEP_LABELS} />
