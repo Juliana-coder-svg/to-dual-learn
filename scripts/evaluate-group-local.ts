@@ -141,11 +141,11 @@ async function repeat(times: number): Promise<void> {
   console.log(`Вызовов: ${usage.calls}, расход $${usage.cost.toFixed(2)} ≈ ${formatRub(usdToRub(usage.cost))}`);
 }
 
-/** Независимый набор B: 13 ответов урока 2 другого автора, без закладок. Оценка наставником и сигналы. */
-async function setB(): Promise<void> {
+/** Независимый набор (b, c): 13 ответов урока 2 другого автора, без закладок. Оценка наставником и сигналы. */
+async function setB(set = "b"): Promise<void> {
   const usage = { cost: 0, calls: 0 };
   const lesson = course.lessons[1];
-  const rows = (JSON.parse(fs.readFileSync(path.join(root, "content/seeds/critical-thinking-ai-lesson2-set-b.json"), "utf8")) as { answers: Array<{ student: number; answer: string }> }).answers;
+  const rows = (JSON.parse(fs.readFileSync(path.join(root, `content/seeds/critical-thinking-ai-lesson2-set-${set}.json`), "utf8")) as { answers: Array<{ student: number; answer: string }> }).answers;
   const feedbacks = new Array<Feedback>(rows.length);
   const queue = rows.map((a, i) => ({ a, i }));
   const worker = async () => {
@@ -162,13 +162,13 @@ async function setB(): Promise<void> {
   console.log(`критерии, провалили из ${rows.length}: ${lesson.rubricCriteria.map((_, c) => `${c + 1}: ${feedbacks.filter((f) => !f.criteria[c]?.met).length}`).join(", ")}`);
   console.log(`по студентам, критерий 2: ${rows.map((a, i) => `${a.student}${feedbacks[i].criteria[1]?.met ? "+" : "-"}`).join(" ")}`);
   console.log(`сигналы: ${sig.signals.map((x) => `${SIGNAL_LABELS[x.kind]} (${x.level === "proposal" ? "предложение" : "наблюдение"}): ${x.text}`).join("; ") || "нет"}`);
-  fs.writeFileSync(path.join(root, "content/seeds/critical-thinking-ai-lesson2-set-b.evaluated.json"), JSON.stringify({ costUsd: usage.cost, calls: usage.calls, results: rows.map((a, i) => ({ student: a.student, answer: a.answer, feedback: feedbacks[i] })) }, null, 2));
+  fs.writeFileSync(path.join(root, `content/seeds/critical-thinking-ai-lesson2-set-${set}.evaluated.json`), JSON.stringify({ costUsd: usage.cost, calls: usage.calls, results: rows.map((a, i) => ({ student: a.student, answer: a.answer, feedback: feedbacks[i] })) }, null, 2));
   console.log(`Вызовов: ${usage.calls}, расход $${usage.cost.toFixed(2)} ≈ ${formatRub(usdToRub(usage.cost))}`);
 }
 
 const cmd = process.argv[2];
 if (cmd === "evaluate") await evaluate();
 else if (cmd === "report") report();
-else if (cmd === "setb") await setB();
+else if (cmd === "setb") await setB(process.argv[3] ?? "b");
 else if (cmd === "repeat") await repeat(Number(process.argv[3] ?? 5));
-else console.error("Команда: evaluate | report | repeat [N] | setb");
+else console.error("Команда: evaluate | report | repeat [N] | setb [b|c]");
