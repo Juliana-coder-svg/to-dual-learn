@@ -134,6 +134,23 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
     }
   }
 
+  // Гость обновил страницу после разбора: поднимаем ответ и разбор из localStorage. Асинхронно, чтобы не расходиться с серверной разметкой.
+  useEffect(() => {
+    if (!guest) return;
+    void Promise.resolve().then(() => {
+      try {
+        const saved = JSON.parse(localStorage.getItem(TRY_STORAGE_KEY) ?? "null") as { slug?: string; lessonIndex?: number; answer?: string; feedback?: Feedback } | null;
+        if (saved && saved.slug === guest.slug && saved.lessonIndex === guest.lessonIndex && typeof saved.answer === "string" && saved.feedback) {
+          setAnswer(saved.answer);
+          setFeedback(saved.feedback);
+          setStep("feedback");
+        }
+      } catch {
+        // Хранилища нет или запись повреждена: урок начинается заново.
+      }
+    });
+  }, [guest]);
+
   const answerIsLong = answer.length > ANSWER_COLLAPSE_CHARS;
   // Разборы до 8 октября 2026 сохранены без worked и nextStep: поля могут отсутствовать, а не только быть null.
   const worked = feedback?.worked?.trim() || null;
@@ -172,7 +189,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
             <p className="mt-2 type-body text-muted-foreground">{c.concept}</p>
           </div>
         </div>
-        <AiNote kind={reviewed ? "lessonReviewed" : "lessonUnreviewed"} className="mt-4" />
+        <AiNote kind={guest ? "lessonGuest" : reviewed ? "lessonReviewed" : "lessonUnreviewed"} className="mt-4" />
       </header>
 
       {step === "intro" ? (
@@ -256,7 +273,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
             <div className="min-w-0">
               <h2 data-step-heading tabIndex={-1} className="type-heading outline-none">Разбор</h2>
               {scoreNote ? <p className="mt-2 text-sm text-muted-foreground">{scoreNote}</p> : null}
-              <AiNote kind="feedback" className="mt-2" />
+              <AiNote kind={guest ? "feedbackGuest" : "feedback"} className="mt-2" />
             </div>
             <dl className="flex shrink-0 gap-8">
               <div>
