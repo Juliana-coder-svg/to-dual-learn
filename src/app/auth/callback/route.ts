@@ -3,7 +3,10 @@ import type { EmailOtpType } from "@supabase/supabase-js";
 import { getSupabase } from "@/lib/supabase/server";
 import { getCurrentUser, homeFor } from "@/lib/auth/session";
 import { takeLoginPrefs } from "@/lib/auth/login-prefs";
-import { updateProfile } from "@/lib/db/queries";
+import { hasActiveConsent, updateProfile } from "@/lib/db/queries";
+import { recordConsents } from "@/lib/legal/consents";
+import { CONSENT_VERSION } from "@/lib/legal/versions";
+import { safeNextPath } from "@/lib/auth/next-path";
 
 export const runtime = "nodejs";
 
@@ -37,10 +40,16 @@ export async function GET(req: Request): Promise<NextResponse> {
   if (!user) return NextResponse.redirect(new URL("/login?error=link", url.origin));
 
   const prefs = await takeLoginPrefs();
+  let target = homeFor(user);
   if (prefs) {
     const patch = { role: prefs.role, ...(prefs.name ? { name: prefs.name } : {}) };
     await updateProfile(user.id, patch);
-    return NextResponse.redirect(new URL(prefs.next ?? homeFor({ ...user, ...patch }), url.origin));
+    if (prefs.consents?.length) await recordConsents(user.id, prefs.consents);
+    target = safeNextPath(prefs.next) || homeFor({ ...user, ...patch });
   }
-  return NextResponse.redirect(new URL(homeFor(user), url.origin));
+  // Ссылку открыли в другом браузере, и отметок формы входа нет: просим согласие ещё раз.
+  if (!(await hasActiveConsent(user.id, "processing", CONSENT_VERSION.processing))) {
+    return NextResponse.redirect(new URL(`/consent?next=${encodeURIComponent(target)}`, url.origin));
+  }
+  return NextResponse.redirect(new URL(target, url.origin));
 }

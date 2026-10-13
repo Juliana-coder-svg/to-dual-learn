@@ -34,13 +34,20 @@ export const LessonReviewSchema = z.object({
     z.object({
       title: z.string().describe("Название урока из входа"),
       changed: z.boolean(),
-      flags: z.array(z.string()).describe("Что было не так: нет опоры на материалы, задача не выполнима за 5 минут, критерий не проверяем, повтор темы. Пусто, если всё в порядке"),
+      flags: z.array(z.string()).describe("Что предлагается изменить и почему, по одному пункту на правку, с номером пункта проверки. Формулируй как предложение («предлагаю заменить…»), а не как сделанное («заменил»): преподаватель решает, принимать ли. Пусто, если всё в порядке"),
     }),
   ),
-  summary: z.string().describe("2–3 предложения для преподавателя: что поправлено и что стоит проверить руками"),
+  summary: z.string().describe("2–3 предложения для преподавателя: что предлагается поправить и что стоит проверить руками. Это предложения, не отчёт о сделанном"),
 });
 export type LessonReview = z.infer<typeof LessonReviewSchema>;
 export type LessonReviewNote = LessonReview["notes"][number];
+
+/** Что хранится в lessons.review: заметка методиста плюс, пока преподаватель не решил, предложенная версия урока.
+ *  proposal — текст, который методист предлагает вместо текущего; decision — что преподаватель с ним сделал. */
+export interface LessonReviewRecord extends LessonReviewNote {
+  proposal?: LessonContent | null;
+  decision?: "accepted" | "rejected" | null;
+}
 
 export const LessonsBatchSchema = z.object({
   lessons: z.array(LessonContentSchema),
@@ -57,6 +64,14 @@ export const FeedbackSchema = z.object({
   ),
   strengths: z.array(z.string()).describe("Что сделано хорошо, 0–3 пункта; при балле 1 список может быть пустым"),
   improvements: z.array(z.string()).describe("Что улучшить, 1–3 конкретных пункта"),
+  worked: z
+    .string()
+    .nullable()
+    .describe("Одна-две фразы студенту: что в ответе получилось, по выполненным критериям, с указанием места в ответе. null, если не выполнен ни один критерий и по задаче в ответе ничего нет"),
+  nextStep: z
+    .string()
+    .nullable()
+    .describe("Один следующий шаг как действие, одно предложение: что сделать в следующем ответе, чтобы закрыть самый важный невыполненный критерий. Не готовый ответ. null только если шаг назвать нельзя"),
   summary: z.string().describe("2–3 предложения итогового разбора от наставника, по-человечески, без штампов"),
 });
 export type Feedback = z.infer<typeof FeedbackSchema>;
@@ -73,9 +88,37 @@ export const HomeworkResultsSchema = z.object({
       flags: z.array(z.string()).describe("Отметки для преподавателя: дословное совпадение с материалами или другой работой, не по заданию, пустая работа"),
     }),
   ),
-  overview: z.string().describe("Сводка для преподавателя: типичные ошибки, что разобрать на занятии"),
+  overview: z
+    .object({
+      failedCriteria: z
+        .array(
+          z.object({
+            criterion: z.string().describe("Критерий дословно, как у преподавателя"),
+            failed: z.number().int().describe("Сколько работ его не выполнили"),
+            total: z.number().int().describe("Сколько работ проверено"),
+          }),
+        )
+        .describe("Критерии, которые не выполнила половина работ или больше, по убыванию числа провалов. Пусто, если таких нет"),
+      reteach: z
+        .array(
+          z.object({
+            topic: z.string().describe("Какой фрагмент материалов или какую идею переобъяснить: раздел, правило или приём, как он назван в материалах"),
+            why: z.string().describe("Почему это видно по работам: одно-два предложения с примером из работ"),
+          }),
+        )
+        .describe("1–3 пункта, что переобъяснить на занятии. Пусто, если переобъяснять нечего"),
+      quickWins: z.array(z.string()).describe("Что уже получается у большинства, 1–3 пункта по выполненным критериям. Пусто, если таких нет"),
+    })
+    .describe("Сводка для преподавателя по всей пачке работ"),
 });
 export type HomeworkResults = z.infer<typeof HomeworkResultsSchema>;
+export type HomeworkOverview = HomeworkResults["overview"];
+
+/** Проверки, сохранённые до структурной сводки (до 8 октября 2026), хранят overview строкой.
+ *  При чтении она переезжает в overviewText, а структурная сводка собирается из результатов. */
+export interface StoredHomeworkResults extends HomeworkResults {
+  overviewText?: string;
+}
 
 export const ClarifyingQuestionsSchema = z.object({
   questions: z.array(z.object({ question: z.string(), why: z.string().describe("Одна фраза: зачем этот ответ нужен для уроков") })),

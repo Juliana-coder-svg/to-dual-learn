@@ -1,24 +1,48 @@
 import Link from "next/link";
 import { requireUser, requireUserId } from "@/lib/auth/session";
-import { countDueFlashcards, countLessonsStartedToday, latestScoresByCourse, listCoursesForStudentWithLessons } from "@/lib/db/queries";
+import { countDueFlashcards, countLessonsStartedToday, latestScoresByCourse, listCoursesForStudentWithLessons, listOwnedCoursesWithLessons } from "@/lib/db/queries";
 import { joinCourseAction } from "@/lib/actions/courses";
 import { setDailyEmailAction } from "@/lib/actions/auth";
 import { AppShell } from "@/components/shared/AppShell";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { Notice } from "@/components/shared/Notice";
+import { StepMarks } from "@/components/shared/StepMarks";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { plural } from "@/lib/utils/format";
+
+/** Показатель-счётчик: подпись сверху, число крупными табличными цифрами. Ссылка, когда за числом стоит действие. */
+function Stat({ label, value, hint, href, accent }: { label: string; value: string; hint?: string; href?: string; accent?: boolean }) {
+  const body = (
+    <>
+      <div className="eyebrow">{label}</div>
+      <div className={`mt-3 type-counter ${accent ? "text-primary" : ""}`}>{value}</div>
+      {hint ? <div className="mt-2 type-caption text-muted-foreground">{hint}</div> : null}
+    </>
+  );
+  const cls = "block border-t-2 pt-4";
+  return href ? (
+    <Link href={href} className={`${cls} border-primary transition-colors outline-none hover:text-primary-strong focus-visible:ring-3 focus-visible:ring-ring/40`}>{body}</Link>
+  ) : (
+    <div className={`${cls} border-foreground`}>{body}</div>
+  );
+}
 
 export default async function LearnPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   // Четыре независимых запроса одним кругом до базы: профиль, курсы с уроками, карточки, баллы по всем курсам.
   const userId = await requireUserId();
-  const [user, sp, enrolled, due, scores] = await Promise.all([
+  const [user, sp, joined, owned, due, scores] = await Promise.all([
     requireUser(),
     searchParams,
     listCoursesForStudentWithLessons(userId),
+    listOwnedCoursesWithLessons(userId),
     countDueFlashcards(userId),
     latestScoresByCourse(userId),
   ]);
+  // Свои курсы преподаватель видит здесь без записи кодом: страница курса и урок ему и так открыты.
+  const joinedIds = new Set(joined.map((e) => e.course.id));
+  const enrolled = [...joined, ...owned.filter((o) => !joinedIds.has(o.course.id))];
   // Дневной лимит считает та же RPC, что и /api/evaluate, чтобы страница и проверка ответа не расходились.
   // Второй круг до базы только для курсов с лимитом, параллельно по курсам.
   const startedToday = await Promise.all(
@@ -29,85 +53,113 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
     const done = scores.get(c.id) ?? new Map<string, number>();
     const completed = lessons.filter((l) => done.has(l.id)).length;
     const next = lessons.find((l) => !done.has(l.id));
+    const nextIndex = next ? lessons.indexOf(next) : lessons.length;
     const limitReached = c.owner_id !== user.id && c.daily_limit > 0 && startedToday[i] >= c.daily_limit;
-    return { course: c, lessons, completed, next, limitReached };
+    return { course: c, lessons, completed, next, nextIndex, limitReached };
   });
+  // Урок дня: первый курс, где есть непройденный урок и не исчерпан дневной лимит. Остальные курсы ждут в списке.
+  const today = cards.find((card) => card.next && !card.limitReached);
+  const paused = !today ? cards.find((card) => card.next && card.limitReached) : undefined;
 
   return (
     <AppShell user={user}>
-      <div className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-md border p-4"><div className="text-xs text-muted-foreground">Дней подряд</div><div className="mt-1 text-2xl font-semibold">{plural(user.streak, "день", "дня", "дней")}</div></div>
-        <div className="rounded-md border p-4"><div className="text-xs text-muted-foreground">Баллы</div><div className="mt-1 text-2xl font-semibold">{user.xp}</div></div>
-        <Link href="/learn/review" className="rounded-md border p-4 transition-colors hover:border-primary">
-          <div className="text-xs text-muted-foreground">Повторение</div>
-          <div className="mt-1 text-2xl font-semibold">{due > 0 ? plural(due, "карточка", "карточки", "карточек") : "Пусто"}</div>
-        </Link>
+      <PageHeader title={`Привет, ${user.name}`} description="Один урок в день и карточки на повторение. Пять минут, и свободны." />
+
+      <div className="mt-10 grid grid-cols-3 gap-4 sm:gap-8">
+        <Stat label="Дней подряд" value={String(user.streak)} hint={user.streak > 0 ? "не прерывайте серию" : "начните сегодня"} />
+        <Stat label="Баллы" value={String(user.xp)} hint="за уроки и повторение" />
+        <Stat label="Повторение" value={String(due)} hint={due > 0 ? `${plural(due, "карточка ждёт", "карточки ждут", "карточек ждут")} · открыть` : "на сегодня пусто"} href="/learn/review" accent={due > 0} />
       </div>
 
-      <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_340px]">
-        <section>
-          <h1 className="text-2xl font-semibold tracking-tight">Мои курсы</h1>
-          {courses.length === 0 ? (
-            <p className="mt-4 text-sm text-muted-foreground">Пока нет курсов. Введите код от преподавателя справа.</p>
-          ) : (
-            <div className="mt-6 space-y-4">
-              {cards.map(({ course: c, lessons, completed, next, limitReached }) => {
-                return (
-                  <Card key={c.id}>
-                    <CardHeader>
-                      <CardTitle><Link href={`/learn/${c.id}`} className="hover:text-primary">{c.title}</Link></CardTitle>
-                      <CardDescription>{c.description || "Без описания"}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center gap-3 text-sm">
-                        <div className="h-2 w-full overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width: `${lessons.length ? Math.round((completed / lessons.length) * 100) : 0}%` }} /></div>
-                        <span className="whitespace-nowrap text-muted-foreground">{completed}/{lessons.length}</span>
-                      </div>
-                      <div className="mt-4">
-                        {next && limitReached ? (
-                          <span className="text-sm text-muted-foreground">Сегодня пройдено. Завтра: {next.title}</span>
-                        ) : next ? (
-                          <Button nativeButton={false} render={<Link href={`/learn/${c.id}/lesson/${next.id}`} />} size="sm">Урок дня: {next.title}</Button>
-                        ) : lessons.length === 0 ? (
-                          <span className="text-sm text-muted-foreground">Преподаватель ещё не опубликовал уроки.</span>
-                        ) : (
-                          <span className="text-sm text-muted-foreground">Все уроки пройдены. Загляните в повторение.</span>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
+      {today?.next ? (
+        <section aria-labelledby="today-title" className="accent-panel mt-12">
+          <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-8">
+            <div className="min-w-0 max-w-xl">
+              <p className="eyebrow">Урок дня · {today.course.title}</p>
+              <div className="mt-5 flex items-start gap-5">
+                <span className="type-counter shrink-0">{String(today.next.position).padStart(2, "0")}</span>
+                <div className="min-w-0 pt-1">
+                  <h2 id="today-title" className="text-balance type-title">{today.next.title}</h2>
+                  <p className="mt-2 type-body accent-panel-muted">{today.next.concept} · 5 минут</p>
+                </div>
+              </div>
             </div>
+            <div className="flex flex-col items-start gap-4">
+              <StepMarks total={3} filled={0} size="md" tone="inverse" labels={["Идея", "Задача", "Разбор"]} />
+              <Button nativeButton={false} render={<Link href={`/learn/${today.course.id}/lesson/${today.next.id}`} />} size="lg" variant="inverse">Начать урок</Button>
+            </div>
+          </div>
+        </section>
+      ) : paused?.next ? (
+        <section className="callout mt-12 md:p-6">
+          <div className="callout-label">На сегодня всё</div>
+          <p className="mt-2 type-heading">Следующий урок откроется завтра: {paused.next.title}</p>
+          <p className="mt-1 text-sm text-muted-foreground">Пока можно повторить карточки или перечитать разбор пройденных уроков.</p>
+        </section>
+      ) : null}
+
+      <div className="mt-14 grid gap-12 lg:grid-cols-[1fr_320px] lg:gap-16">
+        <section>
+          <h2 className="type-heading">Мои курсы</h2>
+          {courses.length === 0 ? (
+            <EmptyState className="mt-5" title="Пока нет курсов" description="Введите код от преподавателя справа, и курс появится здесь." />
+          ) : (
+            <ul className="mt-5 space-y-3">
+              {cards.map(({ course: c, lessons, completed, next, nextIndex, limitReached }) => (
+                <li key={c.id}>
+                  <Link href={`/learn/${c.id}`} className="card-link block rounded-lg border p-5 outline-none">
+                    <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+                      <div className="min-w-0 max-w-xl">
+                        <h3 className="text-balance type-heading">{c.title}{c.owner_id === user.id ? <span className="ml-2 align-middle type-caption font-normal text-muted-foreground">ваш курс</span> : null}</h3>
+                        <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{c.description || "Без описания"}</p>
+                      </div>
+                      <span className="shrink-0 text-2xl font-semibold tracking-tight tabular-nums">
+                        {completed}<span className="text-muted-foreground">/{lessons.length}</span>
+                      </span>
+                    </div>
+                    <StepMarks total={lessons.length} filled={nextIndex} current={next ? nextIndex + 1 : undefined} size="sm" className="mt-4" />
+                    <p className="mt-3 text-sm text-muted-foreground">
+                      {next && limitReached ? (
+                        <>Сегодня пройдено. Завтра: <span className="text-foreground">{next.title}</span></>
+                      ) : next ? (
+                        <>Дальше: <span className="text-foreground">{next.title}</span></>
+                      ) : lessons.length === 0 ? (
+                        "Преподаватель ещё не опубликовал уроки."
+                      ) : (
+                        "Все уроки пройдены. Загляните в повторение."
+                      )}
+                    </p>
+                  </Link>
+                </li>
+              ))}
+            </ul>
           )}
         </section>
-        <aside>
-          <Card>
-            <CardHeader>
-              <CardTitle>Записаться на курс</CardTitle>
-              <CardDescription>Код из шести символов даёт преподаватель.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {sp.error ? <p className="mb-3 text-sm text-destructive">Курс с таким кодом не найден.</p> : null}
-              <form action={joinCourseAction} className="flex gap-2">
-                <Input name="code" required placeholder="ABC234" className="font-mono uppercase" maxLength={6} />
-                <Button type="submit">Записаться</Button>
-              </form>
-            </CardContent>
-          </Card>
-          <Card className="mt-4">
-            <CardHeader>
-              <CardTitle>Письмо с уроком дня</CardTitle>
-              <CardDescription>Каждое утро на {user.email}: какой урок ждёт и сколько карточек пора повторить.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form action={setDailyEmailAction} className="flex items-center justify-between gap-3 text-sm">
-                <span>{user.daily_email ? "Включено" : "Выключено"}</span>
-                <input type="hidden" name="enabled" value={user.daily_email ? "0" : "1"} />
-                <Button type="submit" variant="outline" size="sm">{user.daily_email ? "Выключить" : "Включить"}</Button>
-              </form>
-            </CardContent>
-          </Card>
+        <aside className="space-y-10">
+          <section>
+            <h2 className="type-heading">Записаться на курс</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Код из шести символов даёт преподаватель.</p>
+            {sp.error ? <Notice kind="error" className="mt-4">Курс с таким кодом не найден.</Notice> : null}
+            <form action={joinCourseAction} className="mt-4 flex gap-2">
+              <Input name="code" required placeholder="ABC234" aria-label="Код курса" className="font-mono uppercase tracking-widest" maxLength={6} />
+              <Button type="submit">Записаться</Button>
+            </form>
+          </section>
+          <section className="rounded-lg bg-surface p-5">
+            <h2 className="text-base font-semibold">Письмо с уроком дня</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Каждое утро на {user.email}: какой урок ждёт и сколько карточек пора повторить.</p>
+            <form action={setDailyEmailAction} className="mt-4 flex items-center justify-between gap-3 text-sm">
+              <span className="flex items-center gap-2">
+                <span aria-hidden className={`size-2 rounded-full ${user.daily_email ? "bg-primary" : "bg-border"}`} />
+                {user.daily_email ? "Включено" : "Выключено"}
+              </span>
+              <input type="hidden" name="enabled" value={user.daily_email ? "0" : "1"} />
+              <Button type="submit" variant="outline" size="sm">{user.daily_email ? "Выключить" : "Включить"}</Button>
+            </form>
+          </section>
+          <p className="px-1 type-caption text-muted-foreground">
+            <Link href="/account/data" className="underline underline-offset-4 hover:text-foreground">Мои данные</Link>: скачать всё, что мы храним о вас, или удалить аккаунт.
+          </p>
         </aside>
       </div>
     </AppShell>

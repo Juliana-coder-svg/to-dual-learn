@@ -2,7 +2,7 @@
 .git
 node_modules
 .next*
-data
+/data
 *.db
 *.db-wal
 *.db-shm

@@ -1,4 +1,4 @@
-/** Типы схемы Postgres из supabase/migrations/0001_init.sql, написаны вручную
+/** Типы схемы Postgres из supabase/migrations/*.sql (0001 и следующие), написаны вручную
  *  (генерация через `supabase gen types` требует CLI). При изменении миграции править здесь же.
  *  Row-типы объявлены как type, а не interface: supabase-js требует Record<string, unknown>. */
 
@@ -7,6 +7,9 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Role = "teacher" | "student";
 export type LessonStatus = "draft" | "published";
 export type Tone = "ty" | "vy";
+/** processing — обработка данных для работы сервиса, marketing — письма о программах To Dual,
+ *  terms — принятие пользовательского соглашения. Тексты в docs/legal/consent.md и terms.md. */
+export type ConsentKind = "processing" | "marketing" | "terms";
 
 export type ProfileRow = {
   id: string;
@@ -54,6 +57,9 @@ export type LessonRow = {
   status: LessonStatus;
   review: Json | null;
   created_at: string;
+  /** Когда и кто из преподавателей сохранил урок в редакторе; null — создан ИИ и не проверен. */
+  reviewed_at: string | null;
+  reviewed_by: string | null;
 };
 
 export type EnrollmentRow = {
@@ -123,6 +129,15 @@ export type HomeworkCheckRow = {
   created_at: string;
 };
 
+export type ConsentRow = {
+  id: string;
+  user_id: string;
+  kind: ConsentKind;
+  version: string;
+  accepted_at: string;
+  withdrawn_at: string | null;
+};
+
 export type AiCallRow = {
   id: string;
   course_id: string | null;
@@ -182,7 +197,7 @@ export type Database = {
       profiles: Table<ProfileRow, "created_at" | "streak" | "last_lesson_at" | "xp" | "role" | "daily_email" | "last_digest_at">;
       courses: Table<CourseRow, "id" | "created_at" | "description" | "audience" | "outcomes" | "tone" | "daily_limit">;
       materials: Table<MaterialRow, "id" | "created_at">;
-      lessons: Table<LessonRow, "id" | "created_at" | "status" | "review">;
+      lessons: Table<LessonRow, "id" | "created_at" | "status" | "review" | "reviewed_at" | "reviewed_by">;
       enrollments: Table<EnrollmentRow, "joined_at">;
       submissions: Table<
         SubmissionRow,
@@ -204,6 +219,7 @@ export type Database = {
       chat_messages: Table<ChatMessageRow, "id" | "created_at">;
       homework_checks: Table<HomeworkCheckRow, "id" | "created_at">;
       ai_calls: Table<AiCallRow, "id" | "created_at">;
+      consents: Table<ConsentRow, "id" | "accepted_at" | "withdrawn_at">;
     };
     Views: Record<string, never>;
     Functions: {

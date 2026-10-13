@@ -7,6 +7,9 @@ const nextConfig: NextConfig = {
   // Для Docker (Selectel): самодостаточная сборка в .next/standalone. На Vercel переменная не задана.
   output: process.env.NEXT_OUTPUT === "standalone" ? "standalone" : undefined,
   serverExternalPackages: [],
+  // Страницы /legal читают docs/legal/*.md на сборке. Если их когда-нибудь сделают динамическими,
+  // файлы должны попасть в функцию Vercel.
+  outputFileTracingIncludes: { "/legal/[doc]": ["./docs/legal/*.md"] },
   turbopack: {
     rules: {
       "*.css": {
