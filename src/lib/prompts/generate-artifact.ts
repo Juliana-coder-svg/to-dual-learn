@@ -13,8 +13,8 @@ const KIND_INSTRUCTIONS: Record<ArtifactKind, string> = {
     "Составь структуру презентации на 10–14 слайдов. Для каждого слайда дай заголовок, 2–4 тезиса и заметку для выступающего. На слайде одна мысль. Объём до 900 слов.",
 };
 
-/** Документы для студентов: задание и тест. Конспект, план и презентация — для преподавателя. */
-const STUDENT_FACING: ArtifactKind[] = ["assignment", "quiz"];
+/** Документы для студентов: задание и тест. План и презентация — для преподавателя, конспект читают студенты. */
+const STUDENT_FACING: ArtifactKind[] = ["assignment", "quiz", "notes"];
 
 export function generateArtifactPrompt(opts: {
   kind: ArtifactKind;
