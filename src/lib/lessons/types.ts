@@ -140,12 +140,12 @@ export const CoursePlanSchema = z.object({
     z.object({
       title: z.string().describe("Название урока, до 6 слов"),
       concept: z.string().describe("Одна идея урока одной фразой"),
-      result: z.string().describe("Что студент умеет сделать после урока и что покажет в ответе, одна фраза"),
+      result: z.string().describe("Что студент сможет сделать после урока и что покажет в ответе, одна фраза"),
       sources: z.array(z.string()).describe("Разделы материалов, на которые опирается урок, как они названы в материалах"),
       why: z.string().describe("Почему урок стоит на этом месте и чем отличается от соседних, одно-два предложения"),
     }),
   ),
-  background: z.array(z.string()).describe("Что в материалах оставлено фоном и не стало уроком, с короткой причиной. Пусто, если всё вошло"),
+  background: z.array(z.string()).describe("Что в материалах оставлено фоном и не стало уроком, с короткой причиной. Пусто, если всё вошло в уроки"),
   summary: z.string().describe("2–3 предложения для преподавателя: как устроен курс и что стоит проверить в первую очередь"),
 });
 export type CoursePlan = z.infer<typeof CoursePlanSchema>;
@@ -155,8 +155,8 @@ export const PlanHintsSchema = z.object({
   hints: z.array(
     z.object({
       lesson: z.string().describe("Название урока из плана или «Курс», если подсказка про весь курс"),
-      problem: z.string().describe("Что не так, одно предложение, с указанием на конкретное место плана"),
-      suggestion: z.string().describe("Что сделать, одно предложение-действие"),
+      problem: z.string().describe("Что не так и где именно в плане, одно предложение"),
+      suggestion: z.string().describe("Что поменять в плане, одно предложение"),
       pattern: z.string().describe("Какое правило проектирования стоит за подсказкой, три-пять слов"),
     }),
   ),
