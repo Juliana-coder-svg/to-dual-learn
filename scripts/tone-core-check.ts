@@ -67,7 +67,8 @@ export function hasQuote(f: Feedback, answer: string, scope: "any" | "summary"):
 function pick(): Array<{ student: number; lesson: number; answer: string }> {
   const rows: Array<{ student: number; lesson: number; answer: string }> = [];
   for (const l of [1, 2, 3]) {
-    const cand = group.answers.filter((a) => a.lesson === l && !a.objection);
+    // Сначала ответы без возражения; если их меньше 10, добираем ответами с возражением (первая оценка у них обычная).
+    const cand = [...group.answers.filter((a) => a.lesson === l && !a.objection), ...group.answers.filter((a) => a.lesson === l && a.objection)];
     rows.push(...cand.slice(0, 10));
   }
   return rows;
