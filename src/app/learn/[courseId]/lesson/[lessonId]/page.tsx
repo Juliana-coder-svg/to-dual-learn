@@ -36,7 +36,7 @@ export default async function LessonPage({ params, searchParams }: { params: Pro
       <div>
         <Link href={`/learn/${courseId}`} className="inline-flex min-h-6 items-center gap-1 text-sm text-muted-foreground hover:text-foreground"><span aria-hidden>←</span> {ctx.course.title}</Link>
         {claimed ? (
-          <Notice kind="success" className="mt-6">Ответ и разбор сохранены. Следующий урок откроется завтра, утром пришлём письмо. Через день вернутся вопросы по этому уроку.</Notice>
+          <Notice kind="success" className="mt-6">Ответ и разбор сохранены в профиле. Следующий урок откроется завтра, утром пришлём письмо. Этот урок вернётся карточками на повторение.</Notice>
         ) : null}
         {locked ? (
           <div className="mt-6">

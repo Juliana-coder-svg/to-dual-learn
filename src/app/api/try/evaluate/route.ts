@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     const slug = String(body.slug ?? "");
     const lessonIndex = Number(body.lessonIndex);
     const lesson = getTryLesson(slug, lessonIndex);
-    if (!lesson) return jsonError("Этот урок без входа недоступен", 404);
+    if (!lesson) return jsonError("Этот урок открывается только после входа. Войдите или начните с пробного урока на главной", 404);
     const answer = String(body.answer ?? "").trim().slice(0, MAX_ANSWER_CHARS);
     if (answer.length < 10) return jsonError("Напишите ответ хотя бы в одно предложение");
 
@@ -30,7 +30,7 @@ export async function POST(req: Request) {
       return countTryCalls(ipHash, since);
     });
     if (used >= limit) {
-      return jsonError("Пробные разборы с вашего адреса на сегодня закончились. Войдите, чтобы пройти урок в своём профиле, или вернитесь завтра.", 429);
+      return jsonError("Пробные разборы без входа на сегодня закончились. Войдите, чтобы пройти урок в своём профиле, или вернитесь завтра.", 429);
     }
 
     const feedback = await evaluateAnswer({ userId: null, ipHash }, lesson.content, answer, { tone: lesson.tone, samples: [] });

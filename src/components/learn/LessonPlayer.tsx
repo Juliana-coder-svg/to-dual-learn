@@ -231,7 +231,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
             <label htmlFor="answer" className="text-sm font-semibold">{t.answerLabel}</label>
             <Textarea id="answer" className="mt-2 min-h-40 md:min-h-44" rows={7} value={answer} onChange={(e) => setAnswer(e.target.value)} disabled={busy} placeholder={t.answerPlaceholder} aria-describedby={!error && answer.trim().length > 0 && answer.trim().length < 10 ? "answer-hint" : undefined} />
             {guest ? (
-              <p className="mt-2 type-caption text-muted-foreground">Ответ разберёт модель. Пока вы не вошли, мы его не храним; после входа ответ попадёт в профиль и его увидит команда курса. Не пишите имён, почты и телефонов.</p>
+              <p className="mt-2 type-caption text-muted-foreground">Ответ прочитает и разберёт модель, поэтому не пишите имён, почты и телефонов. До входа ответ хранится только в этом браузере. После входа он попадёт в профиль, и его увидит команда курса.</p>
             ) : (
               <p className="mt-2 type-caption text-muted-foreground">Разбор и балл подготовит модель. Ответ увидит преподаватель курса, итоговое решение за ним.</p>
             )}
@@ -355,8 +355,8 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
           </div>
           {guest ? (
             <div className="rounded-lg border p-6">
-              <h3 className="text-balance type-heading">Чтобы сохранить прогресс и получить урок дня, войдите</h3>
-              <p className="mt-2 type-body text-muted-foreground">Перенесём ответ и разбор в профиль. Завтра утром придёт следующий урок, а через день вернутся вопросы по этому, чтобы проверить, что запомнилось. Пароль не нужен: вход по почте. Без входа разбор останется только в этом браузере на сутки.</p>
+              <h3 className="text-balance type-heading">Войдите, чтобы сохранить разбор и получать урок каждый день</h3>
+              <p className="mt-2 type-body text-muted-foreground">Перенесём ответ и разбор в профиль. Завтра утром пришлём письмо со следующим уроком, а этот урок вернётся карточками на повторение, чтобы проверить, что запомнилось. Пароль не нужен, вход по почте. Без входа разбор останется только в этом браузере на сутки.</p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <Button nativeButton={false} render={<Link href={TRY_LOGIN_HREF} />} size="lg">Войти и сохранить</Button>
                 <Button size="lg" variant="outline" onClick={() => setStep("task")}>{t.retry}</Button>
