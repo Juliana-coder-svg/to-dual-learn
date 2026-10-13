@@ -260,13 +260,51 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
               ) : null}
             </dl>
           </div>
-          {worked || prevNextStep ? (
-            <div className={`grid gap-3 ${worked && prevNextStep ? "md:grid-cols-2" : ""}`}>
+          <p className={worked || prevNextStep ? "max-w-prose type-body" : "max-w-prose text-lg leading-relaxed"}>{feedback.summary}</p>
+          {/* Разбор в виде тетради: слева ответ на бумаге с полем, справа пометки наставника. На телефоне друг под другом. */}
+          <div className="grid gap-8 md:grid-cols-12">
+            <div className="md:col-span-5">
+              <h3 className="text-sm font-semibold">{t.yourAnswer}</h3>
+              <blockquote className={`mt-2 whitespace-pre-wrap border-l-4 border-primary bg-paper p-4 type-body ${answerIsLong && !answerOpen && !appealOpen ? "line-clamp-12" : ""}`}>{answer}</blockquote>
+              {answerIsLong && !appealOpen ? (
+                <button type="button" onClick={() => setAnswerOpen((v) => !v)} aria-expanded={answerOpen} className="mt-1 inline-flex min-h-11 items-center text-sm font-medium text-primary-strong underline-offset-4 hover:underline">
+                  {answerOpen ? "Свернуть ответ" : "Показать ответ полностью"}
+                </button>
+              ) : null}
+            </div>
+            <div className="space-y-6 md:col-span-7">
               {worked ? (
-                <section aria-label="Что получилось" className="rounded-lg border p-4">
-                  <h3 className="eyebrow">Что получилось</h3>
+                <section aria-label="Что получилось">
+                  <h3 className="text-sm font-semibold">Что получилось</h3>
                   <p className="mt-2 type-body">{worked}</p>
                 </section>
+              ) : null}
+              {!worked && feedback.strengths.length > 0 ? <div><h3 className="text-sm font-semibold">Что получилось</h3><ul className="mt-2 list-disc pl-5 type-body">{feedback.strengths.map((s, i) => <li key={i}>{s}</li>)}</ul></div> : null}
+              {feedback.criteria.length > 0 ? (
+                <div>
+                  <h3 className="text-sm font-semibold">По критериям <span className="font-normal text-muted-foreground">· {feedback.criteria.filter((x) => x.met).length} из {feedback.criteria.length}</span></h3>
+                  <ul className="mt-3 divide-y border-y">
+                    {feedback.criteria.map((cr, i) => {
+                      const comment = cr.comment?.trim();
+                      return (
+                        <li key={i} className="flex gap-3 py-3 type-body">
+                          <span aria-hidden className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-none text-xs ${cr.met ? "bg-primary text-primary-foreground" : "border-2 border-foreground font-bold text-foreground"}`}>{cr.met ? "✓" : "✗"}</span>
+                          <span>
+                            <span className="sr-only">{cr.met ? "Выполнено: " : "Не выполнено: "}</span>
+                            <span className={cr.met ? "text-muted-foreground" : "font-medium"}>{cr.criterion}</span>
+                            {comment ? <span className="mt-1 block text-sm text-muted-foreground">{comment}</span> : null}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              ) : null}
+              {feedback.improvements.length > 0 ? (
+                <div>
+                  <h3 className="text-sm font-semibold">Что улучшить</h3>
+                  <ul className="mt-2 space-y-2 type-body">{feedback.improvements.map((s, i) => <li key={i} className="flex gap-3">{arrow}<span>{s}</span></li>)}</ul>
+                </div>
               ) : null}
               {prevNextStep ? (
                 <section aria-label="Один следующий шаг" className="callout">
@@ -275,44 +313,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
                 </section>
               ) : null}
             </div>
-          ) : null}
-          <p className={worked || prevNextStep ? "type-body" : "text-lg leading-relaxed"}>{feedback.summary}</p>
-          <div>
-            <h3 className="text-sm font-semibold">{t.yourAnswer}</h3>
-            <blockquote className={`mt-2 whitespace-pre-wrap border-l-2 pl-4 type-body text-muted-foreground ${answerIsLong && !answerOpen && !appealOpen ? "line-clamp-6" : ""}`}>{answer}</blockquote>
-            {answerIsLong && !appealOpen ? (
-              <button type="button" onClick={() => setAnswerOpen((v) => !v)} aria-expanded={answerOpen} className="mt-1 inline-flex min-h-11 items-center text-sm font-medium text-primary-strong underline-offset-4 hover:underline">
-                {answerOpen ? "Свернуть ответ" : "Показать ответ полностью"}
-              </button>
-            ) : null}
           </div>
-          {feedback.criteria.length > 0 ? (
-            <div>
-              <h3 className="text-sm font-semibold">По критериям <span className="font-normal text-muted-foreground">· {feedback.criteria.filter((x) => x.met).length} из {feedback.criteria.length}</span></h3>
-              <ul className="mt-3 divide-y rounded-lg border">
-                {feedback.criteria.map((cr, i) => {
-                  const comment = cr.comment?.trim();
-                  return (
-                    <li key={i} className="flex gap-3 p-4 type-body">
-                      <span aria-hidden className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-none text-xs ${cr.met ? "bg-primary text-primary-foreground" : "border-2 border-foreground font-bold text-foreground"}`}>{cr.met ? "✓" : "✗"}</span>
-                      <span>
-                        <span className="sr-only">{cr.met ? "Выполнено: " : "Не выполнено: "}</span>
-                        <span className={cr.met ? "text-muted-foreground" : "font-medium"}>{cr.criterion}</span>
-                        {comment ? <span className="mt-1 block text-sm text-muted-foreground">{comment}</span> : null}
-                      </span>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          ) : null}
-          {!worked && feedback.strengths.length > 0 ? <div><h3 className="text-sm font-semibold">Что получилось</h3><ul className="mt-2 list-disc pl-5 type-body">{feedback.strengths.map((s, i) => <li key={i}>{s}</li>)}</ul></div> : null}
-          {feedback.improvements.length > 0 ? (
-            <div className="rounded-lg border p-4">
-              <h3 className="text-sm font-semibold">Что улучшить</h3>
-              <ul className="mt-2 space-y-2 type-body">{feedback.improvements.map((s, i) => <li key={i} className="flex gap-3">{arrow}<span>{s}</span></li>)}</ul>
-            </div>
-          ) : null}
           {appealOpen ? (
             <div className="space-y-3 rounded-lg border p-4">
               <label htmlFor="objection" className="text-sm font-semibold">{t.appealTitle}</label>

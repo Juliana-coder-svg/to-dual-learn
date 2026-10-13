@@ -47,6 +47,7 @@
   --color-primary-soft: var(--primary-soft);
   /* Фон страницы за карточками, когда нужно отделить колонку или шапку. */
   --color-surface: var(--surface);
+  --color-paper: var(--paper);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
@@ -75,6 +76,8 @@
   --primary-strong: oklch(0.52 0.19 36);
   --primary-soft: oklch(0.97 0.02 50);
   --surface: oklch(0.985 0.002 60);
+  /* Бумага разбора: тёплый светлый фон тетради. Не акцент, а нейтраль с оттенком. */
+  --paper: oklch(0.975 0.014 85);
   --secondary: oklch(0.965 0.003 60);
   --secondary-foreground: oklch(0.21 0.005 60);
   --muted: oklch(0.965 0.003 60);
@@ -113,6 +116,7 @@
   --primary-strong: oklch(0.78 0.17 45);
   --primary-soft: oklch(0.25 0.03 40);
   --surface: oklch(0.17 0 0);
+  --paper: oklch(0.2 0.01 85);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
@@ -212,11 +216,11 @@
     @apply rounded-lg bg-primary-soft p-4;
   }
   .callout-label {
-    @apply type-caption font-semibold uppercase tracking-wide text-primary-strong;
+    @apply type-caption font-semibold text-primary-strong;
   }
   /* Подпись к разделу: «Урок 3 · шаг 2 из 3», «Опубликовано 5 из 5». */
   .eyebrow {
-    @apply type-caption font-medium uppercase tracking-wide text-muted-foreground;
+    @apply type-caption font-medium text-muted-foreground;
   }
   /* Пустое состояние: рамка пунктиром, текст по центру, действие внутри. */
   .empty-state {
@@ -227,7 +231,7 @@
     @apply w-full text-sm tabular-nums;
   }
   .data-table th {
-    @apply border-b py-2 pr-4 text-left type-caption font-medium uppercase tracking-wide text-muted-foreground;
+    @apply border-b py-2 pr-4 text-left type-caption font-medium text-muted-foreground;
   }
   .data-table td {
     @apply border-b py-3 pr-4 align-top;

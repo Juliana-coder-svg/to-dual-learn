@@ -92,6 +92,20 @@ function EntryButtons({ size = "lg", tone = "default" }: { size?: "lg" | "defaul
   );
 }
 
+/** Секция в журнальной сетке: слева номер и заголовок на четырёх колонках, справа содержимое на восьми. */
+function MagSection({ n, title, note, children }: { n: string; title: string; note?: string; children: React.ReactNode }) {
+  return (
+    <section className="rule grid gap-8 py-16 md:grid-cols-12 md:gap-8 md:py-24">
+      <header className="md:col-span-4">
+        <p className="type-caption tabular-nums text-muted-foreground">{n}</p>
+        <h2 className="mt-2 text-balance type-title">{title}</h2>
+        {note ? <p className="mt-3 max-w-xs text-sm leading-relaxed text-muted-foreground">{note}</p> : null}
+      </header>
+      <div className="md:col-span-8">{children}</div>
+    </section>
+  );
+}
+
 export default async function Home() {
   const user = await getCurrentUser();
   if (user) redirect(homeFor(user));
@@ -124,22 +138,23 @@ export default async function Home() {
       {/* Знак как графика: три сегмента во всю ширину отделяют героя от остального. */}
       <StepMarks total={3} filled={2} current={3} size="xl" />
 
-      <section className="rule py-20 md:py-24">
-        <h2 className="max-w-2xl type-title">Как это работает</h2>
-        <ol className="mt-10 grid gap-10 md:grid-cols-3 md:gap-8">
+      <MagSection n="01" title="Как это работает">
+        <ol className="divide-y border-b">
           {STEPS.map((step, i) => (
-            <li key={step.title} className={i === 1 ? "md:mt-12" : i === 2 ? "md:mt-24" : ""}>
-              <span aria-hidden className="block h-3 bg-primary md:h-5" />
-              <span className="mt-5 block type-counter text-primary">{String(i + 1).padStart(2, "0")}</span>
-              <h3 className="mt-4 type-heading">{step.title}</h3>
-              <p className="mt-2 max-w-prose text-sm leading-relaxed text-muted-foreground">{step.text}</p>
+            <li key={step.title} className="grid gap-x-8 gap-y-2 py-7 md:grid-cols-[4.5rem_1fr]">
+              <span className="type-counter text-primary">{String(i + 1).padStart(2, "0")}</span>
+              <div>
+                <h3 className="type-heading">{step.title}</h3>
+                <p className="mt-2 max-w-prose text-sm leading-relaxed text-muted-foreground">{step.text}</p>
+              </div>
             </li>
           ))}
         </ol>
-      </section>
+      </MagSection>
 
-      <section className="rule py-20 md:py-24">
-        <h2 className="max-w-2xl type-title">Так выглядит урок</h2>
+      <section className="rule py-16 md:py-24">
+        <p className="type-caption tabular-nums text-muted-foreground">02</p>
+        <h2 className="mt-2 max-w-2xl type-title">Так выглядит урок</h2>
         <p className="mt-3 max-w-prose text-sm text-muted-foreground">Экраны из курса-примера «Критическое мышление в эпоху ИИ». Преподаватель собирает такие же из своих материалов.</p>
         <div className="mt-10 grid gap-10 md:grid-cols-2 md:gap-8">
           <LessonIdeaScreen />
@@ -147,60 +162,53 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="rule py-20 md:py-24">
-        <h2 className="max-w-2xl type-title">Для кого</h2>
-        <div className="mt-10 grid gap-x-8 gap-y-10 md:grid-cols-3">
-          {SEGMENTS.map((segment, i) => (
-            <div key={segment.title} className="border-t pt-5">
-              <StepMarks total={3} filled={i + 1} size="sm" />
-              <h3 className="mt-4 type-heading">{segment.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{segment.text}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="rule py-20 md:py-24">
-        <div className="max-w-2xl">
-          <h2 className="type-title">Что говорят исследования</h2>
-          <p className="mt-3 text-sm text-muted-foreground">
-            Это чужие исследования, а не результаты нашего продукта. Свои цифры опубликуем после первых пилотов.
-          </p>
-        </div>
-        <ul className="mt-10 grid gap-4 md:grid-cols-2">
-          {FINDINGS.map((finding) => (
-            <li key={finding.title} className="flex flex-col rounded-lg bg-surface p-6">
-              <h3 className="type-heading">{finding.title}</h3>
-              <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">{finding.text}</p>
-              <a
-                href={finding.href}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-4 inline-block text-sm text-primary-strong underline decoration-primary/40 underline-offset-4 hover:decoration-primary"
-              >
-                {finding.source}
-              </a>
+      <MagSection n="03" title="Для кого">
+        <ul className="divide-y border-b">
+          {SEGMENTS.map((segment) => (
+            <li key={segment.title} className="grid gap-x-8 gap-y-2 py-7 md:grid-cols-[13rem_1fr]">
+              <h3 className="type-heading">{segment.title}</h3>
+              <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">{segment.text}</p>
             </li>
           ))}
         </ul>
-      </section>
+      </MagSection>
 
-      <section className="rule py-20 md:py-24">
-        <div className="grid gap-6 md:grid-cols-[1fr_1fr] md:gap-16">
-          <h2 className="type-title">Кто делает</h2>
-          <div className="max-w-lg">
-            <p className="type-body text-muted-foreground">
-              Команда To Dual Education. Мы преподаём в НИУ ВШЭ, в магистратуре ИИМУП «AI в маркетинге и продакт-менеджменте»,
-              и ведём программы по ИИ для Яндекса, ВТБ и Сколково.
-            </p>
-            <ul className="mt-5 flex flex-wrap gap-2">
-              {TEAM.map((t) => (
-                <li key={t} className="rounded-none border px-3 py-1 text-sm">{t}</li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </section>
+      <MagSection
+        n="04"
+        title="Что говорят исследования"
+        note="Это чужие исследования, а не результаты нашего продукта. Свои цифры опубликуем после первых пилотов."
+      >
+        <ul className="divide-y border-b">
+          {FINDINGS.map((finding) => (
+            <li key={finding.title} className="grid gap-x-8 gap-y-2 py-7 md:grid-cols-[13rem_1fr]">
+              <h3 className="type-heading">{finding.title}</h3>
+              <div>
+                <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">{finding.text}</p>
+                <a
+                  href={finding.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-3 inline-block text-sm text-primary-strong underline decoration-primary/40 underline-offset-4 hover:decoration-primary"
+                >
+                  {finding.source}
+                </a>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </MagSection>
+
+      <MagSection n="05" title="Кто делает">
+        <p className="max-w-prose type-body text-muted-foreground">
+          Команда To Dual Education. Мы преподаём в НИУ ВШЭ, в магистратуре ИИМУП «AI в маркетинге и продакт-менеджменте»,
+          и ведём программы по ИИ для Яндекса, ВТБ и Сколково.
+        </p>
+        <ul className="mt-5 flex flex-wrap gap-2">
+          {TEAM.map((t) => (
+            <li key={t} className="rounded-none border px-3 py-1 text-sm">{t}</li>
+          ))}
+        </ul>
+      </MagSection>
 
       <section className="accent-panel mb-20 md:mb-24 md:p-12">
         <div className="max-w-2xl">
