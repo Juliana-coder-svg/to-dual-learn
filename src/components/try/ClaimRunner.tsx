@@ -50,7 +50,7 @@ export function ClaimRunner() {
       const res = await claimTryAttemptAction(parsed);
       if (res.ok) {
         forget();
-        router.replace(res.href);
+        router.replace(`${res.href}?claimed=1`);
         return null;
       }
       if (res.reason === "consent") {

@@ -231,7 +231,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
             <label htmlFor="answer" className="text-sm font-semibold">{t.answerLabel}</label>
             <Textarea id="answer" className="mt-2 min-h-40 md:min-h-44" rows={7} value={answer} onChange={(e) => setAnswer(e.target.value)} disabled={busy} placeholder={t.answerPlaceholder} aria-describedby={!error && answer.trim().length > 0 && answer.trim().length < 10 ? "answer-hint" : undefined} />
             {guest ? (
-              <p className="mt-2 type-caption text-muted-foreground">Ответ читает модель, не пишите личное: имена, почту, телефон. Разбор и балл подготовит модель.</p>
+              <p className="mt-2 type-caption text-muted-foreground">Ответ разберёт модель. Пока вы не вошли, мы его не храним; после входа ответ попадёт в профиль и его увидит команда курса. Не пишите имён, почты и телефонов.</p>
             ) : (
               <p className="mt-2 type-caption text-muted-foreground">Разбор и балл подготовит модель. Ответ увидит преподаватель курса, итоговое решение за ним.</p>
             )}
@@ -356,7 +356,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
           {guest ? (
             <div className="rounded-lg border-2 border-foreground p-5">
               <h3 className="type-heading">Чтобы сохранить прогресс и получить урок дня, войдите</h3>
-              <p className="mt-2 type-body text-muted-foreground">Ответ и разбор перенесём в ваш профиль. Пароль не нужен: войдите по почте и имени. Без входа разбор останется только в этом браузере.</p>
+              <p className="mt-2 type-body text-muted-foreground">Перенесём ответ и разбор в профиль. Завтра утром придёт следующий урок, а через день вернутся вопросы по этому, чтобы проверить, что запомнилось. Пароль не нужен: вход по почте. Без входа разбор останется только в этом браузере на сутки.</p>
               <div className="mt-4 flex flex-wrap gap-3">
                 <Button nativeButton={false} render={<Link href={TRY_LOGIN_HREF} />} size="lg">Войти и сохранить</Button>
                 <Button size="lg" variant="outline" onClick={() => setStep("task")}>{t.retry}</Button>
