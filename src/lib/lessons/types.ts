@@ -34,13 +34,20 @@ export const LessonReviewSchema = z.object({
     z.object({
       title: z.string().describe("Название урока из входа"),
       changed: z.boolean(),
-      flags: z.array(z.string()).describe("Что было не так: нет опоры на материалы, задача не выполнима за 5 минут, критерий не проверяем, повтор темы. Пусто, если всё в порядке"),
+      flags: z.array(z.string()).describe("Что предлагается изменить и почему, по одному пункту на правку, с номером пункта проверки. Формулируй как предложение («предлагаю заменить…»), а не как сделанное («заменил»): преподаватель решает, принимать ли. Пусто, если всё в порядке"),
     }),
   ),
-  summary: z.string().describe("2–3 предложения для преподавателя: что поправлено и что стоит проверить руками"),
+  summary: z.string().describe("2–3 предложения для преподавателя: что предлагается поправить и что стоит проверить руками. Это предложения, не отчёт о сделанном"),
 });
 export type LessonReview = z.infer<typeof LessonReviewSchema>;
 export type LessonReviewNote = LessonReview["notes"][number];
+
+/** Что хранится в lessons.review: заметка методиста плюс, пока преподаватель не решил, предложенная версия урока.
+ *  proposal — текст, который методист предлагает вместо текущего; decision — что преподаватель с ним сделал. */
+export interface LessonReviewRecord extends LessonReviewNote {
+  proposal?: LessonContent | null;
+  decision?: "accepted" | "rejected" | null;
+}
 
 export const LessonsBatchSchema = z.object({
   lessons: z.array(LessonContentSchema),

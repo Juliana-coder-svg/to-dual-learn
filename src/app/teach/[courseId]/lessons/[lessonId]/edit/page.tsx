@@ -25,7 +25,7 @@ export default async function EditLessonPage({ params, searchParams }: { params:
       {sp.error ? <Notice kind="error" className="mt-4">Не удалось сохранить: проверьте, что заполнены все поля, есть хотя бы два признака и два критерия.</Notice> : null}
       {lesson.review?.flags.length ? (
         <div className="mt-4 rounded-lg border border-dashed p-4 text-sm">
-          <div className="font-medium">Замечания методиста</div>
+          <div className="font-medium">Что предлагал методист</div>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground">{lesson.review.flags.map((f, i) => <li key={i}>{f}</li>)}</ul>
         </div>
       ) : null}
@@ -44,7 +44,7 @@ export default async function EditLessonPage({ params, searchParams }: { params:
           <Textarea id="flashcards" name="flashcards" rows={4} defaultValue={c.flashcards.map((f) => `${f.question} | ${f.answer}`).join("\n")} />
         </div>
         <p className="text-xs text-muted-foreground">
-          Кнопка «Сохранить» отмечает урок как проверенный вами, студенты увидят эту отметку. Если урок потом перепишет методист, отметка снимется.
+          Кнопка «Сохранить» отмечает урок как проверенный вами, студенты увидят эту отметку. Если вы примете правку методиста, отметка снимется: текст снова от модели.
         </p>
         <div className="flex gap-3 border-t pt-5">
           <Button type="submit">Сохранить</Button>
