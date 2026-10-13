@@ -354,10 +354,10 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
             <p className="mt-2 type-body">{c.keyTakeaway}</p>
           </div>
           {guest ? (
-            <div className="rounded-lg border-2 border-foreground p-5">
-              <h3 className="type-heading">Чтобы сохранить прогресс и получить урок дня, войдите</h3>
+            <div className="rounded-lg border p-6">
+              <h3 className="text-balance type-heading">Чтобы сохранить прогресс и получить урок дня, войдите</h3>
               <p className="mt-2 type-body text-muted-foreground">Перенесём ответ и разбор в профиль. Завтра утром придёт следующий урок, а через день вернутся вопросы по этому, чтобы проверить, что запомнилось. Пароль не нужен: вход по почте. Без входа разбор останется только в этом браузере на сутки.</p>
-              <div className="mt-4 flex flex-wrap gap-3">
+              <div className="mt-6 flex flex-wrap gap-3">
                 <Button nativeButton={false} render={<Link href={TRY_LOGIN_HREF} />} size="lg">Войти и сохранить</Button>
                 <Button size="lg" variant="outline" onClick={() => setStep("task")}>{t.retry}</Button>
               </div>

@@ -19,7 +19,7 @@ export default async function TryLessonPage({ params }: { params: Promise<{ cour
 
   return (
     <PublicShell width="wide" action={<Button nativeButton={false} render={<Link href="/login" />} size="sm" variant="outline">Войти</Button>}>
-      <div className="mx-auto w-full max-w-2xl py-8 md:py-12">
+      <div className="mx-auto w-full max-w-2xl py-8 md:py-10">
         <Link href="/" className="inline-flex min-h-6 items-center gap-1 text-sm text-muted-foreground hover:text-foreground"><span aria-hidden>←</span> {lesson.courseTitle}</Link>
         <div className="mt-6">
           <LessonPlayer
