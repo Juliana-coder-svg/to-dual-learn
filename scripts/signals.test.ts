@@ -62,14 +62,26 @@ test("заложенная ошибка на уроке 2 найдена, уро
   assert.equal(crit.criterionIndex, 1);
   assert.equal(crit.count, 8);
   assert.equal(crit.n, 12);
-  assert.equal(crit.level, "proposal", "8 из 12 при втором сигнале (одинаковое замечание) идёт в предложение");
+  assert.equal(crit.level, "observation", "8 из 12 без независимого второго сигнала остаётся наблюдением: замечание наставника из того же разбора не в счёт");
   assert.ok(l2.signals.some((s) => s.kind === "repeated_improvement" && s.count === 8));
   const obj = l3.signals.find((s) => s.kind === "objections");
   assert.ok(obj);
   assert.equal(obj.count, 3);
   assert.equal(l3.objectionsScoreChanged, 1);
   assert.ok(r.top.length <= THRESHOLDS.maxSignalsPerCourse);
-  assert.equal(r.top[0].kind, "criterion_failed");
+  assert.ok(r.top.some((s) => s.kind === "criterion_failed" && s.lessonPosition === 2));
+});
+
+test("независимый второй сигнал (возражения) поднимает критерий при 10–19 сдавших до предложения", () => {
+  const answers = buildGroup();
+  const withObjections = [...answers];
+  for (const a of answers.filter((x) => x.lesson_id === "L2" && x.user_id !== "owner").slice(0, 3)) {
+    withObjections.push({ ...a, id: `o${a.id}`, objection: "Я же объяснил", created_at: new Date(2026, 9, 2).toISOString() });
+  }
+  const r = computeSignals({ lessons, answers: withObjections, excludeUserIds: ["owner"] });
+  const crit = r.lessons[1].signals.find((s) => s.kind === "criterion_failed");
+  assert.ok(crit);
+  assert.equal(crit.level, "proposal");
 });
 
 test("мало данных: меньше 10 сдавших на каждом уроке", () => {

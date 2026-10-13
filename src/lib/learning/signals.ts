@@ -382,7 +382,10 @@ export function computeSignals(input: SignalsInput): CourseSignals {
       }
 
       // Сигнал 1: критерий провален у большинства.
-      const hasSecondSignal = objectionSignal || Boolean(improvementSignal);
+      // Вторым сигналом считаем только независимый: возражения студентов. Замечание наставника («то же замечание»)
+      // берётся из того же разбора, что и провал критерия, поэтому уровень «предложение» не повышает (вердикт методиста).
+      // Расхождение с образцами преподавателя тоже независимо, но в прототипе без модели считается только по совпавшим ответам.
+      const hasSecondSignal = objectionSignal;
       for (const s of stats) {
         if (s.of < THRESHOLDS.minSubmitters) continue;
         const level = criterionLevel(s.of, s.share, hasSecondSignal);
