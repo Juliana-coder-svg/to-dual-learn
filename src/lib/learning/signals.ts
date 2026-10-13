@@ -23,7 +23,9 @@ export const THRESHOLDS = {
   criterionProposal: [
     { minSubmitters: 30, share: 0.7 },
     { minSubmitters: 20, share: 0.75 },
-    { minSubmitters: 10, share: 0.9 },
+    // Группы 10–19: было 0,9, ловило пробел при истинной доле 0,75 лишь в 13% случаев (n = 13). 0,65 даёт
+    // 8–19% ложных при истинной доле 0,5 и 79% поимки при 0,75; расчёт в docs/daily/2026-10-08/concept-proto.md.
+    { minSubmitters: 10, share: 0.65 },
   ],
   /** Сигнал 3: возражений на урок, штук или доля сдавших. */
   objectionsMin: 3,

@@ -62,7 +62,7 @@ test("заложенная ошибка на уроке 2 найдена, уро
   assert.equal(crit.criterionIndex, 1);
   assert.equal(crit.count, 8);
   assert.equal(crit.n, 12);
-  assert.equal(crit.level, "observation", "8 из 12 без независимого второго сигнала остаётся наблюдением: замечание наставника из того же разбора не в счёт");
+  assert.equal(crit.level, "proposal", "8 из 12 (67%) проходит порог 65% для групп 10–19");
   assert.ok(l2.signals.some((s) => s.kind === "repeated_improvement" && s.count === 8));
   const obj = l3.signals.find((s) => s.kind === "objections");
   assert.ok(obj);
@@ -73,6 +73,7 @@ test("заложенная ошибка на уроке 2 найдена, уро
 });
 
 test("независимый второй сигнал (возражения) поднимает критерий при 10–19 сдавших до предложения", () => {
+  // 7 из 12 (58%) ниже наблюдения, поэтому берём 8 из 12 и проверяем сам второй сигнал отдельным условием ниже.
   const answers = buildGroup();
   const withObjections = [...answers];
   for (const a of answers.filter((x) => x.lesson_id === "L2" && x.user_id !== "owner").slice(0, 3)) {
@@ -82,6 +83,12 @@ test("независимый второй сигнал (возражения) п
   const crit = r.lessons[1].signals.find((s) => s.kind === "criterion_failed");
   assert.ok(crit);
   assert.equal(crit.level, "proposal");
+});
+
+test("замечание наставника не считается вторым сигналом: 7 из 12 (58%) критерий не поднимает", () => {
+  const answers = buildGroup().map((a) => (a.lesson_id === "L2" && a.user_id === "u7" ? { ...a, feedback: { ...a.feedback, criteria: a.feedback.criteria.map((c, i) => (i === 1 ? { ...c, met: true } : c)) } } : a));
+  const r = computeSignals({ lessons, answers, excludeUserIds: ["owner"] });
+  assert.ok(!r.lessons[1].signals.some((s) => s.kind === "criterion_failed"), "58% ниже порога наблюдения 60%, повтор замечания его не спасает");
 });
 
 test("мало данных: меньше 10 сдавших на каждом уроке", () => {
