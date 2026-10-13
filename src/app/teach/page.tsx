@@ -34,7 +34,7 @@ export default async function TeachPage({ searchParams }: { searchParams: Promis
           {courses.length === 0 ? (
             <EmptyState
               title="Пока нет курсов"
-              description="Создайте первый справа: название, пара слов о программе, а потом загрузите материалы. Или добавьте готовый курс-пример, чтобы посмотреть формат."
+              description="Создайте первый справа: название, пара слов о курсе, а потом загрузите материалы. Или добавьте готовый курс-пример, чтобы посмотреть формат."
             />
           ) : (
             <div className="grid gap-4 sm:grid-cols-2">

@@ -95,9 +95,9 @@ export interface SignalsInput {
 export type SignalKind = "criterion_failed" | "repeated_improvement" | "objections" | "flashcard_forgot" | "score_dip" | "calibration_gap";
 
 export const SIGNAL_LABELS: Record<SignalKind, string> = {
-  criterion_failed: "Критерий провален у большинства",
+  criterion_failed: "Большинство не выполнили критерий",
   repeated_improvement: "Одно и то же замечание в разборах",
-  objections: "Возражения на оценку",
+  objections: "Возражения на разбор",
   flashcard_forgot: "Карточку забывают",
   score_dip: "Балл ниже соседних уроков",
   calibration_gap: "Наставник расходится с образцами преподавателя",
@@ -354,7 +354,7 @@ export function computeSignals(input: SignalsInput): CourseSignals {
           n,
           count: objections,
           share: round(objectionShare),
-          text: `${plural(objections, "студент оспорил", "студента оспорили", "студентов оспорили")} оценку из ${n} сдавших`,
+          text: `${plural(objections, "студент оспорил", "студента оспорили", "студентов оспорили")} разбор из ${n} сдавших`,
           detail: objectionsScoreChanged > 0
             ? `После переоценки поменялось выполнение критериев у ${objectionsScoreChanged} из ${objections}: наставник что-то пропустил или критерий двоякий`
             : "Выполнение критериев после переоценки не менялось: причина может быть в итоговом балле или в замечаниях, а не в критерии. Смотрите разборы",
