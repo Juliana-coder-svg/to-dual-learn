@@ -1,5 +1,4 @@
-import { notFound } from "next/navigation";
-import { teacherCourse } from "@/lib/auth/access";
+import { teacherCourse, noCourseAccess } from "@/lib/auth/access";
 import { listLessonSummaries, listStudentsWithStats, listSubmissionsByCourse } from "@/lib/db/queries";
 import { formatDateTime, plural } from "@/lib/utils/format";
 import { Badge } from "@/components/ui/badge";
@@ -19,7 +18,7 @@ export default async function StudentsPage({ params }: { params: Promise<{ cours
     listLessonSummaries(courseId, { publishedOnly: true }),
     listSubmissionsByCourse(courseId),
   ]);
-  if (!ctx) notFound();
+  if (!ctx) return noCourseAccess(`/teach/${courseId}/students`);
   const published = publishedLessons.length;
   const submissions = allSubmissions.slice(0, 30);
 

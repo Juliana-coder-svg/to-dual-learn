@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { teacherCourse } from "@/lib/auth/access";
+import { teacherCourse, noCourseAccess } from "@/lib/auth/access";
 import { countMaterials, listLessons } from "@/lib/db/queries";
 import { deleteLessonAction, moveLessonAction, publishAllAction, setLessonStatusAction } from "@/lib/actions/courses";
 import { LessonsGenerator } from "@/components/teach/LessonsGenerator";
@@ -15,7 +14,7 @@ import { formatDateTime, plural } from "@/lib/utils/format";
 export default async function LessonsPage({ params }: { params: Promise<{ courseId: string }> }) {
   const { courseId } = await params;
   const [ctx, lessons, materialsCount] = await Promise.all([teacherCourse(courseId), listLessons(courseId), countMaterials(courseId)]);
-  if (!ctx) notFound();
+  if (!ctx) return noCourseAccess(`/teach/${courseId}/lessons`);
   const hasMaterials = materialsCount > 0;
   const drafts = lessons.filter((l) => l.status === "draft").length;
   const published = lessons.length - drafts;
@@ -52,10 +51,10 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
           <ol className="mt-6 space-y-3">
             {lessons.map((l, i) => (
               <li key={l.id} className="rounded-lg border p-4 md:p-5">
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div className="min-w-0 flex-1">
+                <div className="grid gap-4">
+                  <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="type-counter text-primary">{String(l.position).padStart(2, "0")}</span>
+                      <span className="eyebrow">Урок {l.position}</span>
                       <Badge variant={l.status === "published" ? "default" : "secondary"}>{l.status === "published" ? "Опубликован" : "Черновик"}</Badge>
                       <Badge
                         variant={l.reviewed_at ? "outline" : "soft"}
@@ -64,7 +63,7 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
                         {l.reviewed_at ? `Проверен ${formatDateTime(l.reviewed_at)}` : "Не проверен"}
                       </Badge>
                     </div>
-                    <h3 className="mt-3 type-heading">{l.title}</h3>
+                    <h3 className="mt-2 text-base font-semibold">{l.title}</h3>
                     <p className="text-sm text-muted-foreground">{l.concept}</p>
                     {l.reviewed_at ? null : <AiNote kind="teacherDraft" className="mt-2" />}
                     {l.review ? (
@@ -77,8 +76,7 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
                       )
                     ) : null}
                   </div>
-                  {/* До xl действия занимают отдельную строку: на lg колонка рядом с боковой панелью ещё узкая, и кнопки сжимают заголовок урока. */}
-                  <div className="flex basis-full flex-wrap items-center gap-1 xl:basis-auto">
+                  <div className="flex flex-wrap items-center gap-1 border-t pt-3">
                     <form action={moveLessonAction.bind(null, courseId, l.id, -1)}><Button type="submit" variant="ghost" size="icon-sm" disabled={i === 0} aria-label="Выше">↑</Button></form>
                     <form action={moveLessonAction.bind(null, courseId, l.id, 1)}><Button type="submit" variant="ghost" size="icon-sm" disabled={i === lessons.length - 1} aria-label="Ниже">↓</Button></form>
                     <Button nativeButton={false} render={<Link href={`/teach/${courseId}/lessons/${l.id}/edit`} />} variant="outline" size="sm">Править</Button>

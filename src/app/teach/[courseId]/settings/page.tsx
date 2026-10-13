@@ -1,5 +1,4 @@
-import { notFound } from "next/navigation";
-import { teacherCourse } from "@/lib/auth/access";
+import { teacherCourse, noCourseAccess } from "@/lib/auth/access";
 import { courseUsageByKind, listCalibrationSamples, listLessonSummaries } from "@/lib/db/queries";
 import { addCalibrationSampleAction, deleteCalibrationSampleAction, updateCourseSettingsAction } from "@/lib/actions/courses";
 import { Button } from "@/components/ui/button";
@@ -33,7 +32,7 @@ export default async function SettingsPage({ params, searchParams }: { params: P
     listCalibrationSamples(courseId),
     courseUsageByKind(courseId),
   ]);
-  if (!ctx) notFound();
+  if (!ctx) return noCourseAccess(`/teach/${courseId}/settings`);
   const { course } = ctx;
   const site = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const totalRub = usage.reduce((s, u) => s + usdToRub(u.cost_usd), 0);

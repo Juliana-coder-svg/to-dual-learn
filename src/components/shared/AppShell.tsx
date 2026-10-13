@@ -37,7 +37,7 @@ export async function AppShell({
   return (
     <div className="flex min-h-screen flex-col">
       <header className="border-b bg-background">
-        <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-4 px-4">
+        <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-3 px-4">
           <div className="flex min-w-0 items-center gap-5">
             <Brand href={isTeacher ? "/teach" : "/learn"} />
             <NavLinks items={nav} className="hidden sm:flex" />

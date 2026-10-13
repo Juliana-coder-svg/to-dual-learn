@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { teacherCourse } from "@/lib/auth/access";
+import { teacherCourse, noCourseAccess } from "@/lib/auth/access";
 import { getCurrentUserId } from "@/lib/auth/session";
 import { AppShell } from "@/components/shared/AppShell";
 import { CourseTabs } from "@/components/teach/CourseTabs";
@@ -19,7 +19,7 @@ export default async function CourseLayout({ children, params }: { children: Rea
   if (!(await getCurrentUserId())) redirect(`/login?role=teacher&next=${encodeURIComponent(`/teach/${courseId}`)}`);
   // Расход считает RPC с проверкой владельца, поэтому его можно запрашивать параллельно с проверкой доступа.
   const [ctx, usage] = await Promise.all([teacherCourse(courseId), courseUsage(courseId)]);
-  if (!ctx) notFound();
+  if (!ctx) return noCourseAccess(`/teach/${courseId}`);
   const { user, course } = ctx;
 
   return (

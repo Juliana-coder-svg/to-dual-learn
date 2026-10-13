@@ -17,9 +17,13 @@ export async function GET(req: Request): Promise<NextResponse> {
   const origin = await requestOrigin();
   const fail = async (kind: "off" | "denied" | "state" | "email" | "failed", detail?: string) => {
     if (detail) console.error(`[auth] yandex ${kind}: ${detail}`);
-    // Роль и адрес возврата этой попытки больше не нужны: иначе их подхватит следующий вход по ссылке из письма.
-    await takeLoginPrefs();
-    return NextResponse.redirect(new URL(`/login?yandex=${kind}`, origin));
+    // Cookie этой попытки снимаем, чтобы её не подхватил следующий вход по ссылке из письма,
+    // а роль и адрес возврата переносим в адрес: студент с /join/КОД после повтора попадёт на запись.
+    const prefs = await takeLoginPrefs();
+    const back = new URL(`/login?yandex=${kind}`, origin);
+    if (prefs?.role) back.searchParams.set("role", prefs.role);
+    if (prefs?.next) back.searchParams.set("next", prefs.next);
+    return NextResponse.redirect(back);
   };
 
   const cfg = yandexConfig();

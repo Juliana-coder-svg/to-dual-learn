@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { notFound, redirect } from "next/navigation";
 import { getCourse, isEnrolled, type Course, type User } from "@/lib/db/queries";
 import { isUuid } from "@/lib/utils/ids";
 import { currentUserConsented, getCurrentUser, getCurrentUserId } from "./session";
@@ -33,3 +34,12 @@ export const studentCourse = cache(async (courseId: string): Promise<{ user: Use
   if (course.owner_id !== user.id && !enrolled) return null;
   return { user, course };
 });
+
+/** Что показать, когда teacherCourse/studentCourse вернули null. Вошедший пользователь без действующего
+ *  согласия (старый аккаунт после деплоя, новая версия документов) идёт на /consent и возвращается на next;
+ *  остальным 404, чтобы не раскрывать, существует ли курс. Только для страниц: в API отвечаем 403. */
+export async function noCourseAccess(next: string): Promise<never> {
+  const userId = await getCurrentUserId();
+  if (userId && !(await currentUserConsented())) redirect(`/consent?next=${encodeURIComponent(next)}`);
+  notFound();
+}
