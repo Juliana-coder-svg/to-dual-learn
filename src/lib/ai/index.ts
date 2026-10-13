@@ -54,7 +54,7 @@ export interface CallContext {
   ipHash?: string;
 }
 
-type Kind = "extract" | "lessons" | "artifact" | "evaluate" | "homework" | "chat" | "review";
+type Kind = "try" | "extract" | "lessons" | "artifact" | "evaluate" | "homework" | "chat" | "review";
 
 async function complete(kind: Kind, ctx: CallContext, req: AiRequest): Promise<AiResult> {
   const provider = getProvider();
@@ -206,7 +206,7 @@ export async function evaluateAnswer(
   opts: { tone: Course["tone"]; samples: CalibrationSample[] },
 ): Promise<Feedback> {
   if (isDemoMode()) return demo.feedback(lesson, answer);
-  return completeJson("evaluate", ctx, FeedbackSchema, {
+  return completeJson(ctx.userId ? "evaluate" : "try", ctx, FeedbackSchema, {
     task: evaluatePrompt(lesson, answer, opts),
     messages: [{ role: "user", content: "Оцени ответ по критериям." }],
     maxTokens: 8000,

@@ -1318,3 +1318,9 @@ export async function countTryCalls(ipHash: string, since: Date): Promise<number
   if (error) throw new Error(`try calls count: ${error.message}`);
   return count ?? 0;
 }
+
+/** Хэш IP живёт не дольше суток: обнуляем у строк старше суток. Строка расхода остаётся. */
+export async function purgeTryIpHashes(olderThan: Date): Promise<void> {
+  const sb = await getSupabase();
+  check(await sb.from("ai_calls").update({ ip_hash: null }).not("ip_hash", "is", null).lt("created_at", olderThan.toISOString()), "try ip purge");
+}

@@ -5,7 +5,8 @@ import { createHash } from "node:crypto";
 export function hashIp(req: Request, now = new Date()): string {
   const fwd = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
   const ip = req.headers.get("x-real-ip")?.trim() || fwd || "unknown";
-  const salt = process.env.TRY_IP_SALT || process.env.SUPABASE_SERVICE_ROLE_KEY || "dev-salt";
+  const salt = process.env.TRY_IP_SALT || (process.env.NODE_ENV === "production" ? "" : "dev-salt");
+  if (!salt) throw new Error("Не задана TRY_IP_SALT: без соли хэш IP не считаем.");
   return createHash("sha256").update(`${salt}|${now.toISOString().slice(0, 10)}|${ip}`).digest("hex").slice(0, 32);
 }
 

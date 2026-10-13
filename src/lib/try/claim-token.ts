@@ -18,7 +18,9 @@ export interface TryAttempt {
 }
 
 function secret(): string {
-  return process.env.TRY_CLAIM_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || "dev-secret";
+  const s = process.env.TRY_CLAIM_SECRET || (process.env.NODE_ENV === "production" ? "" : "dev-secret");
+  if (!s) throw new Error("Не задан TRY_CLAIM_SECRET.");
+  return s;
 }
 
 const sha = (s: string) => createHash("sha256").update(s).digest("hex");

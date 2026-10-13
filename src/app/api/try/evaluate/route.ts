@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { evaluateAnswer } from "@/lib/ai";
-import { countTryCalls } from "@/lib/db/queries";
+import { countTryCalls, purgeTryIpHashes } from "@/lib/db/queries";
 import { runAsService } from "@/lib/supabase/server";
 import { handleRouteError, jsonError } from "@/lib/api";
 import { getTryLesson } from "@/lib/try/catalog";
@@ -24,7 +24,11 @@ export async function POST(req: Request) {
 
     const limit = tryDailyLimit();
     const ipHash = hashIp(req);
-    const used = await runAsService(() => countTryCalls(ipHash, new Date(Date.now() - TRY_WINDOW_MS)));
+    const since = new Date(Date.now() - TRY_WINDOW_MS);
+    const used = await runAsService(async () => {
+      await purgeTryIpHashes(since);
+      return countTryCalls(ipHash, since);
+    });
     if (used >= limit) {
       return jsonError("Пробные разборы с вашего адреса на сегодня закончились. Войдите, чтобы пройти урок в своём профиле, или вернитесь завтра.", 429);
     }
