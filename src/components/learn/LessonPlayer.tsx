@@ -249,7 +249,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
               {progress ? (
                 <>
                   <div>
-                    <dt className="eyebrow">Очки</dt>
+                    <dt className="eyebrow">Баллы</dt>
                     <dd className="mt-1 type-counter">+{progress.gained}</dd>
                   </div>
                   <div>
