@@ -33,7 +33,7 @@ export default async function SignalsPage({ params }: { params: Promise<{ course
     <div className="space-y-8">
       <SectionHeader
         title="Сигналы"
-        description="Где ответы группы повторяют одну и ту же ошибку. Считается кодом по первым ответам студентов, модель не вызывается. Прототип: пороги пересматриваем по данным пилота."
+        description="Где ответы группы повторяют одну и ту же ошибку. Сервис считает по первым ответам студентов, ИИ не участвует. Это прототип: пороги пересмотрим по данным пилота."
       />
       {total === 0 ? (
         <EmptyState title="Ответов пока нет" description="Сигналы появятся, когда студенты сдадут первые уроки." />
@@ -41,8 +41,8 @@ export default async function SignalsPage({ params }: { params: Promise<{ course
         <>
           {!r.enoughData ? (
             <Notice>
-              Мало данных: разбор появится, когда на урок ответят хотя бы {THRESHOLDS.minSubmitters} студентов.
-              {r.mostAnswered ? ` Сейчас больше всего ответов на уроке ${r.mostAnswered.position}: ${r.mostAnswered.count}.` : ""}
+              Мало данных: сигналы появятся, когда на урок ответят не меньше {THRESHOLDS.minSubmitters} человек.
+              {r.mostAnswered ? ` Больше всего ответов пока на уроке ${r.mostAnswered.position}: ${r.mostAnswered.count}.` : ""}
             </Notice>
           ) : r.top.length === 0 ? (
             <Notice>Повторяющихся ошибок в ответах группы не нашли.</Notice>
@@ -52,7 +52,7 @@ export default async function SignalsPage({ params }: { params: Promise<{ course
                 <li key={s.key} className="p-4 text-sm">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-medium">Урок {s.lessonPosition}: {s.lessonTitle}</span>
-                    <Badge variant={s.level === "proposal" ? "default" : "outline"}>{s.level === "proposal" ? "достаточно для предложения" : "наблюдение"}</Badge>
+                    <Badge variant={s.level === "proposal" ? "default" : "outline"}>{s.level === "proposal" ? "можно предложить правку" : "наблюдение"}</Badge>
                   </div>
                   <div className="mt-1">{SIGNAL_LABELS[s.kind]}: {s.text}</div>
                   <div className="mt-0.5 type-caption text-muted-foreground">{s.detail}</div>
@@ -67,7 +67,7 @@ export default async function SignalsPage({ params }: { params: Promise<{ course
                   <th className="pl-4">Урок</th>
                   <th>Сдали</th>
                   <th>Средний балл</th>
-                  <th>Худший критерий</th>
+                  <th>Слабее всего</th>
                   <th>Возражения</th>
                   <th className="pr-4">Сигналы</th>
                 </tr>
@@ -81,7 +81,7 @@ export default async function SignalsPage({ params }: { params: Promise<{ course
                     <td>
                       {l.worstCriterion ? (
                         <>
-                          Критерий {l.worstCriterion.index + 1}: {l.worstCriterion.failed} из {l.worstCriterion.of} ({Math.round(l.worstCriterion.share * 100)}%)
+                          Критерий {l.worstCriterion.index + 1}: не выполнили {l.worstCriterion.failed} из {l.worstCriterion.of} ({Math.round(l.worstCriterion.share * 100)}%)
                         </>
                       ) : "—"}
                     </td>
@@ -96,7 +96,7 @@ export default async function SignalsPage({ params }: { params: Promise<{ course
           </div>
           {r.lessons.some((l) => l.mismatched > 0) ? (
             <p className="type-caption text-muted-foreground">
-              В некоторых разборах текст критерия не совпал с критерием урока: такие строки в подсчёт не вошли ({r.lessons.reduce((s, l) => s + l.mismatched, 0)}).
+              В части разборов текст критерия не совпал с критерием урока, поэтому их не учли ({r.lessons.reduce((s, l) => s + l.mismatched, 0)}).
             </p>
           ) : null}
         </>

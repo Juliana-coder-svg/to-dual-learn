@@ -35,7 +35,7 @@ export function YandexLoginButton({ error }: { error?: string }) {
       </button>
       {message ? <p role="alert" className="text-sm text-destructive">{message}</p> : null}
       <p className="text-xs text-muted-foreground">
-        Войдём с основной почтой вашего Яндекс ID. Если раньше вы входили с другой почтой, введите её выше. Иначе появится новый профиль, а прогресс останется в старом.
+        Вход идёт по основной почте вашего Яндекс ID. Если раньше вы входили по другой почте, введите её выше: иначе появится новый профиль, а прогресс останется в старом.
       </p>
     </div>
   );

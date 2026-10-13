@@ -102,7 +102,7 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
         <section>
           <h2 className="type-heading">Мои курсы</h2>
           {courses.length === 0 ? (
-            <EmptyState className="mt-5" title="Пока нет курсов" description="Введите код от преподавателя справа, и курс появится здесь." />
+            <EmptyState className="mt-5" title="Пока нет курсов" description="Введите код курса в блоке «Записаться на курс», и курс появится здесь." />
           ) : (
             <ul className="mt-5 space-y-3">
               {cards.map(({ course: c, lessons, completed, next, nextIndex, limitReached }) => (

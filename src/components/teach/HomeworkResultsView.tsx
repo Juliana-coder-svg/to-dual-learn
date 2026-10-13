@@ -27,7 +27,7 @@ export function HomeworkResultsView({ results }: { results: StoredHomeworkResult
         </div>
         <AiNote kind="homework" className="mt-1" />
         <div className="mt-4 grid gap-3 md:grid-cols-3">
-          <OverviewCard title="Провалили чаще всего" empty="Каждый критерий выполнило большинство.">
+          <OverviewCard title="Чаще всего не выполнены" empty="Каждый критерий выполнило большинство.">
             {o.failedCriteria.length > 0 ? (
               <ul className="mt-2 space-y-2">
                 {o.failedCriteria.map((c, i) => (
@@ -39,7 +39,7 @@ export function HomeworkResultsView({ results }: { results: StoredHomeworkResult
               </ul>
             ) : null}
           </OverviewCard>
-          <OverviewCard title="Переобъяснить" accent empty="Переобъяснять нечего: общих пробелов в работах нет.">
+          <OverviewCard title="Объяснить заново" accent empty="Объяснять заново нечего: общих пробелов в работах нет.">
             {o.reteach.length > 0 ? (
               <ul className="mt-2 space-y-3">
                 {o.reteach.map((r, i) => (
