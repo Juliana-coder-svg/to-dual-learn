@@ -1,5 +1,6 @@
 import type { z } from "zod";
-import { addAiCall, type Course, type Material } from "@/lib/db/queries";
+import { addAiCall, type AiCallRecord, type Course, type Material } from "@/lib/db/queries";
+import { runAsService } from "@/lib/supabase/server";
 import {
   FeedbackSchema,
   HomeworkResultsSchema,
@@ -47,11 +48,13 @@ function getProvider(): AiProvider {
 }
 
 export interface CallContext {
-  userId: string;
+  /** null у пробного разбора гостя: расход пишется по хэшу IP, без курса. */
+  userId: string | null;
   courseId?: string;
+  ipHash?: string;
 }
 
-type Kind = "extract" | "lessons" | "artifact" | "evaluate" | "homework" | "chat" | "review";
+type Kind = "try" | "extract" | "lessons" | "artifact" | "evaluate" | "homework" | "chat" | "review";
 
 async function complete(kind: Kind, ctx: CallContext, req: AiRequest): Promise<AiResult> {
   const provider = getProvider();
@@ -61,9 +64,10 @@ async function complete(kind: Kind, ctx: CallContext, req: AiRequest): Promise<A
   console.info(
     `[ai] ${kind} ${modelLabel} in=${result.usage.inputTokens} cache_w=${result.usage.cacheWriteTokens} cache_r=${result.usage.cacheReadTokens} out=${result.usage.outputTokens} ${Date.now() - started}ms`,
   );
-  await addAiCall({
+  const record: AiCallRecord = {
     courseId: ctx.courseId ?? null,
     userId: ctx.userId,
+    ipHash: ctx.ipHash,
     kind,
     provider: result.provider,
     model: result.model,
@@ -73,7 +77,9 @@ async function complete(kind: Kind, ctx: CallContext, req: AiRequest): Promise<A
     cacheWriteTokens: result.usage.cacheWriteTokens,
     costUsd: estimateCostUsd(result.usage, result.model),
     durationMs: Date.now() - started,
-  });
+  };
+  // У гостя нет сессии, RLS не пустит запись: пишем от service role.
+  await (ctx.userId ? addAiCall(record) : runAsService(() => addAiCall(record)));
   return result;
 }
 
@@ -200,7 +206,7 @@ export async function evaluateAnswer(
   opts: { tone: Course["tone"]; samples: CalibrationSample[] },
 ): Promise<Feedback> {
   if (isDemoMode()) return demo.feedback(lesson, answer);
-  return completeJson("evaluate", ctx, FeedbackSchema, {
+  return completeJson(ctx.userId ? "evaluate" : "try", ctx, FeedbackSchema, {
     task: evaluatePrompt(lesson, answer, opts),
     messages: [{ role: "user", content: "Оцени ответ по критериям." }],
     maxTokens: 8000,

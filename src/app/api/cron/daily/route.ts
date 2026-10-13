@@ -6,6 +6,7 @@ import {
   listLessons,
   listUsersForDigest,
   markDigestSent,
+  purgeTryIpHashes,
 } from "@/lib/db/queries";
 import { sendMail } from "@/lib/mail";
 import { runAsService } from "@/lib/supabase/server";
@@ -26,6 +27,8 @@ export async function GET(req: Request) {
   const site = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const cutoff = Date.now() - 20 * 60 * 60 * 1000;
   return runAsService(async () => {
+  // Хэши IP пробных разборов (задача 5.7) живут не дольше суток.
+  await purgeTryIpHashes(new Date(Date.now() - 24 * 60 * 60 * 1000));
   let sent = 0;
   let skipped = 0;
   for (const user of await listUsersForDigest()) {

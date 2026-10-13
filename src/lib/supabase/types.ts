@@ -141,7 +141,9 @@ export type ConsentRow = {
 export type AiCallRow = {
   id: string;
   course_id: string | null;
-  user_id: string;
+  /** Пусто у пробного разбора гостя (миграция 0006): тогда заполнен ip_hash. */
+  user_id: string | null;
+  ip_hash: string | null;
   kind: string;
   provider: string;
   model: string;

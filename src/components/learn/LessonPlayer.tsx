@@ -48,9 +48,15 @@ interface Props {
   nextHref: string;
   nextLabel: string;
   tone: Tone;
+  /** Пробный урок без входа: разбор идёт через /api/try/evaluate, в базу ничего не пишется, вместо следующего урока предложение войти. */
+  guest?: { slug: string; lessonIndex: number };
 }
 
-export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, tone }: Props) {
+/** Где гость хранит ответ и разбор до входа. После входа /try/claim переносит их в профиль. */
+export const TRY_STORAGE_KEY = "tdd_try_attempt";
+export const TRY_LOGIN_HREF = "/login?role=student&next=%2Ftry%2Fclaim";
+
+export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, tone, guest }: Props) {
   const router = useRouter();
   const c = lesson.content;
   const t = lessonCopy(tone);
@@ -98,12 +104,12 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
     setBusy(true);
     setError(null);
     try {
-      const res = await fetch("/api/evaluate", {
+      const res = await fetch(guest ? "/api/try/evaluate" : "/api/evaluate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lessonId: lesson.id, answer }),
+        body: JSON.stringify(guest ? { slug: guest.slug, lessonIndex: guest.lessonIndex, answer } : { lessonId: lesson.id, answer }),
       });
-      const data = (await res.json()) as { ok?: boolean; error?: string; feedback?: Feedback; firstTime?: boolean; progress?: { streak: number; xp: number; gained: number } };
+      const data = (await res.json()) as { ok?: boolean; error?: string; feedback?: Feedback; claimToken?: string; firstTime?: boolean; progress?: { streak: number; xp: number; gained: number } };
       if (!res.ok || !data.ok || !data.feedback) throw new ApiError(data.error ?? "Не удалось получить разбор.", res.status);
       setAppealOpen(false);
       setObjection("");
@@ -112,14 +118,38 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
       setScoreNote(feedback ? `Было ${feedback.score}/5, стало ${data.feedback.score}/5.` : null);
       setFeedback(data.feedback);
       if (data.firstTime && data.progress) setProgress(data.progress);
+      if (guest && data.claimToken) {
+        try {
+          localStorage.setItem(TRY_STORAGE_KEY, JSON.stringify({ slug: guest.slug, lessonIndex: guest.lessonIndex, answer, feedback: data.feedback, claimToken: data.claimToken }));
+        } catch {
+          // Хранилище закрыто (приватный режим): разбор виден на экране, но после входа не перенесётся.
+        }
+      }
       setStep("feedback");
-      router.refresh();
+      if (!guest) router.refresh();
     } catch (e) {
       setError(shownError(e, "Не удалось получить разбор."));
     } finally {
       setBusy(false);
     }
   }
+
+  // Гость обновил страницу после разбора: поднимаем ответ и разбор из localStorage. Асинхронно, чтобы не расходиться с серверной разметкой.
+  useEffect(() => {
+    if (!guest) return;
+    void Promise.resolve().then(() => {
+      try {
+        const saved = JSON.parse(localStorage.getItem(TRY_STORAGE_KEY) ?? "null") as { slug?: string; lessonIndex?: number; answer?: string; feedback?: Feedback } | null;
+        if (saved && saved.slug === guest.slug && saved.lessonIndex === guest.lessonIndex && typeof saved.answer === "string" && saved.feedback) {
+          setAnswer(saved.answer);
+          setFeedback(saved.feedback);
+          setStep("feedback");
+        }
+      } catch {
+        // Хранилища нет или запись повреждена: урок начинается заново.
+      }
+    });
+  }, [guest]);
 
   const answerIsLong = answer.length > ANSWER_COLLAPSE_CHARS;
   // Разборы до 8 октября 2026 сохранены без worked и nextStep: поля могут отсутствовать, а не только быть null.
@@ -159,7 +189,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
             <p className="mt-2 type-body text-muted-foreground">{c.concept}</p>
           </div>
         </div>
-        <AiNote kind={reviewed ? "lessonReviewed" : "lessonUnreviewed"} className="mt-4" />
+        <AiNote kind={guest ? "lessonGuest" : reviewed ? "lessonReviewed" : "lessonUnreviewed"} className="mt-4" />
       </header>
 
       {step === "intro" ? (
@@ -217,7 +247,11 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
           <div>
             <label htmlFor="answer" className="text-sm font-semibold">{t.answerLabel}</label>
             <Textarea id="answer" className="mt-2 min-h-40 md:min-h-44" rows={7} value={answer} onChange={(e) => setAnswer(e.target.value)} disabled={busy} placeholder={t.answerPlaceholder} aria-describedby={!error && answer.trim().length > 0 && answer.trim().length < 10 ? "answer-hint" : undefined} />
-            <p className="mt-2 type-caption text-muted-foreground">Разбор и балл подготовит модель. Ответ увидит преподаватель курса, итоговое решение за ним.</p>
+            {guest ? (
+              <p className="mt-2 type-caption text-muted-foreground">Ответ прочитает и разберёт модель, поэтому не пишите имён, почты и телефонов. До входа ответ хранится только в этом браузере. После входа он попадёт в профиль, и его увидит команда курса.</p>
+            ) : (
+              <p className="mt-2 type-caption text-muted-foreground">Разбор и балл подготовит модель. Ответ увидит преподаватель курса, итоговое решение за ним.</p>
+            )}
           </div>
           {error ? (
             <div role="alert" className="border-l-2 border-destructive pl-4 text-sm">
@@ -239,7 +273,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
             <div className="min-w-0">
               <h2 data-step-heading tabIndex={-1} className="type-heading outline-none">Разбор</h2>
               {scoreNote ? <p className="mt-2 text-sm text-muted-foreground">{scoreNote}</p> : null}
-              <AiNote kind="feedback" className="mt-2" />
+              <AiNote kind={guest ? "feedbackGuest" : "feedback"} className="mt-2" />
             </div>
             <dl className="flex shrink-0 gap-8">
               <div>
@@ -313,7 +347,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
               <ul className="mt-2 space-y-2 type-body">{feedback.improvements.map((s, i) => <li key={i} className="flex gap-3">{arrow}<span>{s}</span></li>)}</ul>
             </div>
           ) : null}
-          {appealOpen ? (
+          {guest ? null : appealOpen ? (
             <div className="space-y-3 rounded-lg border p-4">
               <label htmlFor="objection" className="text-sm font-semibold">{t.appealTitle}</label>
               <Textarea id="objection" autoFocus rows={3} value={objection} onChange={(e) => setObjection(e.target.value)} placeholder={t.appealPlaceholder} />
@@ -336,10 +370,21 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
             <div className="callout-label">Запомнить</div>
             <p className="mt-2 type-body">{c.keyTakeaway}</p>
           </div>
+          {guest ? (
+            <div className="rounded-lg border p-6">
+              <h3 className="text-balance type-heading">Войдите, чтобы сохранить разбор и получать урок каждый день</h3>
+              <p className="mt-2 type-body text-muted-foreground">Перенесём ответ и разбор в профиль. Завтра утром пришлём письмо со следующим уроком, а этот урок вернётся карточками на повторение, чтобы проверить, что запомнилось. Пароль не нужен, вход по почте. Без входа разбор останется только в этом браузере.</p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Button nativeButton={false} render={<Link href={TRY_LOGIN_HREF} />} size="lg">Войти и сохранить</Button>
+                <Button size="lg" variant="outline" onClick={() => setStep("task")}>{t.retry}</Button>
+              </div>
+            </div>
+          ) : (
           <div className="flex flex-wrap gap-3">
             <Button nativeButton={false} render={<Link href={nextHref} />} size="lg" className="h-auto min-h-11 max-w-full shrink whitespace-normal py-2 text-left">{nextLabel}</Button>
             <Button size="lg" variant="outline" onClick={() => setStep("task")}>{t.retry}</Button>
           </div>
+          )}
         </section>
       ) : null}
     </article>

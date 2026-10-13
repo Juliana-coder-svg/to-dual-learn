@@ -914,7 +914,9 @@ export async function listHomeworkChecks(courseId: string): Promise<HomeworkChec
 
 export interface AiCallRecord {
   courseId: string | null;
-  userId: string;
+  /** null у пробного разбора гостя: тогда обязателен ipHash. */
+  userId: string | null;
+  ipHash?: string;
   kind: string;
   provider: string;
   model: string;
@@ -931,6 +933,7 @@ export async function addAiCall(r: AiCallRecord): Promise<void> {
   const row: Omit<AiCallRow, "id" | "created_at"> = {
     course_id: r.courseId,
     user_id: r.userId,
+    ip_hash: r.ipHash ?? null,
     kind: r.kind,
     provider: r.provider,
     model: r.model,
@@ -1306,4 +1309,37 @@ export async function listOwnedCoursesWithStudents(userId: string): Promise<Owne
       return { id: c.id, title: c.title, students: people.size };
     })
     .filter((c) => c.students > 0);
+}
+
+/** Сколько пробных разборов гость с этим хэшем IP получил за последние сутки. Читает service role. */
+export async function countTryCalls(ipHash: string, since: Date): Promise<number> {
+  const sb = await getSupabase();
+  const { count, error } = await sb.from("ai_calls").select("id", { count: "exact", head: true }).eq("ip_hash", ipHash).gte("created_at", since.toISOString());
+  if (error) throw new Error(`try calls count: ${error.message}`);
+  return count ?? 0;
+}
+
+/** Занимает попытку до вызова модели: параллельные запросы с одного IP видят друг друга. Строка расхода настоящего вызова пишется отдельно, эту удаляют после. */
+export async function reserveTryCall(ipHash: string): Promise<string> {
+  const sb = await getSupabase();
+  const row = unwrap(
+    await sb
+      .from("ai_calls")
+      .insert({ course_id: null, user_id: null, ip_hash: ipHash, kind: "try", provider: "reserved", model: "reserved", input_tokens: 0, output_tokens: 0, cache_read_tokens: 0, cache_write_tokens: 0, cost_usd: 0, duration_ms: 0 })
+      .select("id")
+      .single(),
+    "try reserve",
+  );
+  return row.id;
+}
+
+export async function releaseTryCall(id: string): Promise<void> {
+  const sb = await getSupabase();
+  check(await sb.from("ai_calls").delete().eq("id", id), "try release");
+}
+
+/** Хэш IP живёт не дольше суток: обнуляем у строк старше суток. Строка расхода остаётся. */
+export async function purgeTryIpHashes(olderThan: Date): Promise<void> {
+  const sb = await getSupabase();
+  check(await sb.from("ai_calls").update({ ip_hash: null }).not("ip_hash", "is", null).lt("created_at", olderThan.toISOString()), "try ip purge");
 }
