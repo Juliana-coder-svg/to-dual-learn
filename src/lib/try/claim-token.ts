@@ -27,6 +27,11 @@ const sha = (s: string) => createHash("sha256").update(s).digest("hex");
 const canonical = (f: Feedback) => JSON.stringify(FeedbackSchema.parse(f));
 const mac = (body: string) => createHmac("sha256", secret()).update(body).digest("base64url");
 
+/** Бросает, если секрет подписи не задан: проверять до платного вызова модели. */
+export function assertClaimConfigured(): void {
+  secret();
+}
+
 export function signAttempt(a: { slug: string; lessonIndex: number; answer: string; feedback: Feedback }): string {
   const body = Buffer.from(JSON.stringify({ s: a.slug, i: a.lessonIndex, a: sha(a.answer), f: sha(canonical(a.feedback)), e: Date.now() + TTL_MS })).toString("base64url");
   return `${body}.${mac(body)}`;

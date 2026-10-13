@@ -1,7 +1,7 @@
 "use server";
 
 import { requireUser } from "@/lib/auth/session";
-import { addSubmission, enroll, getCourse, getLatestSubmission, hasActiveConsent, listLessons, updateUserProgress, upsertFlashcards } from "@/lib/db/queries";
+import { addSubmission, enroll, getLatestSubmission, hasActiveConsent, listLessons, updateUserProgress, upsertFlashcards } from "@/lib/db/queries";
 import { CONSENT_VERSION } from "@/lib/legal/versions";
 import { getTryLesson, tryCourseId } from "@/lib/try/catalog";
 import { verifyAttempt } from "@/lib/try/claim-token";
@@ -25,10 +25,14 @@ export async function claimTryAttemptAction(raw: unknown): Promise<ClaimResult> 
 
   const courseId = tryCourseId(attempt.slug);
   const tryLesson = getTryLesson(attempt.slug, attempt.lessonIndex);
-  const course = courseId ? await getCourse(courseId) : undefined;
-  if (!courseId || !tryLesson || !course) return { ok: false, reason: "unavailable" };
+  if (!courseId || !tryLesson) return { ok: false, reason: "unavailable" };
 
-  await enroll(user.id, courseId);
+  // Сначала запись на курс: до неё RLS не отдаёт курс и уроки. Курса нет в базе: запись упадёт по внешнему ключу.
+  try {
+    await enroll(user.id, courseId);
+  } catch {
+    return { ok: false, reason: "unavailable" };
+  }
   const lesson = (await listLessons(courseId, { publishedOnly: true }))[0];
   // Урок в базе должен быть тем же, на который отвечал гость.
   if (!lesson || lesson.content.title !== tryLesson.content.title) return { ok: false, reason: "unavailable" };

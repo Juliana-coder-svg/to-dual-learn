@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { isUuid } from "@/lib/utils/ids";
 import { SeedSchema } from "@/lib/lessons/seed-schema";
 import type { LessonContent } from "@/lib/lessons/types";
 import type { Tone } from "@/lib/prompts/tone";
@@ -31,7 +32,7 @@ export function tryCourseId(slug: string): string | null {
   try {
     const map = JSON.parse(process.env.TRY_COURSES ?? "{}") as Record<string, unknown>;
     const id = map[slug];
-    return typeof id === "string" ? id : null;
+    return typeof id === "string" && isUuid(id) ? id : null;
   } catch {
     return null;
   }
