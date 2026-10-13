@@ -31,7 +31,7 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
 
   return (
     <div className="grid gap-10 lg:grid-cols-[1fr_340px]">
-      <section>
+      <section className="min-w-0">
         <SectionHeader
           title="Уроки"
           description={
@@ -73,7 +73,7 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
                 <div className="grid gap-4">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="eyebrow">Урок {l.position}</span>
+                      <span className="type-counter text-primary"><span className="sr-only">Урок </span>{String(l.position).padStart(2, "0")}</span>
                       <Badge variant={l.status === "published" ? "default" : "secondary"}>{l.status === "published" ? "Опубликован" : "Черновик"}</Badge>
                       <Badge
                         variant={l.reviewed_at ? "outline" : "soft"}
@@ -82,7 +82,7 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
                         {l.reviewed_at ? `Проверен ${formatDateTime(l.reviewed_at)}` : "Не проверен"}
                       </Badge>
                     </div>
-                    <h3 className="mt-2 text-base font-semibold">{l.title}</h3>
+                    <h3 className="mt-3 type-heading">{l.title}</h3>
                     <p className="text-sm text-muted-foreground">{l.concept}</p>
                     {l.reviewed_at ? null : <AiNote kind="teacherDraft" className="mt-2" />}
                     {l.review && !l.review.proposal ? (
@@ -160,7 +160,7 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
           </ol>
         )}
       </section>
-      <aside>
+      <aside className="min-w-0">
         <LessonsGenerator courseId={courseId} disabled={!hasMaterials} />
       </aside>
     </div>

@@ -52,7 +52,8 @@ export async function AppShell({
             </Link>
             <form action={switchRole}>
               <Button type="submit" variant="ghost" size="sm">
-                {isTeacher ? "Режим студента" : "Режим преподавателя"}
+                <span className="sm:hidden">{isTeacher ? "Студент" : "Преподаватель"}</span>
+                <span className="hidden sm:inline">{isTeacher ? "Режим студента" : "Режим преподавателя"}</span>
               </Button>
             </form>
             <form action={logout}>

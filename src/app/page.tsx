@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser, homeFor } from "@/lib/auth/session";
 import { Button } from "@/components/ui/button";
 import { PublicShell } from "@/components/shared/PublicShell";
+import { StepMarks } from "@/components/shared/StepMarks";
 
 interface Step {
   title: string;
@@ -80,11 +81,12 @@ const FINDINGS: Finding[] = [
 
 const TEAM = ["НИУ ВШЭ", "Яндекс", "ВТБ", "Сколково"];
 
-function EntryButtons({ size = "lg" }: { size?: "lg" | "default" }) {
+function EntryButtons({ size = "lg", tone = "default" }: { size?: "lg" | "default"; tone?: "default" | "inverse" }) {
+  const inverse = tone === "inverse";
   return (
     <div className="flex flex-wrap gap-3">
-      <Button nativeButton={false} render={<Link href="/login?role=teacher" />} size={size}>Я преподаватель</Button>
-      <Button nativeButton={false} render={<Link href="/login?role=student" />} size={size} variant="outline">Я студент</Button>
+      <Button nativeButton={false} render={<Link href="/login?role=teacher" />} size={size} variant={inverse ? "inverse" : "default"}>Я преподаватель</Button>
+      <Button nativeButton={false} render={<Link href="/login?role=student" />} size={size} variant={inverse ? "inverse-outline" : "outline"}>Я студент</Button>
     </div>
   );
 }
@@ -93,13 +95,9 @@ function EntryButtons({ size = "lg" }: { size?: "lg" | "default" }) {
 function LessonSketch() {
   return (
     <div aria-hidden className="rounded-lg border bg-card p-5 text-sm">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4">
         <span className="eyebrow">Урок 2 · шаг 2 из 3</span>
-        <span className="flex gap-1">
-          <span className="h-1.5 w-7 rounded-full bg-primary" />
-          <span className="h-1.5 w-7 rounded-full bg-primary" />
-          <span className="h-1.5 w-7 rounded-full bg-muted" />
-        </span>
+        <StepMarks total={3} filled={2} size="sm" />
       </div>
       <p className="mt-3 type-heading">Первая цифра решает</p>
       <p className="mt-1 text-muted-foreground">Заметить эффект якоря после подсказки модели</p>
@@ -127,17 +125,17 @@ export default async function Home() {
 
   return (
     <PublicShell width="wide" action={<Button nativeButton={false} render={<Link href="/login" />} size="sm" variant="outline">Войти</Button>}>
-      <section className="grid items-center gap-10 py-14 md:grid-cols-[1.1fr_1fr] md:gap-14 md:py-24">
-        <div>
+      <section className="grid items-center gap-12 py-16 md:grid-cols-[1.15fr_1fr] md:gap-16 md:py-28">
+        <div className="flex flex-col">
           <p className="eyebrow text-primary-strong">Микрообучение по вашим материалам</p>
-          <h1 className="mt-4 text-balance type-title md:type-display">
+          <h1 className="mt-5 max-w-3xl text-balance type-display">
             Студенты практикуются по вашим материалам по&nbsp;пять минут в&nbsp;день
           </h1>
-          <p className="mt-5 max-w-xl text-lg leading-relaxed text-muted-foreground">
+          <p className="mt-6 max-w-lg text-lg leading-relaxed text-muted-foreground max-md:order-last max-md:mt-8">
             Загрузите программу, методичку или конспект лекции. To Dual Learn соберёт из них короткие уроки с задачей
             и разберёт ответы студентов по критериям. Через день, неделю и месяц пройденное вернётся карточками.
           </p>
-          <div className="mt-8">
+          <div className="mt-8 max-md:mt-6">
             <EntryButtons />
             <p className="mt-3 text-sm text-muted-foreground">Бесплатно. Пароль не нужен: войдите по почте и имени.</p>
           </div>
@@ -145,42 +143,43 @@ export default async function Home() {
         <LessonSketch />
       </section>
 
-      <section className="border-t py-14 md:py-20">
-        <h2 className="type-heading md:type-title">Как это работает</h2>
-        <ol className="mt-8 grid gap-8 md:grid-cols-3 md:gap-6">
+      <section className="border-t py-20 md:py-24">
+        <h2 className="max-w-2xl type-title">Как это работает</h2>
+        <ol className="mt-10 grid gap-10 md:grid-cols-3 md:gap-8">
           {STEPS.map((step, i) => (
-            <li key={step.title} className="border-t-2 border-primary pt-4">
-              <span className="type-title tabular-nums text-primary-strong">{String(i + 1).padStart(2, "0")}</span>
-              <h3 className="mt-3 text-base font-semibold">{step.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{step.text}</p>
+            <li key={step.title} className="border-t-2 border-primary pt-5">
+              <span className="type-counter text-primary">{String(i + 1).padStart(2, "0")}</span>
+              <h3 className="mt-4 type-heading">{step.title}</h3>
+              <p className="mt-2 max-w-prose text-sm leading-relaxed text-muted-foreground">{step.text}</p>
             </li>
           ))}
         </ol>
       </section>
 
-      <section className="border-t py-14 md:py-20">
-        <h2 className="type-heading md:type-title">Для кого</h2>
-        <div className="mt-8 grid gap-4 md:grid-cols-3">
-          {SEGMENTS.map((segment) => (
-            <div key={segment.title} className="rounded-lg border p-5">
-              <h3 className="text-base font-semibold">{segment.title}</h3>
+      <section className="border-t py-20 md:py-24">
+        <h2 className="max-w-2xl type-title">Для кого</h2>
+        <div className="mt-10 grid gap-x-8 gap-y-10 md:grid-cols-3">
+          {SEGMENTS.map((segment, i) => (
+            <div key={segment.title} className="border-t pt-5">
+              <StepMarks total={3} filled={i + 1} size="sm" />
+              <h3 className="mt-4 type-heading">{segment.title}</h3>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{segment.text}</p>
             </div>
           ))}
         </div>
       </section>
 
-      <section className="border-t py-14 md:py-20">
+      <section className="border-t py-20 md:py-24">
         <div className="max-w-2xl">
-          <h2 className="type-heading md:type-title">Что говорят исследования</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <h2 className="type-title">Что говорят исследования</h2>
+          <p className="mt-3 text-sm text-muted-foreground">
             Это чужие исследования, а не результаты нашего продукта. Свои цифры опубликуем после первых пилотов.
           </p>
         </div>
-        <ul className="mt-8 grid gap-4 md:grid-cols-2">
+        <ul className="mt-10 grid gap-4 md:grid-cols-2">
           {FINDINGS.map((finding) => (
-            <li key={finding.title} className="flex flex-col rounded-lg border p-5">
-              <h3 className="text-base font-semibold">{finding.title}</h3>
+            <li key={finding.title} className="flex flex-col rounded-lg bg-surface p-6">
+              <h3 className="type-heading">{finding.title}</h3>
               <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">{finding.text}</p>
               <a
                 href={finding.href}
@@ -195,10 +194,10 @@ export default async function Home() {
         </ul>
       </section>
 
-      <section className="border-t py-14 md:py-20">
-        <div className="grid gap-6 md:grid-cols-[1fr_1fr] md:gap-14">
-          <h2 className="type-heading md:type-title">Кто делает</h2>
-          <div>
+      <section className="border-t py-20 md:py-24">
+        <div className="grid gap-6 md:grid-cols-[1fr_1fr] md:gap-16">
+          <h2 className="type-title">Кто делает</h2>
+          <div className="max-w-lg">
             <p className="type-body text-muted-foreground">
               Команда To Dual Education. Мы преподаём в НИУ ВШЭ, в магистратуре ИИМУП «AI в маркетинге и продакт-менеджменте»,
               и ведём программы по ИИ для Яндекса, ВТБ и Сколково.
@@ -212,15 +211,16 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="mb-14 rounded-lg bg-primary-soft p-6 md:mb-20 md:p-10">
+      <section className="accent-panel mb-20 md:mb-24 md:p-12">
         <div className="max-w-2xl">
-          <h2 className="type-heading md:type-title">Попробуйте на своём материале</h2>
-          <p className="mt-2 type-body text-muted-foreground">
+          <StepMarks total={3} filled={3} size="md" tone="inverse" />
+          <h2 className="mt-6 text-balance type-title">Попробуйте на своём материале</h2>
+          <p className="mt-3 max-w-lg type-body accent-panel-muted">
             Преподаватель собирает курс и даёт студентам ссылку. Студент входит по ссылке или по коду курса.
           </p>
-          <div className="mt-6">
-            <EntryButtons />
-            <p className="mt-3 text-sm text-muted-foreground">Бесплатно. Пароль не нужен: войдите по почте и имени.</p>
+          <div className="mt-8">
+            <EntryButtons tone="inverse" />
+            <p className="mt-3 text-sm accent-panel-muted">Бесплатно. Пароль не нужен: войдите по почте и имени.</p>
           </div>
         </div>
       </section>

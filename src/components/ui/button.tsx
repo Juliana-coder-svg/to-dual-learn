@@ -22,6 +22,10 @@ const buttonVariants = cva(
         destructive:
           "bg-destructive text-primary-foreground hover:bg-[color-mix(in_oklch,var(--destructive),black_12%)] focus-visible:ring-destructive/30",
         link: "h-auto px-0 text-primary-strong underline-offset-4 hover:underline",
+        /** Белая кнопка на оранжевой плашке (.accent-panel): главное действие внутри фирменного блока. */
+        inverse: "bg-primary-foreground text-primary-strong hover:bg-primary-soft focus-visible:border-primary-foreground focus-visible:ring-primary-foreground/70",
+        /** Прозрачная кнопка с белой рамкой на оранжевой плашке: второе действие рядом с inverse. */
+        "inverse-outline": "border-primary-foreground/60 text-primary-foreground hover:border-primary-foreground hover:bg-primary-foreground/10 focus-visible:border-primary-foreground focus-visible:ring-primary-foreground/70",
       },
       size: {
         default: "h-9 gap-2 px-4 has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3",
