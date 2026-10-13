@@ -37,7 +37,17 @@ async function ask(prompt: string, user: string, usage: { cost: number; calls: n
 async function evaluate(): Promise<void> {
   const usage = { cost: 0, calls: 0 };
   const results: Evaluated[] = [];
-  const queue = [...group.answers];
+  // Неизменившиеся ответы берём из прошлого прогона: платим только за новые и изменённые.
+  const old = fs.existsSync(outFile) ? (JSON.parse(fs.readFileSync(outFile, "utf8")) as Saved) : null;
+  const reused: Evaluated[] = [];
+  const queue = group.answers.filter((a) => {
+    const prev = old?.results.find((r) => r.student === a.student && r.lesson === a.lesson && r.answer === a.answer && r.objection === a.objection);
+    if (!prev) return true;
+    reused.push({ ...prev, planted: a.planted });
+    return false;
+  });
+  results.push(...reused);
+  usage.cost = 0;
   const worker = async () => {
     for (;;) {
       const a = queue.shift();
@@ -54,8 +64,9 @@ async function evaluate(): Promise<void> {
   };
   await Promise.all(Array.from({ length: 3 }, worker));
   results.sort((x, y) => x.student - y.student || x.lesson - y.lesson);
-  fs.writeFileSync(outFile, JSON.stringify({ costUsd: usage.cost, calls: usage.calls, results } satisfies Saved, null, 2));
-  console.log(`Вызовов: ${usage.calls}, расход $${usage.cost.toFixed(2)} ≈ ${formatRub(usdToRub(usage.cost))}`);
+  const total = (old?.costUsd ?? 0) + usage.cost;
+  fs.writeFileSync(outFile, JSON.stringify({ costUsd: total, calls: (old?.calls ?? 0) + usage.calls, results } satisfies Saved, null, 2));
+  console.log(`Новых вызовов: ${usage.calls}, повторно использовано ответов: ${reused.length}, расход этого прогона $${usage.cost.toFixed(2)} ≈ ${formatRub(usdToRub(usage.cost))}, всего по группе $${total.toFixed(2)}`);
 }
 
 function report(): void {
