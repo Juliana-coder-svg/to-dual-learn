@@ -141,8 +141,34 @@ async function repeat(times: number): Promise<void> {
   console.log(`Вызовов: ${usage.calls}, расход $${usage.cost.toFixed(2)} ≈ ${formatRub(usdToRub(usage.cost))}`);
 }
 
+/** Независимый набор B: 13 ответов урока 2 другого автора, без закладок. Оценка наставником и сигналы. */
+async function setB(): Promise<void> {
+  const usage = { cost: 0, calls: 0 };
+  const lesson = course.lessons[1];
+  const rows = (JSON.parse(fs.readFileSync(path.join(root, "content/seeds/critical-thinking-ai-lesson2-set-b.json"), "utf8")) as { answers: Array<{ student: number; answer: string }> }).answers;
+  const feedbacks = new Array<Feedback>(rows.length);
+  const queue = rows.map((a, i) => ({ a, i }));
+  const worker = async () => {
+    for (;;) {
+      const q = queue.shift();
+      if (!q) return;
+      feedbacks[q.i] = await ask(evaluatePrompt(lesson, q.a.answer, { tone: course.tone, samples: [] }), "Оцени ответ по критериям.", usage);
+    }
+  };
+  await Promise.all(Array.from({ length: 3 }, worker));
+  const lessons = [{ id: "L2", position: 2, title: lesson.title, rubricCriteria: lesson.rubricCriteria }];
+  const answers: SignalAnswer[] = rows.map((a, i) => ({ id: `a${i}`, lesson_id: "L2", user_id: `s${a.student}`, answer: a.answer, score: feedbacks[i].score, feedback: feedbacks[i], objection: null, created_at: new Date(2026, 9, 1, 0, i).toISOString() }));
+  const sig = computeSignals({ lessons, answers }).lessons[0];
+  console.log(`критерии, провалили из ${rows.length}: ${lesson.rubricCriteria.map((_, c) => `${c + 1}: ${feedbacks.filter((f) => !f.criteria[c]?.met).length}`).join(", ")}`);
+  console.log(`по студентам, критерий 2: ${rows.map((a, i) => `${a.student}${feedbacks[i].criteria[1]?.met ? "+" : "-"}`).join(" ")}`);
+  console.log(`сигналы: ${sig.signals.map((x) => `${SIGNAL_LABELS[x.kind]} (${x.level === "proposal" ? "предложение" : "наблюдение"}): ${x.text}`).join("; ") || "нет"}`);
+  fs.writeFileSync(path.join(root, "content/seeds/critical-thinking-ai-lesson2-set-b.evaluated.json"), JSON.stringify({ costUsd: usage.cost, calls: usage.calls, results: rows.map((a, i) => ({ student: a.student, answer: a.answer, feedback: feedbacks[i] })) }, null, 2));
+  console.log(`Вызовов: ${usage.calls}, расход $${usage.cost.toFixed(2)} ≈ ${formatRub(usdToRub(usage.cost))}`);
+}
+
 const cmd = process.argv[2];
 if (cmd === "evaluate") await evaluate();
 else if (cmd === "report") report();
+else if (cmd === "setb") await setB();
 else if (cmd === "repeat") await repeat(Number(process.argv[3] ?? 5));
-else console.error("Команда: evaluate | report | repeat [N]");
+else console.error("Команда: evaluate | report | repeat [N] | setb");
