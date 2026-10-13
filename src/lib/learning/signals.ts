@@ -355,7 +355,7 @@ export function computeSignals(input: SignalsInput): CourseSignals {
           text: `${plural(objections, "студент оспорил", "студента оспорили", "студентов оспорили")} оценку из ${n} сдавших`,
           detail: objectionsScoreChanged > 0
             ? `После переоценки поменялось выполнение критериев у ${objectionsScoreChanged} из ${objections}: наставник что-то пропустил или критерий двоякий`
-            : "Балл после переоценки не менялся: студенты не понимают, чего от них ждали в задаче или критерии",
+            : "Выполнение критериев после переоценки не менялось: причина может быть в итоговом балле или в замечаниях, а не в критерии. Смотрите разборы",
           submissionIds: input.answers.filter((a) => a.lesson_id === d.lesson.id && a.objection && d.objectors.has(a.user_id)).map((a) => a.id),
         });
       }
