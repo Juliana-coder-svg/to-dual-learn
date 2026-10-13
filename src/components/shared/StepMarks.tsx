@@ -44,7 +44,7 @@ export function StepMarks({
   const on = tone === "inverse" ? "bg-primary-foreground" : "bg-primary";
   const half = tone === "inverse" ? "bg-primary-foreground/50" : "bg-primary/40";
   const off = tone === "inverse" ? "bg-primary-foreground/25" : "bg-muted";
-  const a11y = label
+  const a11y = label && total > 0
     ? { role: "progressbar" as const, "aria-label": label, "aria-valuemin": 0, "aria-valuemax": total, "aria-valuenow": Math.min(filled, total) }
     : { "aria-hidden": true as const };
 
@@ -67,7 +67,7 @@ export function StepMarks({
           <div key={n} className={cn("flex min-w-0 flex-col gap-1", size === "lg" ? "flex-1" : "")}>
             <span className={cn("block rounded-full", s.seg, state)} />
             {text ? (
-              <span className={cn("type-caption", n === current || (current === undefined && n === filled) ? "font-medium" : tone === "inverse" ? "text-primary-foreground/75" : "text-muted-foreground")}>
+              <span className={cn("type-caption", n === current || (current === undefined && n === filled) ? "font-medium" : tone === "inverse" ? "text-primary-foreground/90" : "text-muted-foreground")}>
                 {text}
               </span>
             ) : null}

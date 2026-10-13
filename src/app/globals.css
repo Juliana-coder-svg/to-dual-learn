@@ -235,7 +235,7 @@
   }
   .accent-panel .eyebrow,
   .accent-panel-muted {
-    @apply text-primary-foreground/75;
+    @apply text-primary-foreground/90;
   }
   /* Карточка-ссылка: на наведении рамка становится фирменной, заголовок темнеет. Без тени и сдвига. */
   .card-link {

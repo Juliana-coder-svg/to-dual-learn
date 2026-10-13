@@ -42,7 +42,7 @@ export default async function TeachPage({ searchParams }: { searchParams: Promis
                 const ready = lessons > 0 && published === lessons;
                 return (
                   <Link key={c.id} href={`/teach/${c.id}`} className="card-link group flex flex-col rounded-lg border p-5 outline-none">
-                    <StepMarks total={lessons} filled={published} size="sm" label="Опубликовано уроков" />
+                    <StepMarks total={lessons} filled={published} size="sm" />
                     <h3 className="mt-4 text-balance type-heading group-hover:text-primary-strong">{c.title}</h3>
                     <p className="mt-1 line-clamp-3 text-sm text-muted-foreground">{c.description || "Без описания"}</p>
                     <dl className="mt-5 grid grid-cols-3 gap-3 border-t pt-4">

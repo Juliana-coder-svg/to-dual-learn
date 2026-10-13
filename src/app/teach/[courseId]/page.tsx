@@ -16,7 +16,7 @@ export default async function MaterialsPage({ params }: { params: Promise<{ cour
 
   return (
     <div className="grid gap-10 lg:grid-cols-[1fr_340px]">
-      <section>
+      <section className="min-w-0">
         <SectionHeader
           title="Материалы курса"
           description="Программа, методички, учебники, статьи. Всё, что вы загрузите, ИИ использует, когда собирает уроки и задания и отвечает на вопросы."
@@ -51,7 +51,7 @@ export default async function MaterialsPage({ params }: { params: Promise<{ cour
           <p className="mt-3 type-caption text-muted-foreground">Всего {formatChars(totalChars)} (~{Math.max(1, Math.round(totalChars / 3.5 / 1000))} тыс. токенов, по ним считается расход на ИИ). Повторные запросы выходят дешевле: материалы берутся из кэша.</p>
         ) : null}
       </section>
-      <aside>
+      <aside className="min-w-0">
         <MaterialsUploader courseId={courseId} />
       </aside>
     </div>

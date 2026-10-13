@@ -126,16 +126,16 @@ export default async function Home() {
   return (
     <PublicShell width="wide" action={<Button nativeButton={false} render={<Link href="/login" />} size="sm" variant="outline">Войти</Button>}>
       <section className="grid items-center gap-12 py-16 md:grid-cols-[1.15fr_1fr] md:gap-16 md:py-28">
-        <div>
+        <div className="flex flex-col">
           <p className="eyebrow text-primary-strong">Микрообучение по вашим материалам</p>
           <h1 className="mt-5 max-w-3xl text-balance type-display">
             Студенты практикуются по вашим материалам по&nbsp;пять минут в&nbsp;день
           </h1>
-          <p className="mt-6 max-w-lg text-lg leading-relaxed text-muted-foreground">
+          <p className="mt-6 max-w-lg text-lg leading-relaxed text-muted-foreground max-md:order-last max-md:mt-8">
             Загрузите программу, методичку или конспект лекции. To Dual Learn соберёт из них короткие уроки с задачей
             и разберёт ответы студентов по критериям. Через день, неделю и месяц пройденное вернётся карточками.
           </p>
-          <div className="mt-8">
+          <div className="mt-8 max-md:mt-6">
             <EntryButtons />
             <p className="mt-3 text-sm text-muted-foreground">Бесплатно. Пароль не нужен: войдите по почте и имени.</p>
           </div>

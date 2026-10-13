@@ -150,7 +150,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
       <header>
         <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
           <p className="eyebrow">Урок {lesson.position} · шаг {stepIndex} из 3</p>
-          <StepMarks total={3} filled={stepIndex} size="md" labels={["Идея", "Задача", "Разбор"]} label={`Шаг ${stepIndex} из 3`} />
+          <StepMarks total={3} filled={stepIndex} size="md" labels={["Идея", "Задача", "Разбор"]} />
         </div>
         <div className="mt-6 flex items-start gap-5">
           <span aria-hidden className="type-counter shrink-0 text-primary">{String(lesson.position).padStart(2, "0")}</span>
@@ -244,12 +244,12 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
             <dl className="flex shrink-0 gap-8">
               <div>
                 <dt className="eyebrow">Балл</dt>
-                <dd className="mt-1 type-counter text-primary"><span className="sr-only">{feedback.score} из 5</span><span aria-hidden>{feedback.score}<span className="text-muted-foreground/60">/5</span></span></dd>
+                <dd className="mt-1 type-counter text-primary"><span className="sr-only">{feedback.score} из 5</span><span aria-hidden>{feedback.score}<span className="text-muted-foreground">/5</span></span></dd>
               </div>
               {progress ? (
                 <>
                   <div>
-                    <dt className="eyebrow">Баллы</dt>
+                    <dt className="eyebrow">Очки</dt>
                     <dd className="mt-1 type-counter">+{progress.gained}</dd>
                   </div>
                   <div>

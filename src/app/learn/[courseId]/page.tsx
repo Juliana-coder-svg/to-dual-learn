@@ -44,7 +44,7 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
               {completed}<span className="text-muted-foreground">/{lessons.length}</span>
             </span>
           </div>
-          <StepMarks total={lessons.length} filled={completed} current={next?.position} size="lg" label="Пройдено уроков" className="mt-2" />
+          <StepMarks total={lessons.length} filled={next ? lessons.indexOf(next) : lessons.length} current={next ? lessons.indexOf(next) + 1 : undefined} size="lg" label="Пройдено уроков" className="mt-2" />
         </div>
       ) : null}
 
@@ -80,7 +80,7 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
             const sub = done.get(l.id);
             const isNext = next?.id === l.id;
             const locked = !sub && limitReached;
-            const number = sub ? "text-primary" : isNext ? "text-foreground" : "text-muted-foreground/60";
+            const number = sub ? "text-primary" : isNext ? "text-foreground" : "text-muted-foreground";
             return (
               <li key={l.id}>
                 <Link

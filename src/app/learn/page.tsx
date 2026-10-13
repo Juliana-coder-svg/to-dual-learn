@@ -49,8 +49,9 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
     const done = scores.get(c.id) ?? new Map<string, number>();
     const completed = lessons.filter((l) => done.has(l.id)).length;
     const next = lessons.find((l) => !done.has(l.id));
+    const nextIndex = next ? lessons.indexOf(next) : lessons.length;
     const limitReached = c.owner_id !== user.id && c.daily_limit > 0 && startedToday[i] >= c.daily_limit;
-    return { course: c, lessons, completed, next, limitReached };
+    return { course: c, lessons, completed, next, nextIndex, limitReached };
   });
   // Урок дня: первый курс, где есть непройденный урок и не исчерпан дневной лимит. Остальные курсы ждут в списке.
   const today = cards.find((card) => card.next && !card.limitReached);
@@ -100,7 +101,7 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
             <EmptyState className="mt-5" title="Пока нет курсов" description="Введите код от преподавателя справа, и курс появится здесь." />
           ) : (
             <ul className="mt-5 space-y-3">
-              {cards.map(({ course: c, lessons, completed, next, limitReached }) => (
+              {cards.map(({ course: c, lessons, completed, next, nextIndex, limitReached }) => (
                 <li key={c.id}>
                   <Link href={`/learn/${c.id}`} className="card-link block rounded-lg border p-5 outline-none">
                     <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
@@ -112,7 +113,7 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
                         {completed}<span className="text-muted-foreground">/{lessons.length}</span>
                       </span>
                     </div>
-                    <StepMarks total={lessons.length} filled={completed} current={next ? next.position : undefined} size="sm" label="Пройдено уроков" className="mt-4" />
+                    <StepMarks total={lessons.length} filled={nextIndex} current={next ? nextIndex + 1 : undefined} size="sm" className="mt-4" />
                     <p className="mt-3 text-sm text-muted-foreground">
                       {next && limitReached ? (
                         <>Сегодня пройдено. Завтра: <span className="text-foreground">{next.title}</span></>
