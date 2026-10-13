@@ -74,7 +74,7 @@ export function HomeworkResultsView({ results }: { results: StoredHomeworkResult
             <ul className="mt-3 space-y-1.5">
               {r.criteria.map((c, j) => (
                 <li key={j} className="flex gap-2">
-                  <span aria-hidden className={`mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full text-[10px] ${c.met ? "bg-primary text-primary-foreground" : "border border-foreground/60 text-foreground"}`}>{c.met ? "✓" : "✗"}</span>
+                  <span aria-hidden className={`mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-none text-[10px] ${c.met ? "bg-primary text-primary-foreground" : "border border-foreground/60 text-foreground"}`}>{c.met ? "✓" : "✗"}</span>
                   <span><span className="sr-only">{c.met ? "Выполнено: " : "Не выполнено: "}</span><span className="font-medium">{c.criterion}.</span> <span className="text-muted-foreground">{c.comment}</span></span>
                 </li>
               ))}

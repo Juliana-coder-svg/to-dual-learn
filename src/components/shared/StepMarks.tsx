@@ -5,11 +5,13 @@ const MAX_SEGMENTS = 24;
 
 const SIZES = {
   /** В карточках и списках: 6 px высоты, сегмент 20 px. */
-  sm: { seg: "h-1.5 w-5", track: "h-1.5" },
+  sm: { seg: "h-2 w-6", track: "h-2" },
   /** В шапке урока: 8 px, сегмент 48 px. */
-  md: { seg: "h-2 w-12", track: "h-2" },
+  md: { seg: "h-3 w-14", track: "h-3" },
   /** Во всю ширину блока: 10 px, сегменты делят ширину поровну. */
-  lg: { seg: "h-2.5 flex-1", track: "h-2.5" },
+  lg: { seg: "h-3 w-full", track: "h-3" },
+  /** Графика: сегменты во всю ширину и в 24–40 px высотой, как разделитель секции. */
+  xl: { seg: "h-6 w-full md:h-10", track: "h-6 md:h-10" },
 } as const;
 
 /**
@@ -51,21 +53,21 @@ export function StepMarks({
   if (total <= 0 || total > MAX_SEGMENTS) {
     const pct = total > 0 ? Math.round((Math.min(filled, total) / total) * 100) : 0;
     return (
-      <div {...a11y} className={cn("w-full overflow-hidden rounded-full", s.track, off, className)}>
-        <div className={cn("bar-grow h-full rounded-full", on)} style={{ width: `${pct}%` }} />
+      <div {...a11y} className={cn("w-full overflow-hidden", s.track, off, className)}>
+        <div className={cn("bar-grow h-full", on)} style={{ width: `${pct}%` }} />
       </div>
     );
   }
 
   return (
-    <div {...a11y} className={cn("flex gap-1", size === "lg" ? "w-full gap-1.5" : "", className)}>
+    <div {...a11y} className={cn("flex gap-1", size === "lg" || size === "xl" ? "w-full gap-1.5" : "", className)}>
       {Array.from({ length: total }, (_, i) => {
         const n = i + 1;
         const state = n <= filled ? on : n === current ? half : off;
         const text = labels?.[i];
         return (
-          <div key={n} className={cn("flex min-w-0 flex-col gap-1", size === "lg" ? "flex-1" : "")}>
-            <span className={cn("block rounded-full", s.seg, state)} />
+          <div key={n} className={cn("flex min-w-0 flex-col gap-1", size === "lg" || size === "xl" ? "flex-1" : "")}>
+            <span className={cn("block", s.seg, state)} />
             {text ? (
               <span className={cn("type-caption", n === current || (current === undefined && n === filled) ? "font-medium" : tone === "inverse" ? "text-primary-foreground/90" : "text-muted-foreground")}>
                 {text}

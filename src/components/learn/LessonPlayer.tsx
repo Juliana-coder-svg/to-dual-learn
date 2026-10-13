@@ -294,7 +294,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
                   const comment = cr.comment?.trim();
                   return (
                     <li key={i} className="flex gap-3 p-4 type-body">
-                      <span aria-hidden className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full text-xs ${cr.met ? "bg-primary text-primary-foreground" : "border-2 border-foreground font-bold text-foreground"}`}>{cr.met ? "✓" : "✗"}</span>
+                      <span aria-hidden className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-none text-xs ${cr.met ? "bg-primary text-primary-foreground" : "border-2 border-foreground font-bold text-foreground"}`}>{cr.met ? "✓" : "✗"}</span>
                       <span>
                         <span className="sr-only">{cr.met ? "Выполнено: " : "Не выполнено: "}</span>
                         <span className={cr.met ? "text-muted-foreground" : "font-medium"}>{cr.criterion}</span>

@@ -4,6 +4,7 @@ import { getCurrentUser, homeFor } from "@/lib/auth/session";
 import { Button } from "@/components/ui/button";
 import { PublicShell } from "@/components/shared/PublicShell";
 import { StepMarks } from "@/components/shared/StepMarks";
+import { LessonFeedbackScreen, LessonIdeaScreen, LessonTaskScreen } from "@/components/shared/LessonScreens";
 
 interface Step {
   title: string;
@@ -91,34 +92,6 @@ function EntryButtons({ size = "lg", tone = "default" }: { size?: "lg" | "defaul
   );
 }
 
-/** Статичный набросок экрана урока: показывает формат, не обещая больше, чем есть. Собран из тех же токенов, что и продукт. */
-function LessonSketch() {
-  return (
-    <div aria-hidden className="rounded-lg border bg-card p-5 text-sm">
-      <div className="flex items-center justify-between gap-4">
-        <span className="eyebrow">Урок 2 · шаг 2 из 3</span>
-        <StepMarks total={3} filled={2} size="sm" />
-      </div>
-      <p className="mt-3 type-heading">Первая цифра решает</p>
-      <p className="mt-1 text-muted-foreground">Заметить эффект якоря после подсказки модели</p>
-      <div className="mt-5">
-        <p className="eyebrow">Задача</p>
-        <p className="mt-1 type-body">
-          Модель оценила рынок в 48 млрд рублей. Через час коллега назвал 12 млрд. Какие две проверки вы сделаете до того, как вставить цифру в презентацию?
-        </p>
-      </div>
-      <div className="mt-4 rounded-lg border border-input bg-background px-3 py-2 text-muted-foreground/80">
-        Первая проверка: откуда модель взяла…
-        <span className="ml-px inline-block h-4 w-px translate-y-0.5 bg-foreground" />
-      </div>
-      <div className="mt-4 flex items-center justify-between gap-3">
-        <span className="inline-flex h-9 items-center rounded-lg bg-primary px-4 font-medium text-primary-foreground">Отправить на разбор</span>
-        <span className="type-caption text-muted-foreground">около 5 минут</span>
-      </div>
-    </div>
-  );
-}
-
 export default async function Home() {
   const user = await getCurrentUser();
   if (user) redirect(homeFor(user));
@@ -140,15 +113,19 @@ export default async function Home() {
             <p className="mt-3 text-sm text-muted-foreground">Бесплатно. Пароль не нужен: войдите по почте и имени.</p>
           </div>
         </div>
-        <LessonSketch />
+        <LessonTaskScreen />
       </section>
 
-      <section className="border-t py-20 md:py-24">
+      {/* Знак как графика: три сегмента во всю ширину отделяют героя от остального. */}
+      <StepMarks total={3} filled={2} current={3} size="xl" />
+
+      <section className="rule py-20 md:py-24">
         <h2 className="max-w-2xl type-title">Как это работает</h2>
         <ol className="mt-10 grid gap-10 md:grid-cols-3 md:gap-8">
           {STEPS.map((step, i) => (
-            <li key={step.title} className="border-t-2 border-primary pt-5">
-              <span className="type-counter text-primary">{String(i + 1).padStart(2, "0")}</span>
+            <li key={step.title}>
+              <span aria-hidden className="block h-3 bg-primary md:h-5" />
+              <span className="mt-5 block type-counter text-primary">{String(i + 1).padStart(2, "0")}</span>
               <h3 className="mt-4 type-heading">{step.title}</h3>
               <p className="mt-2 max-w-prose text-sm leading-relaxed text-muted-foreground">{step.text}</p>
             </li>
@@ -156,7 +133,16 @@ export default async function Home() {
         </ol>
       </section>
 
-      <section className="border-t py-20 md:py-24">
+      <section className="rule py-20 md:py-24">
+        <h2 className="max-w-2xl type-title">Так выглядит урок</h2>
+        <p className="mt-3 max-w-prose text-sm text-muted-foreground">Экраны из курса-примера «Критическое мышление в эпоху ИИ». Преподаватель собирает такие же из своих материалов.</p>
+        <div className="mt-10 grid gap-10 md:grid-cols-2 md:gap-8">
+          <LessonIdeaScreen />
+          <LessonFeedbackScreen />
+        </div>
+      </section>
+
+      <section className="rule py-20 md:py-24">
         <h2 className="max-w-2xl type-title">Для кого</h2>
         <div className="mt-10 grid gap-x-8 gap-y-10 md:grid-cols-3">
           {SEGMENTS.map((segment, i) => (
@@ -169,7 +155,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="border-t py-20 md:py-24">
+      <section className="rule py-20 md:py-24">
         <div className="max-w-2xl">
           <h2 className="type-title">Что говорят исследования</h2>
           <p className="mt-3 text-sm text-muted-foreground">
@@ -194,7 +180,7 @@ export default async function Home() {
         </ul>
       </section>
 
-      <section className="border-t py-20 md:py-24">
+      <section className="rule py-20 md:py-24">
         <div className="grid gap-6 md:grid-cols-[1fr_1fr] md:gap-16">
           <h2 className="type-title">Кто делает</h2>
           <div className="max-w-lg">
@@ -204,7 +190,7 @@ export default async function Home() {
             </p>
             <ul className="mt-5 flex flex-wrap gap-2">
               {TEAM.map((t) => (
-                <li key={t} className="rounded-full border px-3 py-1 text-sm">{t}</li>
+                <li key={t} className="rounded-none border px-3 py-1 text-sm">{t}</li>
               ))}
             </ul>
           </div>
@@ -213,7 +199,7 @@ export default async function Home() {
 
       <section className="accent-panel mb-20 md:mb-24 md:p-12">
         <div className="max-w-2xl">
-          <StepMarks total={3} filled={3} size="md" tone="inverse" />
+          <StepMarks total={3} filled={3} size="xl" tone="inverse" />
           <h2 className="mt-6 text-balance type-title">Попробуйте на своём материале</h2>
           <p className="mt-3 max-w-lg type-body accent-panel-muted">
             Преподаватель собирает курс и даёт студентам ссылку. Студент входит по ссылке или по коду курса.

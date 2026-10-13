@@ -49,7 +49,7 @@ export default async function StudentsPage({ params }: { params: Promise<{ cours
                     <td className="pl-4"><div className="font-medium">{s.name}</div><div className="type-caption text-muted-foreground">{s.email}</div></td>
                     <td>
                       <div className="flex items-center gap-2">
-                        <span className="h-1.5 w-16 overflow-hidden rounded-full bg-muted"><span className="block h-full rounded-full bg-primary" style={{ width: `${published ? Math.round((s.completed / published) * 100) : 0}%` }} /></span>
+                        <span className="h-1.5 w-16 overflow-hidden rounded-none bg-muted"><span className="block h-full rounded-none bg-primary" style={{ width: `${published ? Math.round((s.completed / published) * 100) : 0}%` }} /></span>
                         <span>{s.completed}/{published}</span>
                       </div>
                     </td>

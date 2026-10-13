@@ -103,7 +103,7 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
             <ul className="mt-5 space-y-3">
               {cards.map(({ course: c, lessons, completed, next, nextIndex, limitReached }) => (
                 <li key={c.id}>
-                  <Link href={`/learn/${c.id}`} className="card-link block rounded-lg border p-5 outline-none">
+                  <Link href={`/learn/${c.id}`} className="card-link block rounded-lg p-5 outline-none">
                     <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
                       <div className="min-w-0 max-w-xl">
                         <h3 className="text-balance type-heading">{c.title}</h3>
@@ -146,7 +146,7 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
             <p className="mt-1 text-sm text-muted-foreground">Каждое утро на {user.email}: какой урок ждёт и сколько карточек пора повторить.</p>
             <form action={setDailyEmailAction} className="mt-4 flex items-center justify-between gap-3 text-sm">
               <span className="flex items-center gap-2">
-                <span aria-hidden className={`size-2 rounded-full ${user.daily_email ? "bg-primary" : "bg-border"}`} />
+                <span aria-hidden className={`size-2 rounded-none ${user.daily_email ? "bg-primary" : "bg-border"}`} />
                 {user.daily_email ? "Включено" : "Выключено"}
               </span>
               <input type="hidden" name="enabled" value={user.daily_email ? "0" : "1"} />

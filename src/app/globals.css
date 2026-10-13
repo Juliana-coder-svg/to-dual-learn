@@ -7,8 +7,8 @@
 /*
   Дизайн-токены To Dual Learn. Словарь и правила: docs/design.md.
   Плоский минимализм: один акцент (фирменный оранжевый), шрифт Onest с системным запасным,
-  рамки и воздух вместо теней и градиентов. Радиусов два: 8 px для блоков и
-  полный круг для бейджей, шагов и аватаров.
+  рамки и воздух вместо теней и градиентов. Радиус один: 2 px у блоков и кнопок, углы почти
+  прямые. Сегменты шага и бейджи тоже прямоугольные.
 */
 @theme inline {
   --color-background: var(--background);
@@ -82,7 +82,7 @@
   --accent: oklch(0.965 0.003 60);
   --accent-foreground: oklch(0.21 0.005 60);
   --destructive: oklch(0.55 0.22 27);
-  --border: oklch(0.9 0.004 60);
+  --border: oklch(0.84 0.005 60);
   --input: oklch(0.86 0.005 60);
   --ring: oklch(0.67 0.22 36);
   --chart-1: oklch(0.67 0.22 36);
@@ -90,7 +90,7 @@
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --radius: 0.5rem;
+  --radius: 0.125rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -239,7 +239,12 @@
   }
   /* Карточка-ссылка: на наведении рамка становится фирменной, заголовок темнеет. Без тени и сдвига. */
   .card-link {
+    border: 2px solid var(--foreground);
     @apply transition-colors hover:border-primary focus-visible:border-primary focus-visible:ring-3 focus-visible:ring-ring/40;
+  }
+  /* Толстая линия вместо мягкой карточки: разделитель секции и верх блока. */
+  .rule {
+    border-top: 2px solid var(--foreground);
   }
   /* Полоса прогресса вырастает слева направо при появлении на странице (ширину задаёт style). */
   .bar-grow {

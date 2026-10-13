@@ -89,7 +89,7 @@ export default async function MyDataPage({ searchParams }: { searchParams: Promi
             )}
             <form action={setMarketingConsentAction} className="flex flex-wrap items-center justify-between gap-3 border-t pt-4 text-sm">
               <span className="flex items-center gap-2">
-                <span aria-hidden className={`size-2 rounded-full ${marketingOn ? "bg-primary" : "bg-border"}`} />
+                <span aria-hidden className={`size-2 rounded-none ${marketingOn ? "bg-primary" : "bg-border"}`} />
                 Письма о программах To Dual: {marketingOn ? "включены" : "выключены"}
               </span>
               <input type="hidden" name="enabled" value={marketingOn ? "0" : "1"} />
