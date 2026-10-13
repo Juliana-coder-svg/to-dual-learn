@@ -107,7 +107,42 @@ function report(): void {
   console.log(`\nРасход прогона: $${saved.costUsd.toFixed(2)} ≈ ${formatRub(usdToRub(saved.costUsd))}, вызовов ${saved.calls}`);
 }
 
+/** Разброс модели: те же 13 ответов урока 2 оцениваются заново N раз, по каждому повтору считаются сигналы. */
+async function repeat(times: number): Promise<void> {
+  const usage = { cost: 0, calls: 0 };
+  const lesson = course.lessons[1];
+  const rows = group.answers.filter((a) => a.lesson === 2);
+  const lessons = [{ id: "L2", position: 2, title: lesson.title, rubricCriteria: lesson.rubricCriteria }];
+  const runs: Array<{ failedCriterion2: number; plantedFailed: number; unplantedFailed: number; signals: string[] }> = [];
+  for (let k = 0; k < times; k += 1) {
+    const feedbacks = new Array<Feedback>(rows.length);
+    const queue = rows.map((a, i) => ({ a, i }));
+    const worker = async () => {
+      for (;;) {
+        const q = queue.shift();
+        if (!q) return;
+        feedbacks[q.i] = await ask(evaluatePrompt(lesson, q.a.answer, { tone: course.tone, samples: [] }), "Оцени ответ по критериям.", usage);
+      }
+    };
+    await Promise.all(Array.from({ length: 3 }, worker));
+    const answers: SignalAnswer[] = rows.map((a, i) => ({ id: `a${i}`, lesson_id: "L2", user_id: `s${a.student}`, answer: a.answer, score: feedbacks[i].score, feedback: feedbacks[i], objection: null, created_at: new Date(2026, 9, 1, 0, i).toISOString() }));
+    const sig = computeSignals({ lessons, answers }).lessons[0];
+    const failed = (i: number) => !feedbacks[i].criteria[1]?.met;
+    const run = {
+      failedCriterion2: rows.filter((_, i) => failed(i)).length,
+      plantedFailed: rows.filter((a, i) => a.planted && failed(i)).length,
+      unplantedFailed: rows.filter((a, i) => !a.planted && failed(i)).length,
+      signals: sig.signals.map((x) => `${SIGNAL_LABELS[x.kind]} (${x.level === "proposal" ? "предложение" : "наблюдение"}): ${x.text}`),
+    };
+    runs.push(run);
+    console.log(`повтор ${k + 1}: критерий 2 провален у ${run.failedCriterion2} из ${rows.length} (заложенных ${run.plantedFailed} из ${rows.filter((a) => a.planted).length}, ложных ${run.unplantedFailed}); ${run.signals.join("; ") || "сигналов нет"}`);
+  }
+  fs.writeFileSync(path.join(root, "content/seeds/critical-thinking-ai-lesson2-repeats.json"), JSON.stringify({ costUsd: usage.cost, calls: usage.calls, runs }, null, 2));
+  console.log(`Вызовов: ${usage.calls}, расход $${usage.cost.toFixed(2)} ≈ ${formatRub(usdToRub(usage.cost))}`);
+}
+
 const cmd = process.argv[2];
 if (cmd === "evaluate") await evaluate();
 else if (cmd === "report") report();
-else console.error("Команда: evaluate | report");
+else if (cmd === "repeat") await repeat(Number(process.argv[3] ?? 5));
+else console.error("Команда: evaluate | report | repeat [N]");
