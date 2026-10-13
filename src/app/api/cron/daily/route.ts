@@ -6,6 +6,7 @@ import {
   listLessons,
   listUsersForDigest,
   markDigestSent,
+  purgeTryIpHashes,
 } from "@/lib/db/queries";
 import { sendMail } from "@/lib/mail";
 import { runAsService } from "@/lib/supabase/server";
