@@ -121,5 +121,7 @@ export async function switchRole(): Promise<void> {
 export async function setDailyEmailAction(formData: FormData): Promise<void> {
   const user = await requireUser();
   await setDailyEmail(user.id, formData.get("enabled") === "1");
-  redirect("/learn");
+  // Возврат только на страницы из списка: адрес приходит из формы.
+  const next = String(formData.get("next") ?? "");
+  redirect(next === "/teach" || next === "/account/data" ? next : "/learn");
 }
