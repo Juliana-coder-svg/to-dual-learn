@@ -1,6 +1,6 @@
 import { cache } from "react";
 import { notFound, redirect } from "next/navigation";
-import { getCourse, isEnrolled, type Course, type User } from "@/lib/db/queries";
+import { getCourse, getCourseWithEnrollment, type Course, type User } from "@/lib/db/queries";
 import { isUuid } from "@/lib/utils/ids";
 import { currentUserConsented, getCurrentUser, getCurrentUserId } from "./session";
 
@@ -29,8 +29,9 @@ export const studentCourse = cache(async (courseId: string): Promise<{ user: Use
   if (!isUuid(courseId)) return null;
   const userId = await getCurrentUserId();
   if (!userId) return null;
-  const [user, course, enrolled] = await Promise.all([consentedUser(), getCourse(courseId), isEnrolled(userId, courseId)]);
-  if (!user || !course) return null;
+  const [user, found] = await Promise.all([consentedUser(), getCourseWithEnrollment(courseId, userId)]);
+  if (!user || !found) return null;
+  const { course, enrolled } = found;
   if (course.owner_id !== user.id && !enrolled) return null;
   return { user, course };
 });

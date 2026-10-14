@@ -125,14 +125,7 @@ export const ClarifyingQuestionsSchema = z.object({
 });
 export type ClarifyingQuestions = z.infer<typeof ClarifyingQuestionsSchema>;
 
-export const ARTIFACT_KINDS = {
-  assignment: "Задание для студентов",
-  quiz: "Проверочный тест",
-  notes: "Конспект",
-  lesson_plan: "План занятия",
-  presentation: "Структура презентации",
-} as const;
-export type ArtifactKind = keyof typeof ARTIFACT_KINDS;
+export { ARTIFACT_KINDS, type ArtifactKind } from "./artifact-kinds";
 
 /** План курса до сборки уроков: преподаватель правит его, потом уроки собираются по утверждённому плану. */
 export const CoursePlanSchema = z.object({

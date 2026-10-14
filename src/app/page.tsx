@@ -1,10 +1,12 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { getCurrentUser, homeFor } from "@/lib/auth/session";
 import { Button } from "@/components/ui/button";
 import { PublicShell } from "@/components/shared/PublicShell";
 import { StepMarks } from "@/components/shared/StepMarks";
 import { DEFAULT_TRY_SLUG } from "@/lib/try/catalog";
+import { SessionRedirect } from "@/components/shared/SessionRedirect";
+
+/** Лендинг статический: без чтения cookie и базы в рендере, его отдаёт CDN. Вошедших уводит SessionRedirect. */
+export const dynamic = "force-static";
 
 interface Step {
   title: string;
@@ -123,12 +125,10 @@ function LessonSketch() {
   );
 }
 
-export default async function Home() {
-  const user = await getCurrentUser();
-  if (user) redirect(homeFor(user));
-
+export default function Home() {
   return (
     <PublicShell width="wide" action={<Button nativeButton={false} render={<Link href="/login" />} size="sm" variant="outline">Войти</Button>}>
+      <SessionRedirect />
       <section className="grid items-center gap-12 py-16 md:grid-cols-[1.15fr_1fr] md:gap-16 md:py-28">
         <div className="flex flex-col">
           <p className="eyebrow text-primary-strong">Микрообучение по вашим материалам</p>

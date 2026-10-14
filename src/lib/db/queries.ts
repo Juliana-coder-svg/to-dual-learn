@@ -159,6 +159,32 @@ export async function hasActiveConsent(userId: string, kind: ConsentKind, versio
   return Boolean(row);
 }
 
+/** Профиль и признак действующего согласия одним запросом (embed consents по внешнему ключу):
+ *  вместо двух параллельных запросов, каждый из которых мог открыть своё соединение с базой. */
+export async function getUserWithConsent(
+  id: string,
+  kind: ConsentKind,
+  version: string,
+): Promise<{ user: User; consented: boolean } | undefined> {
+  const sb = await getSupabase();
+  const row = unwrapMaybe(
+    await sb
+      .from("profiles")
+      .select("*, consents(id)")
+      .eq("id", id)
+      .eq("consents.kind", kind)
+      .eq("consents.version", version)
+      .is("consents.withdrawn_at", null)
+      .limit(1, { foreignTable: "consents" })
+      .maybeSingle()
+      .overrideTypes<ProfileRow & { consents: Array<{ id: string }> }, { merge: false }>(),
+    "profile with consent",
+  );
+  if (!row) return undefined;
+  const { consents, ...user } = row;
+  return { user, consented: consents.length > 0 };
+}
+
 export async function withdrawConsent(userId: string, kind: ConsentKind): Promise<void> {
   const sb = await getSupabase();
   check(
@@ -211,6 +237,24 @@ export async function updateCourseSettings(
 export async function getCourse(id: string): Promise<Course | undefined> {
   const sb = await getSupabase();
   return unwrapMaybe(await sb.from("courses").select("*").eq("id", id).maybeSingle(), "course");
+}
+
+/** Курс и признак записи текущего студента одним запросом (embed enrollments с фильтром по user_id). */
+export async function getCourseWithEnrollment(id: string, userId: string): Promise<{ course: Course; enrolled: boolean } | undefined> {
+  const sb = await getSupabase();
+  const row = unwrapMaybe(
+    await sb
+      .from("courses")
+      .select("*, enrollments(user_id)")
+      .eq("id", id)
+      .eq("enrollments.user_id", userId)
+      .maybeSingle()
+      .overrideTypes<CourseRow & { enrollments: Array<{ user_id: string }> }, { merge: false }>(),
+    "course with enrollment",
+  );
+  if (!row) return undefined;
+  const { enrollments, ...course } = row;
+  return { course, enrolled: enrollments.length > 0 };
 }
 
 /** Через RPC: до записи на курс RLS не даёт прочитать его напрямую. */

@@ -1,7 +1,7 @@
 import { cache } from "react";
 import { redirect } from "next/navigation";
 import { getSupabase } from "@/lib/supabase/server";
-import { getUserById, hasActiveConsent, type User } from "@/lib/db/queries";
+import { getUserWithConsent, type User } from "@/lib/db/queries";
 import { CONSENT_VERSION } from "@/lib/legal/versions";
 
 /** Сессия — Supabase Auth (magic link по почте). Токен живёт в cookie, которую
@@ -15,17 +15,12 @@ export const getCurrentUserId = cache(async (): Promise<string | null> => {
   return data?.claims.sub ?? null;
 });
 
-/** Профиль и действующее согласие на обработку одним заходом (запросы параллельно),
+/** Профиль и действующее согласие на обработку одним запросом,
  *  чтобы проверка согласия в AppShell не добавляла круг до базы. */
 const loadCurrent = cache(async (): Promise<{ user: User; consented: boolean } | null> => {
   const id = await getCurrentUserId();
   if (!id) return null;
-  const [profile, consented] = await Promise.all([
-    getUserById(id),
-    hasActiveConsent(id, "processing", CONSENT_VERSION.processing),
-  ]);
-  if (!profile) return null;
-  return { user: profile, consented };
+  return (await getUserWithConsent(id, "processing", CONSENT_VERSION.processing)) ?? null;
 });
 
 /** Текущий пользователь с профилем. Один запрос на рендер: layout и page вызывают оба. */
