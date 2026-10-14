@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Markdown } from "@/components/shared/Markdown";
 import { AiNote } from "@/components/shared/AiNote";
 import { Notice } from "@/components/shared/Notice";
-import { ARTIFACT_KINDS, type ArtifactKind } from "@/lib/lessons/types";
+import { ARTIFACT_KINDS, type ArtifactKind } from "@/lib/lessons/artifact-kinds";
 
 export function ArtifactGenerator({ courseId, disabled }: { courseId: string; disabled: boolean }) {
   const router = useRouter();
