@@ -2,14 +2,14 @@ import Link from "next/link";
 import { requireUser, requireUserId } from "@/lib/auth/session";
 import { countDueFlashcards, countLessonsStartedToday, latestScoresByCourse, listCoursesForStudentWithLessons, listOwnedCoursesWithLessons } from "@/lib/db/queries";
 import { joinCourseAction } from "@/lib/actions/courses";
-import { setDailyEmailAction } from "@/lib/actions/auth";
+import { DailyEmailCard } from "@/components/shared/DailyEmailCard";
 import { AppShell } from "@/components/shared/AppShell";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { EmptyState } from "@/components/shared/EmptyState";
 import { Notice } from "@/components/shared/Notice";
 import { StepMarks } from "@/components/shared/StepMarks";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DEFAULT_TRY_SLUG } from "@/lib/try/catalog";
 import { plural } from "@/lib/utils/format";
 
 /** Показатель-счётчик: подпись сверху, число крупными табличными цифрами. Ссылка, когда за числом стоит действие. */
@@ -58,6 +58,12 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
     return { course: c, lessons, completed, next, nextIndex, limitReached };
   });
   // Урок дня: первый курс, где есть непройденный урок и не исчерпан дневной лимит. Остальные курсы ждут в списке.
+  const joinForm = (
+    <form action={joinCourseAction} className="mt-4 flex gap-2">
+      <Input name="code" required placeholder="ABC234" aria-label="Код курса" className="font-mono uppercase tracking-widest" maxLength={6} />
+      <Button type="submit">Записаться</Button>
+    </form>
+  );
   const today = cards.find((card) => card.next && !card.limitReached);
   const paused = !today ? cards.find((card) => card.next && card.limitReached) : undefined;
 
@@ -102,7 +108,22 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
         <section>
           <h2 className="type-heading">Мои курсы</h2>
           {courses.length === 0 ? (
-            <EmptyState className="mt-5" title="Пока нет курсов" description="Введите код курса в блоке «Записаться на курс», и курс появится здесь." />
+            <div className="mt-5 space-y-4">
+              <p className="text-muted-foreground">Курсы появятся здесь. Что вам подходит?</p>
+              <div className="grid gap-3 md:grid-cols-2">
+                <section className="rounded-lg border border-primary p-5">
+                  <h3 className="type-heading">У меня есть код</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">Шесть символов или ссылка от преподавателя. Ссылку достаточно открыть, код введите здесь.</p>
+                  {sp.error ? <Notice kind="error" className="mt-4">Курс с таким кодом не найден. Проверьте код или попросите преподавателя прислать ссылку.</Notice> : null}
+                  {joinForm}
+                </section>
+                <section className="rounded-lg border p-5">
+                  <h3 className="type-heading">Кода нет</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">Пройдите первый урок примера: идея, задача, разбор. Это пять минут и ничего не нужно настраивать.</p>
+                  <Button nativeButton={false} render={<Link href={`/try/${DEFAULT_TRY_SLUG}/1?from=learn`} />} variant="outline" className="mt-4">Попробовать урок</Button>
+                </section>
+              </div>
+            </div>
           ) : (
             <ul className="mt-5 space-y-3">
               {cards.map(({ course: c, lessons, completed, next, nextIndex, limitReached }) => (
@@ -136,27 +157,15 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
           )}
         </section>
         <aside className="space-y-10">
-          <section>
-            <h2 className="type-heading">Записаться на курс</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Код из шести символов даёт преподаватель.</p>
-            {sp.error ? <Notice kind="error" className="mt-4">Курс с таким кодом не найден.</Notice> : null}
-            <form action={joinCourseAction} className="mt-4 flex gap-2">
-              <Input name="code" required placeholder="ABC234" aria-label="Код курса" className="font-mono uppercase tracking-widest" maxLength={6} />
-              <Button type="submit">Записаться</Button>
-            </form>
-          </section>
-          <section className="rounded-lg bg-surface p-5">
-            <h2 className="text-base font-semibold">Письмо с уроком дня</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Каждое утро на {user.email}: какой урок ждёт и сколько карточек пора повторить.</p>
-            <form action={setDailyEmailAction} className="mt-4 flex items-center justify-between gap-3 text-sm">
-              <span className="flex items-center gap-2">
-                <span aria-hidden className={`size-2 rounded-full ${user.daily_email ? "bg-primary" : "bg-border"}`} />
-                {user.daily_email ? "Включено" : "Выключено"}
-              </span>
-              <input type="hidden" name="enabled" value={user.daily_email ? "0" : "1"} />
-              <Button type="submit" variant="outline" size="sm">{user.daily_email ? "Выключить" : "Включить"}</Button>
-            </form>
-          </section>
+          {courses.length > 0 ? (
+            <section>
+              <h2 className="type-heading">Записаться на курс</h2>
+              <p className="mt-1 text-sm text-muted-foreground">Код из шести символов даёт преподаватель.</p>
+              {sp.error ? <Notice kind="error" className="mt-4">Курс с таким кодом не найден.</Notice> : null}
+              {joinForm}
+            </section>
+          ) : null}
+          <DailyEmailCard user={user} next="/learn" />
           <p className="px-1 type-caption text-muted-foreground">
             <Link href="/account/data" className="underline underline-offset-4 hover:text-foreground">Мои данные</Link>: скачать всё, что мы храним о вас, или удалить аккаунт.
           </p>
