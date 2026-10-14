@@ -221,7 +221,7 @@ export async function reevaluateAnswer(
   answer: string,
   previous: Feedback,
   objection: string,
-  opts: { tone: Course["tone"] },
+  opts: { tone: Course["tone"]; samples?: CalibrationSample[] },
 ): Promise<Feedback> {
   if (isDemoMode()) {
     const f = demo.feedback(lesson, answer);

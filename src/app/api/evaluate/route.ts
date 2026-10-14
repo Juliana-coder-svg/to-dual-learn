@@ -37,7 +37,8 @@ export async function POST(req: Request) {
     const objection = String(body.objection ?? "").trim().slice(0, 2000);
     if (objection) {
       if (!previous) return jsonError("Сначала нужно получить разбор");
-      const feedback = await reevaluateAnswer(callCtx, lesson.content, previous.answer, previous.feedback, objection, { tone: course.tone });
+      const reSamples = (await listCalibrationSamples(course.id, lesson.id)).map((s) => ({ answer: s.answer, score: s.score, comment: s.comment }));
+      const feedback = await reevaluateAnswer(callCtx, lesson.content, previous.answer, previous.feedback, objection, { tone: course.tone, samples: reSamples });
       await addSubmission({ lessonId: lesson.id, userId: user.id, answer: previous.answer, feedback, objection });
       return NextResponse.json({ ok: true, feedback, firstTime: false, progress: { streak: user.streak, xp: user.xp, gained: 0 } });
     }
