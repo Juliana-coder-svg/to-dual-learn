@@ -39,5 +39,11 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)"],
+  // Не вызываем proxy там, где сессия не нужна: лендинг "/" и /legal/* отдаются из кэша CDN без функции.
+  // На "/" proxy остаётся только для ссылок входа с ?code= и ?token_hash= (см. выше).
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|legal/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).+)",
+    { source: "/", has: [{ type: "query", key: "code" }] },
+    { source: "/", has: [{ type: "query", key: "token_hash" }] },
+  ],
 };
