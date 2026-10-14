@@ -86,10 +86,19 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
                     <p className="text-sm text-muted-foreground">{l.concept}</p>
                     {l.reviewed_at ? null : <AiNote kind="teacherDraft" className="mt-2" />}
                     {l.review && !l.review.proposal ? (
-                      l.review.flags.length > 0 ? (
+                      l.review.decision && l.review.flags.length > 0 ? (
+                        // Решение принято: замечания прячем под раскрывашку, иначе «предлагаю…» читается как ещё не решённое.
+                        <details className="mt-3 type-caption text-muted-foreground">
+                          <summary className="cursor-pointer list-none">
+                            {l.review.decision === "accepted" ? "Правки методиста приняты" : "Правки методиста отклонены, оставлен ваш текст"} · что предлагалось
+                          </summary>
+                          <ul className="mt-2 space-y-1">
+                            {l.review.flags.map((f, j) => <li key={j} className="flex gap-2"><span aria-hidden className="font-semibold text-primary-strong">!</span><span>{f}</span></li>)}
+                          </ul>
+                        </details>
+                      ) : l.review.flags.length > 0 ? (
                         <ul className="mt-3 space-y-1 type-caption text-muted-foreground">
                           {l.review.flags.map((f, j) => <li key={j} className="flex gap-2"><span aria-hidden className="font-semibold text-primary-strong">!</span><span>{f}</span></li>)}
-                          {l.review.decision ? <li>{l.review.decision === "accepted" ? "Правки методиста приняты." : "Правки методиста отклонены, оставлен ваш текст."}</li> : null}
                         </ul>
                       ) : (
                         <p className="mt-3 type-caption text-muted-foreground">
