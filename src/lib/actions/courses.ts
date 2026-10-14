@@ -103,7 +103,8 @@ export async function joinCourseAction(formData: FormData): Promise<void> {
   const code = String(formData.get("code") ?? "").trim().toUpperCase();
   const course = await getCourseByJoinCode(code);
   if (!course) redirect("/learn?error=code");
-  await enroll(user.id, course.id);
+  // Свой курс открыт владельцу и без записи; запись исказила бы число студентов.
+  if (course.owner_id !== user.id) await enroll(user.id, course.id);
   redirect(`/learn/${course.id}`);
 }
 

@@ -28,13 +28,12 @@ export default async function JoinPage({ params }: { params: Promise<{ code: str
               <p className="mt-3 type-body text-muted-foreground">
                 {preview.authorName ? `Автор: ${preview.authorName}. ` : ""}
                 {preview.lessons > 0
-                  ? `${plural(preview.lessons, "урок", "урока", "уроков")} по ${MINUTES_PER_LESSON} минут: один в день.`
+                  ? `${plural(preview.lessons, "урок", "урока", "уроков")}, каждый примерно на ${MINUTES_PER_LESSON} минут.`
                   : "Преподаватель ещё готовит уроки, они появятся в курсе."}
               </p>
               <ol className="mt-6 list-decimal space-y-1 pl-5 type-body">
-                <li>Войдите: пароль не нужен.</li>
-                <li>Курс появится в вашем списке.</li>
-                <li>Откройте первый урок: идея, задача, разбор.</li>
+                <li>Войдите. Пароль не нужен.</li>
+                <li>Курс сразу откроется, а в нём первый урок: идея, задача, разбор.</li>
               </ol>
               <div className="mt-8">
                 <Button nativeButton={false} render={<Link href={`/login?role=student&next=${encodeURIComponent(here)}`} />} size="lg">Войти и записаться</Button>

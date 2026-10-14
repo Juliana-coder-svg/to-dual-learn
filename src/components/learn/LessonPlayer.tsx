@@ -373,7 +373,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
           {!guest && progress && progress.xp === progress.gained ? (
             <div className="callout">
               <div className="callout-label">Что дальше</div>
-              <p className="mt-2 type-body">Это первый урок, серия началась. Завтра откроется следующий урок, а сегодняшний вернётся карточками на повторение. Они лежат в разделе «Повторение».</p>
+              <p className="mt-2 type-body">Первый урок пройден, серия началась. Серия считает дни подряд: пропустите день, и она начнётся заново. Сегодняшний урок вернётся карточками на повторение: завтра они появятся в разделе «Повторение».</p>
             </div>
           ) : null}
           {guest ? (

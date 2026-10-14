@@ -44,7 +44,7 @@ export function teacherSteps(courses: CourseSummary[]): TeacherStep[] {
     {
       id: "lessons",
       title: "Соберите и опубликуйте уроки",
-      text: "ИИ предложит черновики уроков по 5 минут. Вы поправите и опубликуете: студенты видят только опубликованные.",
+      text: "ИИ предложит черновики уроков по пять минут. Откройте урок, поправьте и нажмите «Опубликовать»: пока этого нет, студенты урок не видят.",
       doneNote: "Есть опубликованный урок",
       action: "Собрать уроки",
       href: forLessons ? `/teach/${forLessons.course.id}/lessons` : "/teach#new-course",

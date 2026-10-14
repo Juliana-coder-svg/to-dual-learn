@@ -30,7 +30,7 @@ export function StartSteps({ steps, className }: { steps: TeacherStep[]; classNa
             {s.state === "done" ? (
               <p className="text-sm font-medium"><span className="sr-only">Выполнено: </span>{s.doneNote}</p>
             ) : (
-              <Button nativeButton={false} render={<Link href={s.href} />} variant={s.state === "current" ? "default" : "outline"} size="sm">{s.action}</Button>
+              <Button nativeButton={false} render={<Link href={s.href} />} variant={s.state === "current" ? "default" : "outline"} size="lg">{s.action}</Button>
             )}
           </div>
         </li>

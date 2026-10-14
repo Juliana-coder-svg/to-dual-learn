@@ -21,9 +21,9 @@ export function CopyButton({ text, label, doneLabel = "Скопировано", 
   }
 
   return (
-    <span className="inline-flex items-center gap-3">
-      <Button type="button" variant={variant} onClick={copy}>{state === "done" ? doneLabel : label}</Button>
-      <span role="status" className="text-sm text-muted-foreground">{state === "failed" ? "Не получилось скопировать. Текст выделен, нажмите Ctrl+C." : ""}</span>
+    <span className="inline-flex flex-wrap items-center gap-x-3 gap-y-2">
+      <Button type="button" size="lg" variant={variant} onClick={copy}>{state === "done" ? doneLabel : label}</Button>
+      <span role="status" className="text-sm text-muted-foreground">{state === "failed" ? "Не получилось скопировать. Текст выделен, нажмите Ctrl+C (на Mac Cmd+C)." : ""}</span>
     </span>
   );
 }

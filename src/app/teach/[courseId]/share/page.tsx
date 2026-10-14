@@ -8,6 +8,8 @@ import { SectionHeader } from "@/components/shared/PageHeader";
 import { Notice } from "@/components/shared/Notice";
 import { CopyButton } from "@/components/teach/CopyButton";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { plural } from "@/lib/utils/format";
 
 export const metadata = { title: "Отправить студентам" };
@@ -42,7 +44,7 @@ export default async function SharePage({ params }: { params: Promise<{ courseId
           <p className="mt-1 text-sm text-muted-foreground">
             В курсе нет опубликованных уроков: студент записался бы и увидел пустой курс. Опубликуйте хотя бы один урок, и здесь появится приглашение.
           </p>
-          <Button nativeButton={false} render={<Link href={`/teach/${courseId}/lessons`} />} className="mt-4">К урокам</Button>
+          <Button nativeButton={false} render={<Link href={`/teach/${courseId}/lessons`} />} size="lg" className="mt-4">К урокам</Button>
         </div>
       ) : (
         <>
@@ -54,14 +56,7 @@ export default async function SharePage({ params }: { params: Promise<{ courseId
 
           <section className="mt-6">
             <h3 className="type-heading">Приглашение</h3>
-            <textarea
-              id="invite-text"
-              readOnly
-              rows={9}
-              value={text}
-              className="mt-3 w-full resize-y rounded-lg border bg-surface p-4 text-sm leading-relaxed outline-none focus-visible:ring-3 focus-visible:ring-ring/40"
-              aria-label="Текст приглашения"
-            />
+            <Textarea id="invite-text" readOnly rows={9} value={text} className="mt-3 bg-surface leading-relaxed" aria-label="Текст приглашения" />
             <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
               <CopyButton text={text} label="Скопировать приглашение" fieldId="invite-text" />
             </div>
@@ -69,14 +64,8 @@ export default async function SharePage({ params }: { params: Promise<{ courseId
 
           <section className="mt-8">
             <h3 className="type-heading">Только ссылка</h3>
-            <div className="mt-3 flex flex-wrap items-center gap-3">
-              <input
-                id="invite-link"
-                readOnly
-                value={link}
-                aria-label="Ссылка на курс"
-                className="h-9 min-w-0 flex-1 rounded-lg border bg-background px-3 font-mono text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/40"
-              />
+            <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
+              <Input id="invite-link" readOnly value={link} aria-label="Ссылка на курс" className="min-w-0 flex-1 font-mono" />
               <CopyButton text={link} label="Скопировать ссылку" variant="outline" fieldId="invite-link" />
             </div>
             <p className="mt-2 type-caption text-muted-foreground">Код для ввода вручную: <span className="font-mono font-semibold tracking-wider text-foreground">{course.join_code}</span></p>

@@ -32,7 +32,7 @@ export default async function CourseLayout({ children, params }: { children: Rea
         description={course.description || undefined}
         actions={
           <div className="flex flex-wrap items-center gap-2">
-          <Button nativeButton={false} render={<Link href={`/teach/${course.id}/share`} />}>Отправить студентам</Button>
+          <Button nativeButton={false} render={<Link href={`/teach/${course.id}/share`} />} size="lg">Отправить студентам</Button>
           <dl className="flex flex-wrap gap-2 text-sm">
             <div className="flex items-center gap-2 rounded-lg border px-3 py-1.5">
               <dt className="text-muted-foreground">Код для студентов</dt>

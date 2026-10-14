@@ -12,7 +12,7 @@ export function DailyEmailCard({ user, next }: { user: User; next: "/learn" | "/
       <p className="mt-1 text-sm text-muted-foreground">
         {teacher
           ? `Если вы сами учитесь на курсах, каждое утро на ${user.email} приходит письмо: какой урок ждёт и сколько карточек пора повторить. О ваших студентах письма нет.`
-          : `Каждое утро на ${user.email}: какой урок ждёт и сколько карточек пора повторить.`}
+          : `Каждое утро на ${user.email} приходит письмо: какой урок ждёт и сколько карточек пора повторить.`}
       </p>
       <form action={setDailyEmailAction} className="mt-4 flex items-center justify-between gap-3 text-sm">
         <span className="flex items-center gap-2">

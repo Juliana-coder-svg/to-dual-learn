@@ -17,7 +17,7 @@ import { plural } from "@/lib/utils/format";
 const ERRORS: Record<string, string> = {
   confirm: "Почта не совпадает. Введите адрес, под которым вы вошли.",
   courses: "Пока на ваших курсах есть студенты или их ответы, удалить аккаунт нельзя: ответы пропали бы вместе с курсом. Напишите нам, решим вручную.",
-  name: "Имя должно быть от 2 до 80 знаков.",
+  name: "Имя не сохранилось: в нём должно быть от 2 до 80 знаков. Исправьте и сохраните ещё раз.",
   delete: "Не удалось удалить аккаунт. Попробуйте ещё раз через минуту или напишите нам.",
 };
 
@@ -71,7 +71,7 @@ export default async function MyDataPage({ searchParams }: { searchParams: Promi
               </div>
               <Button type="submit" variant="outline">Сохранить</Button>
             </form>
-            <p className="mt-2 type-caption text-muted-foreground">Имя видно в шапке и тем, кто учится на ваших курсах, или вашему преподавателю.</p>
+            <p className="mt-2 type-caption text-muted-foreground">Имя видно вам в шапке, студентам ваших курсов и преподавателю, на чьём курсе вы учитесь.</p>
             <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-2">
               <div><dt className="type-caption text-muted-foreground">Почта</dt><dd className="mt-0.5 break-all font-medium">{user.email}</dd></div>
               <div><dt className="type-caption text-muted-foreground">Роль</dt><dd className="mt-0.5 font-medium">{user.role === "teacher" ? "Преподаватель" : "Студент"}</dd></div>

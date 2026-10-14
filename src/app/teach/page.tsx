@@ -42,8 +42,8 @@ export default async function TeachPage({ searchParams }: { searchParams: Promis
           <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
             <h2 id="start-title" className="type-heading">С чего начать</h2>
             <form action={hideStartPanelAction} className="flex items-center gap-4 text-sm">
-              <Link href="/teach/start" className="text-muted-foreground underline underline-offset-4 hover:text-foreground">Что увидит студент</Link>
-              <Button type="submit" variant="ghost" size="sm">Скрыть</Button>
+              <Link href="/teach/start" className="inline-flex min-h-11 items-center text-muted-foreground underline underline-offset-4 hover:text-foreground">Что увидит студент</Link>
+              <Button type="submit" variant="ghost" size="lg" title="Вернуть панель можно через «Как это работает» в шапке">Скрыть</Button>
             </form>
           </div>
           <StartSteps steps={steps} className="mt-4" />
@@ -91,10 +91,10 @@ export default async function TeachPage({ searchParams }: { searchParams: Promis
         <aside className="space-y-10">
           <section id="new-course" className="scroll-mt-6">
             <h2 className="type-heading">Новый курс</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Потом загрузите материалы и соберёте уроки.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Потом загрузите материалы и соберите уроки.</p>
             <div className="mt-5">
-              {sp.error === "title" ? <Notice kind="error" className="mb-4">Нужно название.</Notice> : null}
-              {sp.error === "seed" ? <Notice kind="error" className="mb-4">Файл курса-примера не найден.</Notice> : null}
+              {sp.error === "title" ? <Notice kind="error" className="mb-4">Введите название курса.</Notice> : null}
+              {sp.error === "seed" ? <Notice kind="error" className="mb-4">Файл курса-примера не найден. Попробуйте ещё раз или напишите нам.</Notice> : null}
               <form action={createCourseAction} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="title">Название</Label>
@@ -114,7 +114,7 @@ export default async function TeachPage({ searchParams }: { searchParams: Promis
           </section>
           <section className="rounded-lg bg-surface p-5">
             <h2 className="text-base font-semibold">Готовые курсы для примера</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Методичка и уроки с задачами, уже опубликованы. Чтобы показать формат студентам и коллегам.</p>
+            <p className="mt-1 text-sm text-muted-foreground">В каждом есть методичка и опубликованные уроки с задачами. Подойдут, чтобы показать формат студентам и коллегам.</p>
             <ul className="mt-4 divide-y">
               {DEMO_COURSES.map((d) => (
                 <li key={d.slug} className="space-y-3 py-4 first:pt-0 last:pb-0">

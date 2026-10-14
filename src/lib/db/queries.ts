@@ -1360,12 +1360,13 @@ export async function getJoinPreview(code: string): Promise<JoinPreview | undefi
   const row = unwrapMaybe(
     await sb
       .from("courses")
-      .select("title, author:profiles!courses_owner_id_fkey(name), lessons(status)")
+      .select("title, author:profiles!courses_owner_id_fkey(name, email), lessons(status)")
       .eq("join_code", normalized)
       .maybeSingle()
-      .overrideTypes<{ title: string; author: { name: string } | null; lessons: Array<{ status: LessonStatus }> }, { merge: false }>(),
+      .overrideTypes<{ title: string; author: { name: string; email: string } | null; lessons: Array<{ status: LessonStatus }> }, { merge: false }>(),
     "join preview",
   );
   if (!row) return undefined;
-  return { title: row.title, authorName: row.author?.name ?? "", lessons: row.lessons.filter((l) => l.status === "published").length };
+  return { title: row.title, // Пока человек не менял имя, там заготовка из почты: её публично не показываем.
+    authorName: row.author && row.author.name !== row.author.email.split("@")[0] ? row.author.name : "", lessons: row.lessons.filter((l) => l.status === "published").length };
 }
