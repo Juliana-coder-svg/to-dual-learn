@@ -94,7 +94,7 @@ export default async function TeachPage({ searchParams }: { searchParams: Promis
           </section>
           <section className="rounded-lg bg-surface p-5">
             <h2 className="text-base font-semibold">Готовые курсы для примера</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Методичка и уроки с задачами, уже опубликованы. Чтобы показать формат студентам и коллегам.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Методичка и уроки с задачами уже опубликованы: можно показать формат студентам и коллегам.</p>
             <ul className="mt-4 divide-y">
               {DEMO_COURSES.map((d) => (
                 <li key={d.slug} className="space-y-3 py-4 first:pt-0 last:pb-0">
