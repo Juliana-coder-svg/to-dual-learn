@@ -1,5 +1,8 @@
 import type { CourseSummary } from "@/lib/db/queries";
 
+/** Cookie «Скрыть» с панели «С чего начать». */
+export const START_HIDDEN_COOKIE = "tdd_start_hidden";
+
 export type StepState = "done" | "current" | "next";
 
 export interface TeacherStep {

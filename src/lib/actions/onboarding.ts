@@ -3,8 +3,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { requireUserId } from "@/lib/auth/session";
-
-export const START_HIDDEN_COOKIE = "tdd_start_hidden";
+import { START_HIDDEN_COOKIE } from "@/lib/onboarding/teacher-steps";
 
 /** «Скрыть» на панели «С чего начать». Флажок в cookie браузера: панель не возвращается после обновления,
  *  а страница «Как это работает» остаётся в шапке. */

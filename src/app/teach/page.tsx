@@ -15,8 +15,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { StepMarks } from "@/components/shared/StepMarks";
 import { StartSteps } from "@/components/onboarding/StartSteps";
 import { DailyEmailCard } from "@/components/shared/DailyEmailCard";
-import { START_HIDDEN_COOKIE, hideStartPanelAction } from "@/lib/actions/onboarding";
-import { allStepsDone, teacherSteps } from "@/lib/onboarding/teacher-steps";
+import { hideStartPanelAction } from "@/lib/actions/onboarding";
+import { START_HIDDEN_COOKIE, allStepsDone, teacherSteps } from "@/lib/onboarding/teacher-steps";
 import { plural } from "@/lib/utils/format";
 
 /** Курсы-примеры из content/courses/<slug>.json. */
