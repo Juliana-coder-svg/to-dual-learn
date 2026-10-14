@@ -9,18 +9,20 @@ import { Button } from "@/components/ui/button";
 export const metadata = { title: "Пробный урок", robots: { index: false } };
 
 /** Первый урок курса-примера без регистрации. Остальные уроки гостю не открываются. */
-export default async function TryLessonPage({ params }: { params: Promise<{ courseSlug: string; lessonIndex: string }> }) {
+export default async function TryLessonPage({ params, searchParams }: { params: Promise<{ courseSlug: string; lessonIndex: string }>; searchParams: Promise<{ from?: string }> }) {
   const { courseSlug, lessonIndex } = await params;
   const index = Number(lessonIndex);
   const lesson = getTryLesson(courseSlug, index);
   if (!lesson) notFound();
   const user = await getCurrentUser();
-  if (user) redirect(homeFor(user));
+  // Вошедшего уводим домой, кроме студента с пустого /learn: ему пробный урок и нужен.
+  const fromLearn = (await searchParams).from === "learn";
+  if (user && !fromLearn) redirect(homeFor(user));
 
   return (
-    <PublicShell width="wide" action={<Button nativeButton={false} render={<Link href="/login" />} size="sm" variant="outline">Войти</Button>}>
+    <PublicShell width="wide" action={user ? <Button nativeButton={false} render={<Link href="/learn" />} size="sm" variant="outline">К курсам</Button> : <Button nativeButton={false} render={<Link href="/login" />} size="sm" variant="outline">Войти</Button>}>
       <div className="mx-auto w-full max-w-2xl py-8 md:py-10">
-        <Link href="/" className="inline-flex min-h-6 items-center gap-1 text-sm text-muted-foreground hover:text-foreground"><span aria-hidden>←</span> {lesson.courseTitle}</Link>
+        <Link href={user ? "/learn" : "/"} className="inline-flex min-h-6 items-center gap-1 text-sm text-muted-foreground hover:text-foreground"><span aria-hidden>←</span> {lesson.courseTitle}</Link>
         <div className="mt-6">
           <LessonPlayer
             lesson={{ id: `try-${lesson.slug}-${index}`, position: index, content: lesson.content }}
@@ -29,7 +31,7 @@ export default async function TryLessonPage({ params }: { params: Promise<{ cour
             nextHref="/"
             nextLabel=""
             tone={lesson.tone}
-            guest={{ slug: lesson.slug, lessonIndex: index }}
+            guest={{ slug: lesson.slug, lessonIndex: index, signedIn: Boolean(user) }}
           />
         </div>
       </div>

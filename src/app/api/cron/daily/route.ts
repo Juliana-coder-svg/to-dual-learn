@@ -11,6 +11,8 @@ import {
 import { sendMail } from "@/lib/mail";
 import { runAsService } from "@/lib/supabase/server";
 
+const escapeHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
 export const runtime = "nodejs";
 export const maxDuration = 300;
 
@@ -42,10 +44,10 @@ export async function GET(req: Request) {
     }
     const due = await countDueFlashcards(user.id);
     if (items.length === 0 && due === 0) continue;
-    const html = `<p>${user.name}, на сегодня:</p>
+    const html = `<p>${escapeHtml(user.name)}, на сегодня:</p>
 <ul>${items.join("")}${due > 0 ? `<li><a href="${site}/learn/review">Повторить карточки: ${due}</a></li>` : ""}</ul>
 <p>Пять минут, и серия ${user.streak > 0 ? `дойдёт до ${user.streak + 1}` : "начнётся"}.</p>
-<p style="color:#888;font-size:12px">Отключить письма можно на <a href="${site}/learn">странице курсов</a>.</p>`;
+<p style="color:#888;font-size:12px">Отключить письма можно на <a href="${site}/account/data">странице «Мои данные»</a>.</p>`;
     const result = await sendMail(user.email, items.length > 0 ? "Ваш урок на сегодня" : "Пора повторить карточки", html);
     if (result === "sent") { sent++; await markDigestSent(user.id); } else skipped++;
   }

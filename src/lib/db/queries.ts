@@ -1,5 +1,5 @@
 import type { PostgrestMaybeSingleResponse, PostgrestResponse, PostgrestSingleResponse } from "@supabase/supabase-js";
-import { getSupabase } from "@/lib/supabase/server";
+import { createServiceClient, getSupabase } from "@/lib/supabase/server";
 import type {
   AiCallRow,
   CalibrationSampleRow,
@@ -1342,4 +1342,31 @@ export async function releaseTryCall(id: string): Promise<void> {
 export async function purgeTryIpHashes(olderThan: Date): Promise<void> {
   const sb = await getSupabase();
   check(await sb.from("ai_calls").update({ ip_hash: null }).not("ip_hash", "is", null).lt("created_at", olderThan.toISOString()), "try ip purge");
+}
+
+export interface JoinPreview {
+  title: string;
+  authorName: string;
+  lessons: number;
+}
+
+/** Что видит человек на /join/КОД до входа: название, автор, число опубликованных уроков и больше ничего.
+ *  Поиск по коду закрыт для anon (RPC course_by_join_code), поэтому здесь service role и узкая выборка полей;
+ *  ослаблять RLS ради этого не нужно. Вызывать только из серверных компонентов. */
+export async function getJoinPreview(code: string): Promise<JoinPreview | undefined> {
+  const normalized = code.trim().toUpperCase();
+  if (!/^[A-Z0-9]{4,12}$/.test(normalized)) return undefined;
+  const sb = createServiceClient();
+  const row = unwrapMaybe(
+    await sb
+      .from("courses")
+      .select("title, author:profiles!courses_owner_id_fkey(name, email), lessons(status)")
+      .eq("join_code", normalized)
+      .maybeSingle()
+      .overrideTypes<{ title: string; author: { name: string; email: string } | null; lessons: Array<{ status: LessonStatus }> }, { merge: false }>(),
+    "join preview",
+  );
+  if (!row) return undefined;
+  return { title: row.title, // Пока человек не менял имя, там заготовка из почты: её публично не показываем.
+    authorName: row.author && row.author.name !== row.author.email.split("@")[0] ? row.author.name : "", lessons: row.lessons.filter((l) => l.status === "published").length };
 }

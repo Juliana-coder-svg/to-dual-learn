@@ -7,7 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Brand } from "@/components/shared/Brand";
 import { NavLinks, type NavItem } from "@/components/shared/NavLinks";
 
-const TEACHER_NAV: NavItem[] = [{ href: "/teach", label: "Мои курсы" }];
+const TEACHER_NAV: NavItem[] = [
+  { href: "/teach", label: "Мои курсы", except: ["/teach/start"] },
+  { href: "/teach/start", label: "Как это работает" },
+];
 
 const STUDENT_NAV: NavItem[] = [
   { href: "/learn", label: "Учиться", exact: true },

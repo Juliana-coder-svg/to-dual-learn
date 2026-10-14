@@ -1,6 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 import { teacherCourse, noCourseAccess } from "@/lib/auth/access";
 import { getCurrentUserId } from "@/lib/auth/session";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { AppShell } from "@/components/shared/AppShell";
 import { CourseTabs } from "@/components/teach/CourseTabs";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -29,6 +31,8 @@ export default async function CourseLayout({ children, params }: { children: Rea
         title={course.title}
         description={course.description || undefined}
         actions={
+          <div className="flex flex-wrap items-center gap-2">
+          <Button nativeButton={false} render={<Link href={`/teach/${course.id}/share`} />} size="lg">Отправить студентам</Button>
           <dl className="flex flex-wrap gap-2 text-sm">
             <div className="flex items-center gap-2 rounded-lg border px-3 py-1.5">
               <dt className="text-muted-foreground">Код для студентов</dt>
@@ -44,6 +48,7 @@ export default async function CourseLayout({ children, params }: { children: Rea
               </dd>
             </div>
           </dl>
+          </div>
         }
       />
       {isDemoMode() ? (

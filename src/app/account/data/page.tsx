@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth/session";
 import { listConsents, listOwnedCoursesWithStudents } from "@/lib/db/queries";
-import { deleteAccountAction, setMarketingConsentAction } from "@/lib/actions/account";
+import { deleteAccountAction, setMarketingConsentAction, updateNameAction } from "@/lib/actions/account";
 import { CONSENT_VERSION } from "@/lib/legal/versions";
 import { AppShell } from "@/components/shared/AppShell";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { DailyEmailCard } from "@/components/shared/DailyEmailCard";
 import { Notice } from "@/components/shared/Notice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +17,7 @@ import { plural } from "@/lib/utils/format";
 const ERRORS: Record<string, string> = {
   confirm: "Почта не совпадает. Введите адрес, под которым вы вошли.",
   courses: "Пока на ваших курсах есть студенты или их ответы, удалить аккаунт нельзя: ответы пропали бы вместе с курсом. Напишите нам, решим вручную.",
+  name: "Имя не сохранилось: в нём должно быть от 2 до 80 знаков. Исправьте и сохраните ещё раз.",
   delete: "Не удалось удалить аккаунт. Попробуйте ещё раз через минуту или напишите нам.",
 };
 
@@ -35,7 +37,7 @@ function describeVersion(version: string): string {
   return parts.map(([k, v]) => `${DOC_NAMES[k] ?? k} ${v}`).join(", ");
 }
 
-export default async function MyDataPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+export default async function MyDataPage({ searchParams }: { searchParams: Promise<{ error?: string; saved?: string }> }) {
   const user = await requireUser();
   const sp = await searchParams;
   const [consents, blockingCourses] = await Promise.all([listConsents(user.id), listOwnedCoursesWithStudents(user.id)]);
@@ -55,19 +57,29 @@ export default async function MyDataPage({ searchParams }: { searchParams: Promi
       />
       <div className="mt-8 space-y-6">
         {sp.error ? <Notice kind="error">{ERRORS[sp.error] ?? ERRORS.delete}</Notice> : null}
+        {sp.saved === "name" ? <Notice kind="success">Имя сохранено.</Notice> : null}
 
         <Card>
           <CardHeader>
             <CardTitle>Профиль</CardTitle>
           </CardHeader>
           <CardContent>
-            <dl className="grid gap-3 text-sm sm:grid-cols-3">
-              <div><dt className="type-caption text-muted-foreground">Имя</dt><dd className="mt-0.5 font-medium">{user.name}</dd></div>
+            <form action={updateNameAction} className="flex flex-wrap items-end gap-3">
+              <div className="min-w-0 flex-1 space-y-2 sm:max-w-sm">
+                <Label htmlFor="name">Имя</Label>
+                <Input id="name" name="name" required minLength={2} maxLength={80} defaultValue={user.name} autoComplete="name" />
+              </div>
+              <Button type="submit" variant="outline">Сохранить</Button>
+            </form>
+            <p className="mt-2 type-caption text-muted-foreground">Имя видно вам в шапке, студентам ваших курсов и преподавателю, на чьём курсе вы учитесь.</p>
+            <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-2">
               <div><dt className="type-caption text-muted-foreground">Почта</dt><dd className="mt-0.5 break-all font-medium">{user.email}</dd></div>
               <div><dt className="type-caption text-muted-foreground">Роль</dt><dd className="mt-0.5 font-medium">{user.role === "teacher" ? "Преподаватель" : "Студент"}</dd></div>
             </dl>
           </CardContent>
         </Card>
+
+        <DailyEmailCard user={user} next="/account/data" />
 
         <Card>
           <CardHeader>

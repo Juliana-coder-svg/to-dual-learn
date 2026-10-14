@@ -49,7 +49,7 @@ interface Props {
   nextLabel: string;
   tone: Tone;
   /** Пробный урок без входа: разбор идёт через /api/try/evaluate, в базу ничего не пишется, вместо следующего урока предложение войти. */
-  guest?: { slug: string; lessonIndex: number };
+  guest?: { slug: string; lessonIndex: number; /** Уже вошёл (пробный урок с пустого /learn): сохранить разбор можно без нового входа. */ signedIn?: boolean };
 }
 
 /** Где гость хранит ответ и разбор до входа. После входа /try/claim переносит их в профиль. */
@@ -370,12 +370,18 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
             <div className="callout-label">Запомнить</div>
             <p className="mt-2 type-body">{c.keyTakeaway}</p>
           </div>
+          {!guest && progress && progress.xp === progress.gained ? (
+            <div className="callout">
+              <div className="callout-label">Что дальше</div>
+              <p className="mt-2 type-body">Первый урок пройден, серия началась. Серия считает дни подряд: пропустите день, и она начнётся заново. Сегодняшний урок вернётся карточками на повторение: завтра они появятся в разделе «Повторение».</p>
+            </div>
+          ) : null}
           {guest ? (
             <div className="rounded-lg border p-6">
-              <h3 className="text-balance type-heading">Войдите, чтобы сохранить разбор и получать урок каждый день</h3>
-              <p className="mt-2 type-body text-muted-foreground">Перенесём ответ и разбор в профиль. Завтра утром пришлём письмо со следующим уроком, а этот урок вернётся карточками на повторение, чтобы проверить, что запомнилось. Пароль не нужен, вход по почте. Без входа разбор останется только в этом браузере.</p>
+              <h3 className="text-balance type-heading">{guest.signedIn ? "Сохраните разбор в профиле" : "Войдите, чтобы сохранить разбор и получать урок каждый день"}</h3>
+              <p className="mt-2 type-body text-muted-foreground">Перенесём ответ и разбор в профиль. Завтра утром пришлём письмо со следующим уроком, а этот урок вернётся карточками на повторение, чтобы проверить, что запомнилось. {guest.signedIn ? "Без сохранения разбор останется только в этом браузере." : "Пароль не нужен, вход по почте. Без входа разбор останется только в этом браузере."}</p>
               <div className="mt-6 flex flex-wrap gap-3">
-                <Button nativeButton={false} render={<Link href={TRY_LOGIN_HREF} />} size="lg">Войти и сохранить</Button>
+                <Button nativeButton={false} render={<Link href={guest.signedIn ? "/try/claim" : TRY_LOGIN_HREF} />} size="lg">{guest.signedIn ? "Сохранить разбор" : "Войти и сохранить"}</Button>
                 <Button size="lg" variant="outline" onClick={() => setStep("task")}>{t.retry}</Button>
               </div>
             </div>
