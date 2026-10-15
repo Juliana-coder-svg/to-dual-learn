@@ -40,7 +40,7 @@ export function teacherSteps(courses: CourseSummary[]): TeacherStep[] {
       title: "Загрузите материалы",
       text: "Программа, методичка, статья или конспект: уроки соберутся из них. Если материалов под рукой нет, добавьте готовый курс-пример: на нём виден формат.",
       doneNote: "Материалы загружены",
-      action: forMaterials ? "Загрузить материалы" : "Создать курс",
+      action: forMaterials ? "Загрузить материалы" : "К форме курса",
       href: forMaterials ? `/teach/${forMaterials.course.id}` : "/teach#new-course",
       state: state(0),
     },

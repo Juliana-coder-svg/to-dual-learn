@@ -24,7 +24,7 @@ export function MaterialsUploader({ courseId }: { courseId: string }) {
       const res = await fetch("/api/materials", { method: "POST", body: form });
       const data = (await res.json()) as { ok?: boolean; error?: string; added?: number };
       if (!res.ok || !data.ok) throw new Error(data.error ?? "Не удалось загрузить материал. Проверьте файл и попробуйте ещё раз.");
-      setMsg({ text: `Добавлено: ${data.added}`, kind: "success" });
+      setMsg({ text: data.added === 1 ? "Материал добавлен." : `Материалов добавлено: ${data.added}.`, kind: "success" });
       if (fileRef.current) fileRef.current.value = "";
       setPasteText("");
       setPasteTitle("");

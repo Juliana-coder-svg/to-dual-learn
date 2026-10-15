@@ -119,12 +119,12 @@ export default async function SettingsPage({ params, searchParams }: { params: P
         </section>
 
         <section className="pt-10">
-          <SectionHeader title="Расход по курсу" description={`Оценка в рублях по курсу ${usdRubRate()} ₽ за доллар (переменная USD_RUB_RATE). Точная сумма: в кабинете поставщика модели.`} />
+          <SectionHeader title="Расход по курсу" description={`Оценка в рублях по курсу ${usdRubRate()} ₽ за доллар. Точная сумма в кабинете поставщика модели.`} />
           <div className="mt-5">
             {usage.length === 0 ? <p className="text-sm text-muted-foreground">Запросов к ИИ пока не было.</p> : (
               <div className="overflow-x-auto">
                 <table className="data-table">
-                  <thead><tr><th>Операция</th><th className="text-right">Запросов</th><th className="text-right">Токены, тыс.</th><th className="pr-0 text-right">Рубли</th></tr></thead>
+                  <thead><tr><th>Операция</th><th className="text-right">Запросов</th><th className="text-right">Объём, тыс. (запрос / ответ)</th><th className="pr-0 text-right">Рубли</th></tr></thead>
                   <tbody>{usage.map((u) => (
                     <tr key={u.kind}>
                       <td>{KIND_LABELS[u.kind] ?? u.kind}</td>
