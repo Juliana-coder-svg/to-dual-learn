@@ -23,6 +23,8 @@ const RAYS = 6;
 const CENTER = 12;
 const RAY = 9.5;
 const STROKE = 3.2;
+/** Штрих точек в режиме `due`: тоньше луча, чтобы между точками остался просвет даже на 16 px. */
+const DOT_STROKE = 2.2;
 
 type Value = number | { done: number; total: number };
 
@@ -92,8 +94,9 @@ export function ProgressAsterisk({
           if (part <= 0) return null;
           const len = RAY * part;
           const t = tip(i, len);
-          // Точки по длине этого луча: центр, середина, конец. У частичного луча шаг короче, чтобы он не пропал.
-          const dots = dotted ? { strokeDasharray: `0 ${+(len / 2).toFixed(3)}` } : undefined;
+          // Точки по длине этого луча: центр, середина, конец. Шаг округлён вниз, чтобы конечная точка не выпала;
+          // штрих тоньше, иначе на 16–24 px точки сливаются в линию. У частичного луча шаг короче, чтобы он не пропал.
+          const dots = dotted ? { strokeDasharray: `0 ${Math.floor((len / 2) * 1000) / 1000}`, strokeWidth: DOT_STROKE } : undefined;
           return <line key={i} x1={CENTER} y1={CENTER} x2={t.x} y2={t.y} className={on} {...dots} />;
         })}
         {f <= 0 ? <circle cx={CENTER} cy={CENTER} r={STROKE / 2} className={cn("stroke-none", tone === "inverse" ? "fill-primary-foreground" : "fill-primary")} /> : null}
