@@ -51,7 +51,7 @@ export async function GET(req: Request) {
 <p>Пять минут, и серия ${user.streak > 0 ? `дойдёт до ${user.streak + 1}` : "начнётся"}.</p>
 <p style="color:#888;font-size:12px">Отключить письма можно на <a href="${site}/account/data">странице «Мои данные»</a>.</p>`;
     // Тема называет урок, чтобы письмо было видно в ленте: при нескольких курсах — первый и счётчик остальных. Переводы строк убираем: тема уходит в заголовок письма.
-    const first = lessonTitles[0]?.replace(/\s+/g, " ").trim();
+    const first = lessonTitles[0]?.replace(/\s+/g, " ").trim().slice(0, 80);
     const subject = first ? `Урок дня: ${first}${lessonTitles.length > 1 ? ` и ещё ${lessonTitles.length - 1}` : ""}` : "Пора повторить карточки";
     const result = await sendMail(user.email, subject, html);
     if (result === "sent") { sent++; await markDigestSent(user.id); } else skipped++;

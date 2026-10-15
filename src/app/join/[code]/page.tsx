@@ -36,7 +36,7 @@ export default async function JoinPage({ params }: { params: Promise<{ code: str
                 <li>Курс сразу откроется, а в нём первый урок: идея, задача, разбор.</li>
               </ol>
               <div className="mt-8">
-                <Button nativeButton={false} render={<Link href={`/login?role=student&next=${encodeURIComponent(here)}`} />} size="lg">Войти и записаться</Button>
+                <Button nativeButton={false} render={<Link href={`/login?next=${encodeURIComponent(here)}`} />} size="lg">Войти и записаться</Button>
               </div>
             </>
           ) : (

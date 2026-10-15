@@ -144,7 +144,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
     void Promise.resolve().then(() => {
       try {
         const saved = JSON.parse(localStorage.getItem(TRY_STORAGE_KEY) ?? "null") as { slug?: string; lessonIndex?: number; answer?: string; feedback?: Feedback } | null;
-        if (saved && saved.slug === guest.slug && saved.lessonIndex === guest.lessonIndex && typeof saved.answer === "string" && saved.feedback) {
+        if (saved && saved.slug === guest.slug && saved.lessonIndex === guest.lessonIndex && typeof saved.answer === "string" && saved.feedback && Array.isArray(saved.feedback.criteria) && Array.isArray(saved.feedback.improvements)) {
           setAnswer(saved.answer);
           setFeedback(saved.feedback);
           setStep("feedback");

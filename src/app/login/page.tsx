@@ -103,7 +103,8 @@ export default async function LoginPage({
               поэтому не пишите в них данные других людей и то, что не хотите передавать.
             </p>
           </div>
-          {joinCode ? <input type="hidden" name="role" value="student" /> : <RoleChoice defaultRole={defaultRole} />}
+          {/* Приглашение: роль не спрашиваем и не отправляем, чтобы вход преподавателя по чужой ссылке не сменил ему роль. Новый профиль станет студенческим. */}
+          {joinCode ? null : <RoleChoice defaultRole={defaultRole} />}
           <ConsentFields />
           <div className="space-y-2.5 sm:space-y-3">
             <Button type="submit" size="lg" className="w-full">{submitLabel}</Button>
