@@ -43,20 +43,20 @@ export async function AppShell({
         <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-3 px-4">
           <div className="flex min-w-0 items-center gap-5">
             <Brand href={isTeacher ? "/teach" : "/learn"} />
-            <NavLinks items={nav} className="hidden sm:flex" />
+            <NavLinks items={nav} className="hidden md:flex" />
           </div>
           <div className="flex shrink-0 items-center gap-1 sm:gap-2">
             <Link
               href="/account/data"
-              className="hidden h-9 items-center rounded-lg px-3 text-sm text-muted-foreground hover:bg-muted/60 hover:text-foreground md:inline-flex"
+              className="hidden h-9 max-w-40 items-center rounded-lg px-3 text-sm text-muted-foreground hover:bg-muted/60 hover:text-foreground lg:inline-flex"
               title={`${user.name} · ${user.email}`}
             >
-              {user.name}
+              <span className="truncate">{user.name}</span>
             </Link>
             <form action={switchRole}>
               <Button type="submit" variant="ghost" size="sm">
-                <span className="sm:hidden">{isTeacher ? "Студент" : "Преподаватель"}</span>
-                <span className="hidden sm:inline">{isTeacher ? "Режим студента" : "Режим преподавателя"}</span>
+                <span className="lg:hidden">{isTeacher ? "Как студент" : "Как преподаватель"}</span>
+                <span className="hidden lg:inline">{isTeacher ? "Режим студента" : "Режим преподавателя"}</span>
               </Button>
             </form>
             <form action={logout}>
@@ -64,7 +64,7 @@ export async function AppShell({
             </form>
           </div>
         </div>
-        <div className="border-t sm:hidden">
+        <div className="border-t md:hidden">
           <NavLinks items={nav} className="mx-auto w-full max-w-5xl overflow-x-auto px-3 py-1.5" />
         </div>
       </header>

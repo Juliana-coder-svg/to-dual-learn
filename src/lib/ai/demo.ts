@@ -81,8 +81,8 @@ export const demo = {
   review(lessons: LessonContent[]): LessonReview {
     return {
       lessons,
-      notes: lessons.map((l, i) => ({ title: l.title, changed: false, flags: i === 0 ? [`${NOTE} Пример замечания методиста.`] : [] })),
-      summary: `${NOTE} С подключённой моделью методист сверит уроки с материалами и образовательными результатами.`,
+      notes: lessons.map((l, i) => ({ title: l.title, changed: false, flags: i === 0 ? [`${NOTE} Пример замечания проверки.`] : [] })),
+      summary: `${NOTE} С подключённой моделью проверка сверит уроки с материалами и образовательными результатами.`,
     };
   },
 

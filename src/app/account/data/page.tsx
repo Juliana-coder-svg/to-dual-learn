@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth/session";
-import { listConsents, listOwnedCoursesWithStudents } from "@/lib/db/queries";
+import { listConsents, listCoursesByOwner, listOwnedCoursesWithStudents } from "@/lib/db/queries";
 import { deleteAccountAction, setMarketingConsentAction, updateNameAction } from "@/lib/actions/account";
 import { CONSENT_VERSION } from "@/lib/legal/versions";
 import { AppShell } from "@/components/shared/AppShell";
@@ -40,7 +40,10 @@ function describeVersion(version: string): string {
 export default async function MyDataPage({ searchParams }: { searchParams: Promise<{ error?: string; saved?: string }> }) {
   const user = await requireUser();
   const sp = await searchParams;
-  const [consents, blockingCourses] = await Promise.all([listConsents(user.id), listOwnedCoursesWithStudents(user.id)]);
+  const [consents, blockingCourses, ownedCourses] = await Promise.all([listConsents(user.id), listOwnedCoursesWithStudents(user.id), listCoursesByOwner(user.id)]);
+  // Курсы без студентов и без их ответов пропадут вместе с аккаунтом: показываем их по названию, а не словом «курсы вообще».
+  const blockingIds = new Set(blockingCourses.map((c) => c.id));
+  const vanishing = ownedCourses.filter((c) => !blockingIds.has(c.id));
   const marketingOn = consents.some((c) => c.kind === "marketing" && c.withdrawn_at === null && c.version === CONSENT_VERSION.marketing);
 
   return (
@@ -123,7 +126,7 @@ export default async function MyDataPage({ searchParams }: { searchParams: Promi
             <CardTitle>Удалить аккаунт</CardTitle>
             <CardDescription>
               Вместе с аккаунтом вы отзовёте согласие на обработку данных. Из рабочей базы сразу пропадут профиль, ответы, карточки, записи на курсы
-              {user.role === "teacher" || blockingCourses.length > 0 ? ", а также ваши курсы без студентов вместе с материалами и уроками" : ""}.
+              {vanishing.length > 0 ? ", а также ваши курсы без студентов вместе с материалами и уроками" : ""}.
               Из резервных копий данные исчезнут, когда копии обновятся.
             </CardDescription>
           </CardHeader>
@@ -138,6 +141,12 @@ export default async function MyDataPage({ searchParams }: { searchParams: Promi
               </div>
             ) : (
               <form action={deleteAccountAction} className="space-y-4">
+                {vanishing.length > 0 ? (
+                  <div className="border-l-2 border-destructive pl-3 text-sm">
+                    <p className="font-medium">Вместе с аккаунтом пропадут {plural(vanishing.length, "курс", "курса", "курсов")}: материалы, уроки и ссылки-приглашения перестанут работать.</p>
+                    <ul className="mt-2 list-disc pl-5 text-muted-foreground">{vanishing.map((c) => <li key={c.id}>{c.title}</li>)}</ul>
+                  </div>
+                ) : null}
                 <div className="space-y-2">
                   <Label htmlFor="confirm">Для подтверждения введите вашу почту: {user.email}</Label>
                   <Input id="confirm" name="confirm" type="email" required autoComplete="off" placeholder={user.email} />

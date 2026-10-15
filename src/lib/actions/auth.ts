@@ -11,8 +11,10 @@ import { loginMode } from "@/lib/auth/mode";
 import { recordConsents } from "@/lib/legal/consents";
 import { safeNextPath } from "@/lib/auth/next-path";
 
-function parseRole(v: FormDataEntryValue | null): Role {
-  return v === "teacher" ? "teacher" : "student";
+/** Роль из формы. null — человек её не выбирал (вход без ?role): роль существующего профиля не трогаем,
+ *  новому профилю ставим «студент». */
+function parseRole(v: FormDataEntryValue | null): Role | null {
+  return v === "teacher" || v === "student" ? v : null;
 }
 
 /** Согласия из формы входа: обязательное на обработку (без него null), соглашение принимается кнопкой,
@@ -42,16 +44,17 @@ export async function login(formData: FormData): Promise<void> {
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const name = String(formData.get("name") ?? "").trim();
   const role = parseRole(formData.get("role"));
+  const roleQuery = role ? `&role=${role}` : "";
   if (!email.includes("@") || name.length < 2) redirect("/login?error=1");
   const safeNext = safeNextPath(formData.get("next"));
   const consents = parseConsents(formData);
-  if (!consents) redirect(`/login?error=consent&role=${role}${safeNext ? `&next=${encodeURIComponent(safeNext)}` : ""}`);
+  if (!consents) redirect(`/login?error=consent${roleQuery}${safeNext ? `&next=${encodeURIComponent(safeNext)}` : ""}`);
 
   if (loginMode() === "direct") {
     const failed = await loginDirect(email, name, role, consents);
     if (failed) {
       console.error("[auth] direct login", failed);
-      redirect(`/login?error=send&role=${role}${safeNext ? `&next=${encodeURIComponent(safeNext)}` : ""}`);
+      redirect(`/login?error=send${roleQuery}${safeNext ? `&next=${encodeURIComponent(safeNext)}` : ""}`);
     }
     const user = await getCurrentUser();
     redirect(safeNext || (user ? homeFor(user) : "/login"));
@@ -61,17 +64,17 @@ export async function login(formData: FormData): Promise<void> {
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
-      data: { name, role },
+      data: { name, role: role ?? "student" },
       emailRedirectTo: `${await siteOrigin()}/auth/callback`,
     },
   });
   if (error) {
     console.error("[auth] signInWithOtp", error.message);
     const kind = error.code === "email_address_invalid" ? "email" : "send";
-    redirect(`/login?error=${kind}&role=${role}${safeNext ? `&next=${encodeURIComponent(safeNext)}` : ""}`);
+    redirect(`/login?error=${kind}${roleQuery}${safeNext ? `&next=${encodeURIComponent(safeNext)}` : ""}`);
   }
-  await setLoginPrefs({ name, role, next: safeNext, consents });
-  redirect(`/login?sent=1&role=${role}`);
+  await setLoginPrefs({ name, ...(role ? { role } : {}), next: safeNext, consents });
+  redirect(`/login?sent=1${roleQuery}${safeNext ? `&next=${encodeURIComponent(safeNext)}` : ""}`);
 }
 
 /** Согласие для уже вошедшего пользователя: старая сессия или ссылка из письма, открытая
@@ -88,9 +91,9 @@ export async function acceptConsentAction(formData: FormData): Promise<void> {
 /** Вход без письма: service role выпускает одноразовый токен входа, мы тут же подтверждаем его
  *  от имени пользователя, и @supabase/ssr кладёт сессию в cookie. Письмо при этом не отправляется.
  *  Возвращает текст ошибки или null. */
-async function loginDirect(email: string, name: string, role: Role, consents: ConsentKind[]): Promise<string | null> {
+async function loginDirect(email: string, name: string, role: Role | null, consents: ConsentKind[]): Promise<string | null> {
   const admin = createServiceClient();
-  const { data, error } = await admin.auth.admin.generateLink({ type: "magiclink", email, options: { data: { name, role } } });
+  const { data, error } = await admin.auth.admin.generateLink({ type: "magiclink", email, options: { data: { name, role: role ?? "student" } } });
   if (error) return error.message;
   const supabase = await getSupabase();
   const { data: session, error: verifyError } = await supabase.auth.verifyOtp({
@@ -99,7 +102,7 @@ async function loginDirect(email: string, name: string, role: Role, consents: Co
   });
   if (verifyError) return verifyError.message;
   if (session.user) {
-    await updateProfile(session.user.id, { name, role });
+    await updateProfile(session.user.id, role ? { name, role } : { name });
     await recordConsents(session.user.id, consents);
   }
   return null;

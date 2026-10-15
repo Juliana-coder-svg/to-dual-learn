@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PublicShell } from "@/components/shared/PublicShell";
 import { StepMarks } from "@/components/shared/StepMarks";
-import { DEFAULT_TRY_SLUG } from "@/lib/try/catalog";
+import { DEFAULT_TRY_SLUG, getTryLesson } from "@/lib/try/catalog";
 import { SessionRedirect } from "@/components/shared/SessionRedirect";
 
 /** Лендинг статический: без чтения cookie и базы в рендере, его отдаёт CDN. Вошедших уводит SessionRedirect. */
@@ -97,31 +97,26 @@ function EntryButtons({ size = "lg", tone = "default", trial = false }: { size?:
   );
 }
 
-/** Статичный набросок экрана урока: показывает формат, не обещая больше, чем есть. Собран из тех же токенов, что и продукт. */
+/** Статичный набросок экрана пробного урока: те же название, навык и задача, что в /try, шаг «Задача». Без поля ответа и кнопки: набросок не должен выглядеть рабочим. */
 function LessonSketch() {
+  const lesson = getTryLesson(DEFAULT_TRY_SLUG, 1);
+  if (!lesson) return null;
+  const { title, concept, task } = lesson.content;
   return (
-    <div aria-hidden className="rounded-lg border bg-card p-5 text-sm">
-      <div className="flex items-center justify-between gap-4">
-        <span className="eyebrow">Урок 2 · шаг 2 из 3</span>
+    <figure aria-hidden className="rounded-lg border border-dashed bg-card p-5 text-sm">
+      <figcaption className="eyebrow text-muted-foreground">Так выглядит урок</figcaption>
+      <div className="mt-4 flex items-center justify-between gap-4">
+        <span className="eyebrow">Урок 1 · шаг 2 из 3</span>
         <StepMarks total={3} filled={2} size="sm" />
       </div>
-      <p className="mt-3 type-heading">Первая цифра решает</p>
-      <p className="mt-1 text-muted-foreground">Заметить эффект якоря после подсказки модели</p>
+      <p className="mt-3 type-heading">{title}</p>
+      <p className="mt-1 text-muted-foreground">{concept}</p>
       <div className="mt-5">
         <p className="eyebrow">Задача</p>
-        <p className="mt-1 type-body">
-          Модель оценила рынок в 48 млрд рублей. Через час коллега назвал 12 млрд. Какие две проверки вы сделаете до того, как вставить цифру в презентацию?
-        </p>
+        <p className="mt-1 line-clamp-5 type-body">{task}</p>
       </div>
-      <div className="mt-4 rounded-lg border border-input bg-background px-3 py-2 text-muted-foreground/80">
-        Первая проверка: откуда модель взяла…
-        <span className="ml-px inline-block h-4 w-px translate-y-0.5 bg-foreground" />
-      </div>
-      <div className="mt-4 flex items-center justify-between gap-3">
-        <span className="inline-flex h-9 items-center rounded-lg bg-primary px-4 font-medium text-primary-foreground">Отправить на разбор</span>
-        <span className="type-caption text-muted-foreground">около 5 минут</span>
-      </div>
-    </div>
+      <p className="mt-5 type-caption text-muted-foreground">Дальше: ответ своими словами и разбор по критериям. Около пяти минут.</p>
+    </figure>
   );
 }
 
@@ -129,7 +124,7 @@ export default function Home() {
   return (
     <PublicShell width="wide" action={<Button nativeButton={false} render={<Link href="/login" />} size="sm" variant="outline">Войти</Button>}>
       <SessionRedirect />
-      <section className="grid items-center gap-12 py-16 md:grid-cols-[1.15fr_1fr] md:gap-16 md:py-28">
+      <section className="grid items-center gap-10 py-10 md:grid-cols-[1.15fr_1fr] md:gap-16 md:py-28">
         <div className="flex flex-col">
           <p className="eyebrow text-primary-strong">Микрообучение</p>
           <h1 className="mt-5 max-w-3xl text-balance type-display">

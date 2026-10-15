@@ -27,8 +27,8 @@ export function ReviewButton({ courseId }: { courseId: string }) {
 
   return (
     <div className="flex flex-col items-end gap-1">
-      <Button onClick={review} disabled={busy} variant="outline" size="sm" title="ИИ-методист сверит уроки с материалами и результатами курса и предложит правки. Что принять, решаете вы">
-        {busy ? "Проверяю…" : "Проверить методистом"}
+      <Button onClick={review} disabled={busy} variant="outline" size="sm" title="ИИ сверит уроки с материалами и результатами курса и предложит правки. Что принять, решаете вы">
+        {busy ? "Проверяю…" : "Проверить уроки"}
       </Button>
       {msg ? <p role="status" className="max-w-xs text-right type-caption text-muted-foreground">{msg}</p> : null}
     </div>

@@ -36,11 +36,13 @@ export async function GET(req: Request) {
   for (const user of await listUsersForDigest()) {
     if (user.last_digest_at && new Date(user.last_digest_at).getTime() > cutoff) continue;
     const items: string[] = [];
+    const lessonTitles: string[] = [];
     for (const course of await listCoursesForStudent(user.id)) {
       const lessons = await listLessons(course.id, { publishedOnly: true });
       const done = await latestSubmissionsForCourse(user.id, course.id);
       const next = lessons.find((l) => !done.has(l.id));
-      if (next) items.push(`<li><a href="${site}/learn/${course.id}/lesson/${next.id}">${course.title}: урок ${next.position} «${next.title}»</a></li>`);
+      if (next) items.push(`<li><a href="${site}/learn/${course.id}/lesson/${next.id}">${escapeHtml(course.title)}: урок ${next.position} «${escapeHtml(next.title)}»</a></li>`);
+      if (next) lessonTitles.push(next.title);
     }
     const due = await countDueFlashcards(user.id);
     if (items.length === 0 && due === 0) continue;
@@ -48,7 +50,10 @@ export async function GET(req: Request) {
 <ul>${items.join("")}${due > 0 ? `<li><a href="${site}/learn/review">Повторить карточки: ${due}</a></li>` : ""}</ul>
 <p>Пять минут, и серия ${user.streak > 0 ? `дойдёт до ${user.streak + 1}` : "начнётся"}.</p>
 <p style="color:#888;font-size:12px">Отключить письма можно на <a href="${site}/account/data">странице «Мои данные»</a>.</p>`;
-    const result = await sendMail(user.email, items.length > 0 ? "Ваш урок на сегодня" : "Пора повторить карточки", html);
+    // Тема называет урок, чтобы письмо было видно в ленте: при нескольких курсах — первый и счётчик остальных. Переводы строк убираем: тема уходит в заголовок письма.
+    const first = lessonTitles[0]?.replace(/\s+/g, " ").trim().slice(0, 80);
+    const subject = first ? `Урок дня: ${first}${lessonTitles.length > 1 ? ` и ещё ${lessonTitles.length - 1}` : ""}` : "Пора повторить карточки";
+    const result = await sendMail(user.email, subject, html);
     if (result === "sent") { sent++; await markDigestSent(user.id); } else skipped++;
   }
   return NextResponse.json({ ok: true, sent, skipped });
