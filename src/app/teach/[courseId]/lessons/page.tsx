@@ -17,7 +17,7 @@ import { SectionHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { AiNote } from "@/components/shared/AiNote";
+import { ConfirmSubmitButton } from "@/components/teach/ConfirmSubmitButton";
 import { formatDateTime, plural } from "@/lib/utils/format";
 
 export default async function LessonsPage({ params }: { params: Promise<{ courseId: string }> }) {
@@ -28,6 +28,7 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
   const drafts = lessons.filter((l) => l.status === "draft").length;
   const published = lessons.length - drafts;
   const proposals = lessons.filter((l) => l.review?.proposal).length;
+  const draftsWithProposal = lessons.filter((l) => l.status === "draft" && l.review?.proposal).length;
 
   return (
     <div className="grid gap-10 lg:grid-cols-[1fr_340px]">
@@ -44,7 +45,12 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
               {lessons.length > 0 && hasMaterials ? <ReviewButton courseId={courseId} /> : null}
               {drafts > 0 ? (
                 <form action={publishAllAction.bind(null, courseId)}>
-                  <Button type="submit" size="sm">Опубликовать все ({drafts})</Button>
+                  <ConfirmSubmitButton
+                    size="sm"
+                    message={draftsWithProposal > 0 ? `${plural(draftsWithProposal, "урок", "урока", "уроков")} с непринятыми правками проверки. Студенты увидят их без этих правок. Опубликовать все?` : undefined}
+                  >
+                    Опубликовать все ({drafts})
+                  </ConfirmSubmitButton>
                 </form>
               ) : null}
             </>
@@ -52,7 +58,7 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
         />
         {proposals > 0 ? (
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary px-4 py-3 text-sm">
-            <span>Методист предлагает правки в {plural(proposals, "уроке", "уроках", "уроках")}. Под каждым уроком видно, что меняется и почему.</span>
+            <span>Проверка предлагает правки в {plural(proposals, "уроке", "уроках", "уроках")}. Под каждым уроком видно, что меняется и почему.</span>
             <div className="flex gap-2">
               <form action={decideAllProposalsAction.bind(null, courseId, "accepted")}><Button type="submit" size="sm">Принять все</Button></form>
               <form action={decideAllProposalsAction.bind(null, courseId, "rejected")}><Button type="submit" size="sm" variant="outline">Оставить всё как есть</Button></form>
@@ -63,7 +69,7 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
           <EmptyState
             className="mt-6"
             title="Уроков пока нет"
-            description={hasMaterials ? "Соберите первые уроки справа: ИИ прочитает материалы и предложит последовательность." : "Сначала загрузите материалы на вкладке «Материалы», потом соберите уроки."}
+            description={hasMaterials ? "Соберите первые уроки в блоке «Собрать уроки»: ИИ прочитает материалы и предложит последовательность." : "Сначала загрузите материалы на вкладке «Материалы», потом соберите уроки."}
             action={!hasMaterials ? <Button nativeButton={false} render={<Link href={`/teach/${courseId}`} />} variant="outline">К материалам</Button> : undefined}
           />
         ) : (
@@ -75,22 +81,21 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="type-counter text-primary"><span className="sr-only">Урок </span>{String(l.position).padStart(2, "0")}</span>
                       <Badge variant={l.status === "published" ? "default" : "secondary"}>{l.status === "published" ? "Опубликован" : "Черновик"}</Badge>
-                      <Badge
-                        variant={l.reviewed_at ? "outline" : "soft"}
+                      <span
+                        className="type-caption text-muted-foreground"
                         title={l.reviewed_at ? "Вы сохранили урок в редакторе. Студенты видят, что урок проверен." : "Урок собрала модель. Чтобы отметить его проверенным, нажмите «Править» и сохраните."}
                       >
-                        {l.reviewed_at ? `Проверен ${formatDateTime(l.reviewed_at)}` : "Не проверен"}
-                      </Badge>
+                        {l.reviewed_at ? `Проверен ${formatDateTime(l.reviewed_at)}` : "Собран моделью, вы его не правили"}
+                      </span>
                     </div>
                     <h3 className="mt-3 type-heading">{l.title}</h3>
                     <p className="text-sm text-muted-foreground">{l.concept}</p>
-                    {l.reviewed_at ? null : <AiNote kind="teacherDraft" className="mt-2" />}
                     {l.review && !l.review.proposal ? (
                       l.review.decision && l.review.flags.length > 0 ? (
                         // Решение принято: замечания прячем под раскрывашку, иначе «предлагаю…» читается как ещё не решённое.
                         <details className="mt-3 type-caption text-muted-foreground">
                           <summary className="cursor-pointer list-none">
-                            {l.review.decision === "accepted" ? "Правки методиста приняты" : "Правки методиста отклонены, оставлен ваш текст"} · что предлагалось
+                            {l.review.decision === "accepted" ? "Правки проверки приняты" : "Правки проверки отклонены, оставлен ваш текст"} · что предлагалось
                           </summary>
                           <ul className="mt-2 space-y-1">
                             {l.review.flags.map((f, j) => <li key={j} className="flex gap-2"><span aria-hidden className="font-semibold text-primary-strong">!</span><span>{f}</span></li>)}
@@ -102,7 +107,7 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
                         </ul>
                       ) : (
                         <p className="mt-3 type-caption text-muted-foreground">
-                          Методист: замечаний нет{l.review.decision === "accepted" ? ", правки приняты" : l.review.decision === "rejected" ? ", правки отклонены" : l.review.changed ? ", текст подправлен" : ""}.
+                          Проверка: замечаний нет{l.review.decision === "accepted" ? ", правки приняты" : l.review.decision === "rejected" ? ", правки отклонены" : l.review.changed ? ", текст подправлен" : ""}.
                         </p>
                       )
                     ) : null}
@@ -112,7 +117,13 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
                     <form action={moveLessonAction.bind(null, courseId, l.id, 1)}><Button type="submit" variant="ghost" size="icon-sm" disabled={i === lessons.length - 1} aria-label="Ниже">↓</Button></form>
                     <Button nativeButton={false} render={<Link href={`/teach/${courseId}/lessons/${l.id}/edit`} />} variant="outline" size="sm">Править</Button>
                     <form action={setLessonStatusAction.bind(null, courseId, l.id, l.status === "published" ? "draft" : "published")}>
-                      <Button type="submit" variant={l.status === "published" ? "outline" : "secondary"} size="sm">{l.status === "published" ? "Снять с публикации" : "Опубликовать"}</Button>
+                      <ConfirmSubmitButton
+                        variant={l.status === "published" ? "outline" : "secondary"}
+                        size="sm"
+                        message={l.status === "draft" && l.review?.proposal ? "У урока есть непринятые правки проверки. Студенты увидят текст без них. Опубликовать?" : undefined}
+                      >
+                        {l.status === "published" ? "Снять с публикации" : "Опубликовать"}
+                      </ConfirmSubmitButton>
                     </form>
                     <form action={deleteLessonAction.bind(null, courseId, l.id)}>
                       <Button type="submit" variant="ghost" size="sm" className="text-muted-foreground">Удалить</Button>
@@ -123,8 +134,8 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
                   <div className="mt-4 rounded-lg border border-primary p-4 text-sm">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
-                        <div className="font-semibold">Методист предлагает правки</div>
-                        {l.status === "published" ? <p className="mt-1 type-caption text-muted-foreground">Урок уже открыт студентам: принятая правка сразу изменит задачу и критерии у них.</p> : null}
+                        <div className="font-semibold">Проверка предлагает правки</div>
+                        {l.status === "published" ? <p className="mt-1 type-caption text-muted-foreground">Урок уже открыт студентам: принятая правка сразу изменит задачу и критерии у них.</p> : <p className="mt-1 type-caption text-muted-foreground">Пока правки не приняты и не отклонены, при публикации студенты увидят текст без них.</p>}
                         {l.review.flags.length > 0 ? (
                           <ul className="mt-2 space-y-1 type-caption text-muted-foreground">
                             {l.review.flags.map((f, j) => <li key={j} className="flex gap-2"><span aria-hidden className="font-semibold text-primary-strong">!</span><span>{f}</span></li>)}

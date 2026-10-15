@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     if (!ctx) return jsonError("Нет доступа к курсу", 403);
     const lessons = await listLessons(ctx.course.id);
     if (lessons.length === 0) return jsonError("Нет уроков для проверки");
-    if (lessons.length > 15) return jsonError("За раз методист проверяет до 15 уроков");
+    if (lessons.length > 15) return jsonError("За раз проверка берёт до 15 уроков");
     const materials = await listMaterials(ctx.course.id);
     const review = await reviewLessons({ userId: ctx.user.id, courseId: ctx.course.id }, ctx.course, materials, lessons.map((l) => l.content));
     // Методист ничего не переписывает сам: его версия ложится рядом с текущей, преподаватель принимает или отклоняет.

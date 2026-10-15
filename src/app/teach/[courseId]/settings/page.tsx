@@ -13,7 +13,7 @@ import { formatRub, usdRubRate, usdToRub } from "@/lib/utils/money";
 const KIND_LABELS: Record<string, string> = {
   extract: "Чтение PDF",
   lessons: "Сборка уроков",
-  review: "Проверка уроков методистом",
+  review: "Проверка уроков",
   artifact: "Материалы для занятий",
   evaluate: "Оценка ответов",
   homework: "Проверка работ",
