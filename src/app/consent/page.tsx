@@ -24,7 +24,7 @@ export default async function ConsentPage({ searchParams }: { searchParams: Prom
         <form action={acceptConsentAction} className="mt-8 space-y-6">
           {next ? <input type="hidden" name="next" value={next} /> : null}
           <ConsentFields />
-          <Button type="submit" size="lg" className="w-full">Продолжить</Button>
+          <Button type="submit" size="lg" className="w-full">Согласиться и продолжить</Button>
         </form>
         <form action={logout} className="mt-3">
           <Button type="submit" variant="ghost" className="w-full">Выйти без согласия</Button>

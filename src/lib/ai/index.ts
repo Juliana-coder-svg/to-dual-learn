@@ -229,7 +229,7 @@ export async function reevaluateAnswer(
   }
   return completeJson("evaluate", ctx, FeedbackSchema, {
     task: reevaluatePrompt(lesson, answer, previous.summary, previous.score, objection, opts),
-    messages: [{ role: "user", content: "Пересмотри оценку с учётом возражения." }],
+    messages: [{ role: "user", content: "Пересмотри оценку по возражению." }],
     maxTokens: 8000,
     effort: "medium",
   });

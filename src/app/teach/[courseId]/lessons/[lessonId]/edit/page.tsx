@@ -33,7 +33,7 @@ export default async function EditLessonPage({ params, searchParams }: { params:
         <div className="space-y-2"><Label htmlFor="title">Название</Label><Input id="title" name="title" defaultValue={c.title} required /></div>
         <div className="space-y-2"><Label htmlFor="concept">Навык (одна фраза)</Label><Input id="concept" name="concept" defaultValue={c.concept} required /></div>
         <div className="space-y-2"><Label htmlFor="intro">Зачем это нужно</Label><Textarea id="intro" name="intro" rows={3} defaultValue={c.intro} required /></div>
-        <div className="space-y-2"><Label htmlFor="keyIdea">Ключевая идея</Label><Textarea id="keyIdea" name="keyIdea" rows={3} defaultValue={c.keyIdea} required /></div>
+        <div className="space-y-2"><Label htmlFor="keyIdea">Идея урока</Label><Textarea id="keyIdea" name="keyIdea" rows={3} defaultValue={c.keyIdea} required /></div>
         <div className="space-y-2"><Label htmlFor="signals">Признаки, по одному на строку</Label><Textarea id="signals" name="signals" rows={4} defaultValue={c.signals.join("\n")} required /></div>
         <div className="space-y-2"><Label htmlFor="task">Задача</Label><Textarea id="task" name="task" rows={3} defaultValue={c.task} required /></div>
         <div className="space-y-2"><Label htmlFor="sample">Текст или пример для разбора (пусто, если не нужен)</Label><Textarea id="sample" name="sample" rows={4} defaultValue={c.sample ?? ""} /></div>

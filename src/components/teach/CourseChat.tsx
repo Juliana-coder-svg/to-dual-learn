@@ -31,10 +31,10 @@ export function CourseChat({ courseId, initial }: { courseId: string; initial: M
         body: JSON.stringify({ courseId, message: question }),
       });
       const data = (await res.json()) as { ok?: boolean; error?: string; reply?: string; id?: string };
-      if (!res.ok || !data.ok || !data.reply) throw new Error(data.error ?? "Ошибка ответа");
+      if (!res.ok || !data.ok || !data.reply) throw new Error(data.error ?? "Не удалось получить ответ. Повторите вопрос через минуту.");
       setMessages((m) => [...m, { id: data.id ?? `a-${Date.now()}`, role: "assistant", content: data.reply! }]);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка");
+      setError(err instanceof Error ? err.message : "Не удалось выполнить действие. Попробуйте ещё раз через минуту.");
     } finally {
       setBusy(false);
     }
@@ -72,7 +72,7 @@ export function CourseChat({ courseId, initial }: { courseId: string; initial: M
           onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void send(e); } }}
           placeholder="Вопрос по материалам… Enter отправляет, Shift+Enter переносит строку"
         />
-        <Button type="submit" disabled={busy || !input.trim()}>Отправить</Button>
+        <Button type="submit" disabled={busy || !input.trim()}>Спросить</Button>
       </form>
     </div>
   );

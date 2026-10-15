@@ -137,7 +137,7 @@ export async function updateLessonAction(courseId: string, lessonId: string, for
     sample: sample || null,
     rubricCriteria: lines(formData.get("rubricCriteria")),
     keyTakeaway: String(formData.get("keyTakeaway") ?? "").trim(),
-    flashcards: flashcards.length > 0 ? flashcards : [{ question: "Какая ключевая идея урока?", answer: String(formData.get("keyTakeaway") ?? "").trim() }],
+    flashcards: flashcards.length > 0 ? flashcards : [{ question: "Какая идея у урока?", answer: String(formData.get("keyTakeaway") ?? "").trim() }],
   });
   if (!parsed.success) redirect(`/teach/${courseId}/lessons/${lessonId}/edit?error=1`);
   await updateLessonContent(lessonId, courseId, parsed.data, { by: ctx.user.id });

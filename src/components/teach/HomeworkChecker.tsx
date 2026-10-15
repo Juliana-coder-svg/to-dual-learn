@@ -49,11 +49,11 @@ export function HomeworkChecker({ courseId }: { courseId: string }) {
         body: JSON.stringify({ courseId, task, criteria, works }),
       });
       const data = (await res.json()) as { ok?: boolean; error?: string; results?: HomeworkResults };
-      if (!res.ok || !data.ok || !data.results) throw new Error(data.error ?? "Не удалось проверить");
+      if (!res.ok || !data.ok || !data.results) throw new Error(data.error ?? "Не удалось проверить работы. Попробуйте ещё раз: если не выйдет, проверяйте меньше работ за раз.");
       setResults(data.results);
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка");
+      setError(err instanceof Error ? err.message : "Не удалось выполнить действие. Попробуйте ещё раз через минуту.");
     } finally {
       setBusy(false);
     }

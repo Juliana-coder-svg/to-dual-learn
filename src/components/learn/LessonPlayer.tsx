@@ -86,6 +86,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
         body: JSON.stringify({ lessonId: lesson.id, answer, objection }),
       });
       const data = (await res.json()) as { ok?: boolean; error?: string; feedback?: Feedback };
+      // text-lint-ignore: следующий шаг показывает RETRY_HINT рядом с ошибкой
       if (!res.ok || !data.ok || !data.feedback) throw new ApiError(data.error ?? "Не удалось пересмотреть разбор.", res.status);
       const before = feedback?.score;
       setFeedback(data.feedback);
@@ -94,6 +95,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
       setScoreNote(before === data.feedback.score ? `Наставник оставил балл: ${before}.` : `Наставник изменил балл: ${before} → ${data.feedback.score}.`);
       router.refresh();
     } catch (e) {
+      // text-lint-ignore: следующий шаг показывает RETRY_HINT рядом с ошибкой
       setAppealError(shownError(e, "Не удалось пересмотреть разбор."));
     } finally {
       setBusy(false);
@@ -110,6 +112,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
         body: JSON.stringify(guest ? { slug: guest.slug, lessonIndex: guest.lessonIndex, answer } : { lessonId: lesson.id, answer }),
       });
       const data = (await res.json()) as { ok?: boolean; error?: string; feedback?: Feedback; claimToken?: string; firstTime?: boolean; progress?: { streak: number; xp: number; gained: number } };
+      // text-lint-ignore: следующий шаг показывает RETRY_HINT рядом с ошибкой
       if (!res.ok || !data.ok || !data.feedback) throw new ApiError(data.error ?? "Не удалось получить разбор.", res.status);
       setAppealOpen(false);
       setObjection("");
@@ -128,6 +131,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
       setStep("feedback");
       if (!guest) router.refresh();
     } catch (e) {
+      // text-lint-ignore: следующий шаг показывает RETRY_HINT рядом с ошибкой
       setError(shownError(e, "Не удалось получить разбор."));
     } finally {
       setBusy(false);

@@ -24,11 +24,11 @@ export function LessonsGenerator({ courseId, disabled }: { courseId: string; dis
     try {
       const res = await fetch(`/api/lessons/questions?courseId=${encodeURIComponent(courseId)}`);
       const data = (await res.json()) as { ok?: boolean; error?: string; questions?: { question: string; why: string }[] };
-      if (!res.ok || !data.ok || !data.questions) throw new Error(data.error ?? "Не удалось получить вопросы");
+      if (!res.ok || !data.ok || !data.questions) throw new Error(data.error ?? "Не удалось получить вопросы. Попробуйте ещё раз через минуту.");
       setQuestions(data.questions);
       setAnswers(data.questions.map(() => ""));
     } catch (e) {
-      setMsg({ text: e instanceof Error ? e.message : "Ошибка", kind: "error" });
+      setMsg({ text: e instanceof Error ? e.message : "Не удалось выполнить действие. Попробуйте ещё раз через минуту.", kind: "error" });
     } finally {
       setAsking(false);
     }
@@ -46,13 +46,13 @@ export function LessonsGenerator({ courseId, disabled }: { courseId: string; dis
         body: JSON.stringify({ courseId, answers: payload }),
       });
       const data = (await res.json()) as { ok?: boolean; error?: string; saved?: number };
-      if (!res.ok || !data.ok) throw new Error(data.error ?? "Не удалось сохранить ответы");
+      if (!res.ok || !data.ok) throw new Error(data.error ?? "Не удалось сохранить ответы. Они остались в полях: нажмите «Сохранить» ещё раз.");
       setNotesSaved(true);
       setQuestions(null);
       setMsg({ text: `Ответы сохранены как материал курса (${data.saved}). Теперь можно собирать уроки.`, kind: "success" });
       router.refresh();
     } catch (e) {
-      setMsg({ text: e instanceof Error ? e.message : "Ошибка", kind: "error" });
+      setMsg({ text: e instanceof Error ? e.message : "Не удалось выполнить действие. Попробуйте ещё раз через минуту.", kind: "error" });
     } finally {
       setSaving(false);
     }
@@ -70,11 +70,11 @@ export function LessonsGenerator({ courseId, disabled }: { courseId: string; dis
         body: JSON.stringify({ courseId, count, review }),
       });
       const data = (await res.json()) as { ok?: boolean; error?: string; added?: number; reviewSummary?: string };
-      if (!res.ok || !data.ok) throw new Error(data.error ?? "Не удалось собрать уроки");
+      if (!res.ok || !data.ok) throw new Error(data.error ?? "Не удалось собрать уроки. Попробуйте ещё раз: если не выйдет, уменьшите число уроков.");
       setMsg({ text: `Добавлено уроков: ${data.added}. ${data.reviewSummary ?? "Проверьте и опубликуйте."}`, kind: "success" });
       router.refresh();
     } catch (e) {
-      setMsg({ text: e instanceof Error ? e.message : "Ошибка", kind: "error" });
+      setMsg({ text: e instanceof Error ? e.message : "Не удалось выполнить действие. Попробуйте ещё раз через минуту.", kind: "error" });
     } finally {
       setBusy(false);
     }
