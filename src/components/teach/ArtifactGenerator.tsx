@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { ProgressAsterisk } from "@/components/shared/ProgressAsterisk";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -71,7 +72,7 @@ export function ArtifactGenerator({ courseId, disabled }: { courseId: string; di
             <Label htmlFor="instructions">Пожелания</Label>
             <Textarea id="instructions" rows={4} value={instructions} onChange={(e) => setInstructions(e.target.value)} placeholder="Тема и что обязательно включить" />
           </div>
-          <Button onClick={generate} disabled={busy || disabled} className="w-full">{busy ? "Собираю…" : "Собрать"}</Button>
+          <Button onClick={generate} disabled={busy || disabled} className="w-full">{busy ? <><ProgressAsterisk thinking size={16} />Собираю…</> : "Собрать"}</Button>
           {disabled ? <p className="type-caption text-muted-foreground">Сначала загрузите материалы.</p> : null}
           {error ? <Notice kind="error">{error}</Notice> : null}
         </CardContent>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { ProgressAsterisk } from "@/components/shared/ProgressAsterisk";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -131,7 +132,7 @@ export function LessonsGenerator({ courseId, disabled }: { courseId: string; dis
               <span className="mt-0.5 block type-caption text-muted-foreground">Второй проход: ИИ-методист сверяет уроки с материалами и результатами курса и правит критерии. Удваивает время и расход.</span>
             </span>
           </label>
-          <Button onClick={generate} disabled={working || disabled} className="w-full">{busy ? (review ? "Собираю и проверяю…" : "Собираю…") : "Собрать уроки"}</Button>
+          <Button onClick={generate} disabled={working || disabled} className="w-full">{busy ? <><ProgressAsterisk thinking size={16} />{review ? "Собираю и проверяю…" : "Собираю…"}</> : "Собрать уроки"}</Button>
           {disabled ? <p className="type-caption text-muted-foreground">Сначала загрузите материалы.</p> : null}
         </div>
         {msg ? <Notice kind={msg.kind}>{msg.text}</Notice> : null}
