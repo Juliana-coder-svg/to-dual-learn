@@ -67,7 +67,7 @@ export function ProgressAsterisk({
   const f = thinking ? 1 : fraction(value);
   const on = thinking ? "stroke-current" : tone === "inverse" ? "stroke-primary-foreground" : "stroke-primary";
   const off = tone === "inverse" ? "stroke-primary-foreground/30" : "stroke-border";
-  const dots = due && !thinking ? { strokeDasharray: `0 ${RAY / 2}` } : undefined;
+  const dotted = due && !thinking;
   const a11y = label ? { role: "img" as const, "aria-label": label } : undefined;
 
   return (
@@ -90,7 +90,10 @@ export function ProgressAsterisk({
           // Доля этого луча: 1 у пройденных, 0..1 у текущего, 0 у будущих (их не рисуем, иначе круглый конец даст точку).
           const part = Math.min(1, Math.max(0, f * RAYS - i));
           if (part <= 0) return null;
-          const t = tip(i, RAY * part);
+          const len = RAY * part;
+          const t = tip(i, len);
+          // Точки по длине этого луча: центр, середина, конец. У частичного луча шаг короче, чтобы он не пропал.
+          const dots = dotted ? { strokeDasharray: `0 ${+(len / 2).toFixed(3)}` } : undefined;
           return <line key={i} x1={CENTER} y1={CENTER} x2={t.x} y2={t.y} className={on} {...dots} />;
         })}
         {f <= 0 ? <circle cx={CENTER} cy={CENTER} r={STROKE / 2} className={cn("stroke-none", tone === "inverse" ? "fill-primary-foreground" : "fill-primary")} /> : null}
