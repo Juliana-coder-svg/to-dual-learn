@@ -26,7 +26,7 @@ export default async function JoinPage({ params }: { params: Promise<{ code: str
               <p className="eyebrow">Приглашение на курс</p>
               <h1 className="mt-3 text-balance type-title">{preview.title}</h1>
               <p className="mt-3 type-body text-muted-foreground">
-                {preview.authorName ? `Автор: ${preview.authorName}. ` : ""}
+                {preview.authorName ? `Преподаватель: ${preview.authorName}. ` : ""}
                 {preview.lessons > 0
                   ? `${plural(preview.lessons, "урок", "урока", "уроков")}, каждый примерно на ${MINUTES_PER_LESSON} минут.`
                   : "Преподаватель ещё готовит уроки, они появятся в курсе."}

@@ -69,13 +69,13 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
 
   return (
     <AppShell user={user}>
-      <PageHeader title={`Привет, ${user.name}`} description="Один урок в день и карточки на повторение. Пять минут, и свободны." />
+      <PageHeader title="Сегодня" description="Один урок в день и карточки на повторение. Это пять минут." />
 
       {courses.length > 0 || user.streak > 0 || user.xp > 0 || due > 0 ? (
       <div className="mt-10 grid grid-cols-3 gap-4 sm:gap-8">
         <Stat label="Дней подряд" value={String(user.streak)} hint={user.streak > 0 ? "считается по урокам" : "начните сегодня"} />
         <Stat label="Баллы" value={String(user.xp)} hint="за уроки и повторение" />
-        <Stat label="Повторение" value={String(due)} hint={due > 0 ? `${plural(due, "карточка ждёт", "карточки ждут", "карточек ждут")} · открыть` : "на сегодня пусто"} href="/learn/review" accent={due > 0} />
+        <Stat label="Повторение" value={String(due)} hint={due > 0 ? `${plural(due, "карточка ждёт", "карточки ждут", "карточек ждут")} · открыть` : "на сегодня карточек нет"} href="/learn/review" accent={due > 0} />
       </div>
       ) : null}
 
@@ -111,17 +111,17 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
           <h2 className="type-heading">Мои курсы</h2>
           {courses.length === 0 ? (
             <div className="mt-5 space-y-4">
-              <p className="text-muted-foreground">Курсы появятся здесь. Что вам подходит?</p>
+              <p className="text-muted-foreground">Курсы появятся здесь. Выберите, как начать.</p>
               <div className="grid gap-3 md:grid-cols-2">
                 <section className="rounded-lg border border-primary p-5">
                   <h3 className="type-heading">У меня есть код</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">Пришла ссылка: просто откройте её. Пришёл код из шести символов: введите его ниже.</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Если у вас ссылка, откройте её. Если код из шести символов, введите его ниже.</p>
                   {sp.error ? <Notice kind="error" className="mt-4">Курс с таким кодом не найден. Проверьте код или попросите преподавателя прислать ссылку.</Notice> : null}
                   {joinForm}
                 </section>
                 <section className="rounded-lg border p-5">
                   <h3 className="type-heading">Кода нет</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">Пройдите первый урок примера: идея, задача, разбор. Это пять минут и ничего не нужно настраивать.</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Пройдите первый урок примера: идея, задача, разбор. Это пять минут, настраивать ничего не нужно.</p>
                   <Button nativeButton={false} render={<Link href={`/try/${DEFAULT_TRY_SLUG}/1?from=learn`} />} variant="outline" className="mt-4">Попробовать урок</Button>
                 </section>
               </div>
