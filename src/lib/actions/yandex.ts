@@ -17,12 +17,14 @@ function parseConsents(formData: FormData): ConsentKind[] | null {
 /** Кнопка «Войти с Яндекс ID» внутри формы входа: берёт из формы роль, адрес возврата и согласия,
  *  почту и имя не читает. Дальше тот же путь, что у /auth/yandex/callback. */
 export async function startYandexLogin(formData: FormData): Promise<void> {
-  const role = parseRole(formData.get("role"));
+  // Роль не выбрана (вход без ?role): роль существующего профиля не трогаем.
+  const rawRole = formData.get("role");
+  const role = rawRole === "teacher" || rawRole === "student" ? parseRole(rawRole) : undefined;
   const next = safeNext(formData.get("next"));
-  const tail = `role=${role}${next ? `&next=${encodeURIComponent(next)}` : ""}`;
+  const tail = [role ? `role=${role}` : "", next ? `next=${encodeURIComponent(next)}` : ""].filter(Boolean).join("&");
   const consents = parseConsents(formData);
-  if (!consents) redirect(`/login?error=consent&${tail}`);
+  if (!consents) redirect(`/login?error=consent${tail ? `&${tail}` : ""}`);
   const cfg = yandexConfig();
-  if (!cfg) redirect(`/login?yandex=off&${tail}`);
+  if (!cfg) redirect(`/login?yandex=off${tail ? `&${tail}` : ""}`);
   redirect(await beginYandexLogin(cfg, { role, next, consents }));
 }

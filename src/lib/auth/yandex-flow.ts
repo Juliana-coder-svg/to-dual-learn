@@ -44,7 +44,7 @@ export async function yandexRedirectUri(): Promise<string> {
 }
 
 /** Запоминает роль и адрес возврата, ставит state и возвращает адрес страницы разрешений Яндекса. */
-export async function beginYandexLogin(cfg: YandexConfig, p: { role: Role; next: string; consents: ConsentKind[] }): Promise<string> {
+export async function beginYandexLogin(cfg: YandexConfig, p: { role?: Role; next: string; consents: ConsentKind[] }): Promise<string> {
   const state = randomBytes(32).toString("base64url");
   const store = await cookies();
   store.set(STATE_COOKIE, state, {
@@ -57,7 +57,7 @@ export async function beginYandexLogin(cfg: YandexConfig, p: { role: Role; next:
   // Имя не задаём: новый пользователь получит его из Яндекса через user_metadata,
   // а имя существующего профиля при входе не перезаписываем.
   // Согласия из формы входа переносятся в consents на /auth/callback, как и при входе по почте.
-  await setLoginPrefs({ name: "", role: p.role, consents: p.consents, ...(p.next ? { next: p.next } : {}) });
+  await setLoginPrefs({ name: "", ...(p.role ? { role: p.role } : {}), consents: p.consents, ...(p.next ? { next: p.next } : {}) });
   return buildAuthorizeUrl({ clientId: cfg.clientId, redirectUri: await yandexRedirectUri(), state });
 }
 

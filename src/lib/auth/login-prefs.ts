@@ -11,7 +11,8 @@ const MAX_AGE_SEC = 60 * 30;
 
 export interface LoginPrefs {
   name: string;
-  role: Role;
+  /** Не задана, если человек не выбирал роль: тогда роль существующего профиля остаётся прежней. */
+  role?: Role;
   /** Куда вернуть после входа (например, /join/КОД). Только относительный путь. */
   next?: string;
   /** Согласия, отмеченные в форме входа: записываются в consents после подтверждения ссылки. */
@@ -33,7 +34,7 @@ export async function takeLoginPrefs(): Promise<LoginPrefs | null> {
   try {
     const parsed = JSON.parse(raw) as { name?: unknown; role?: unknown; next?: unknown; consents?: unknown };
     const name = typeof parsed.name === "string" ? parsed.name.trim() : "";
-    const role: Role = parsed.role === "teacher" ? "teacher" : "student";
+    const role: Role | undefined = parsed.role === "teacher" || parsed.role === "student" ? parsed.role : undefined;
     const next = safeNextPath(parsed.next) || undefined;
     const consents = Array.isArray(parsed.consents)
       ? CONSENT_KINDS.filter((k) => (parsed.consents as unknown[]).includes(k))

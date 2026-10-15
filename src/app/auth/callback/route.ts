@@ -42,7 +42,7 @@ export async function GET(req: Request): Promise<NextResponse> {
   const prefs = await takeLoginPrefs();
   let target = homeFor(user);
   if (prefs) {
-    const patch = { role: prefs.role, ...(prefs.name ? { name: prefs.name } : {}) };
+    const patch = { ...(prefs.role ? { role: prefs.role } : {}), ...(prefs.name ? { name: prefs.name } : {}) };
     await updateProfile(user.id, patch);
     if (prefs.consents?.length) await recordConsents(user.id, prefs.consents);
     target = safeNextPath(prefs.next) || homeFor({ ...user, ...patch });
