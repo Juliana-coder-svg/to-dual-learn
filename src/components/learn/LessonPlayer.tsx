@@ -220,6 +220,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
           <div>
             <h2 data-step-heading tabIndex={-1} className="eyebrow outline-none">Задача</h2>
             <p className="mt-2 text-lg leading-relaxed">{c.task}</p>
+            {sample ? <a href="#answer" className="mt-1 inline-flex min-h-11 items-center text-sm text-muted-foreground underline underline-offset-4 md:hidden">К полю ответа</a> : null}
           </div>
           {sample ? (
             <div>
@@ -231,16 +232,6 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
                 </button>
               ) : null}
             </div>
-          ) : null}
-          {c.signals.length > 0 ? (
-            <details className="group rounded-lg border px-4">
-              <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium outline-none focus-visible:ring-3 focus-visible:ring-ring/40 [&::-webkit-details-marker]:hidden">
-                <span>На что смотреть <span className="font-normal text-muted-foreground">· {plural(c.signals.length, "признак", "признака", "признаков")}</span></span>
-                <span aria-hidden className="text-muted-foreground group-open:hidden">Показать</span>
-                <span aria-hidden className="hidden text-muted-foreground group-open:inline">Скрыть</span>
-              </summary>
-              <ul className="space-y-2 pb-4 type-body">{c.signals.map((s, i) => <li key={i} className="flex gap-3">{arrow}<span>{s}</span></li>)}</ul>
-            </details>
           ) : null}
           {feedback && (prevNextStep || feedback.improvements.length > 0) ? (
             <div className="rounded-lg border p-4">
@@ -254,7 +245,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
           ) : null}
           <div>
             <label htmlFor="answer" className="text-sm font-semibold">{t.answerLabel}</label>
-            <Textarea id="answer" className="mt-2 min-h-40 md:min-h-44" rows={7} value={answer} onChange={(e) => setAnswer(e.target.value)} disabled={busy} placeholder={t.answerPlaceholder} aria-describedby={!error && answer.trim().length > 0 && answer.trim().length < 10 ? "answer-hint" : undefined} />
+            <Textarea id="answer" className="mt-2 min-h-32 max-h-[45vh] overflow-y-auto md:min-h-44 md:max-h-96" rows={7} value={answer} onChange={(e) => setAnswer(e.target.value)} disabled={busy} placeholder={t.answerPlaceholder} aria-describedby={!error && answer.trim().length > 0 && answer.trim().length < 10 ? "answer-hint" : undefined} />
             {guest ? (
               <p className="mt-2 type-caption text-muted-foreground">Ответ прочитает и разберёт модель, поэтому не пишите имён, почты и телефонов. До входа ответ хранится только в этом браузере. После входа он попадёт в профиль, и его увидит команда курса.</p>
             ) : (
@@ -268,10 +259,21 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
             </div>
           ) : null}
           {!error && answer.trim().length > 0 && answer.trim().length < 10 ? <p id="answer-hint" className="text-sm text-muted-foreground">{TOO_SHORT}</p> : null}
-          <div className="flex flex-wrap gap-3">
+          {/* На телефоне ряд кнопок липнет к низу экрана: поле растёт, а кнопка остаётся под пальцем. */}
+          <div className="sticky bottom-0 z-10 -mx-4 flex flex-wrap gap-3 border-t bg-background px-4 py-3 md:static md:mx-0 md:border-0 md:bg-transparent md:p-0">
             <Button size="lg" onClick={submit} disabled={busy || answer.trim().length < 10}>{busy ? t.busy : error?.retryable ? t.submitRetry : t.submit}</Button>
             <Button size="lg" variant="ghost" onClick={() => setStep("intro")} disabled={busy}>{t.back}</Button>
           </div>
+          {c.signals.length > 0 ? (
+            <details className="group rounded-lg border px-4">
+              <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium outline-none focus-visible:ring-3 focus-visible:ring-ring/40 [&::-webkit-details-marker]:hidden">
+                <span>На что смотреть <span className="font-normal text-muted-foreground">· {plural(c.signals.length, "признак", "признака", "признаков")}</span></span>
+                <span aria-hidden className="text-muted-foreground group-open:hidden">Показать</span>
+                <span aria-hidden className="hidden text-muted-foreground group-open:inline">Скрыть</span>
+              </summary>
+              <ul className="space-y-2 pb-4 type-body">{c.signals.map((s, i) => <li key={i} className="flex gap-3">{arrow}<span>{s}</span></li>)}</ul>
+            </details>
+          ) : null}
         </section>
       ) : null}
 
