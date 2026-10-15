@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { SectionHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { AiNote } from "@/components/shared/AiNote";
+import { ProgressAsterisk } from "@/components/shared/ProgressAsterisk";
 
 export default async function StudentsPage({ params }: { params: Promise<{ courseId: string }> }) {
   const { courseId } = await params;
@@ -48,10 +49,7 @@ export default async function StudentsPage({ params }: { params: Promise<{ cours
                   <tr key={s.user_id}>
                     <td className="pl-4"><div className="font-medium">{s.name}</div><div className="type-caption text-muted-foreground">{s.email}</div></td>
                     <td>
-                      <div className="flex items-center gap-2">
-                        <span className="h-1.5 w-16 overflow-hidden rounded-none bg-muted"><span className="block h-full rounded-none bg-primary" style={{ width: `${published ? Math.round((s.completed / published) * 100) : 0}%` }} /></span>
-                        <span>{s.completed}/{published}</span>
-                      </div>
+                      <ProgressAsterisk size={16} value={{ done: s.completed, total: published }} label={`Пройдено ${s.completed} из ${published}`} count={`${s.completed}/${published}`} />
                     </td>
                     <td>{s.avg_score != null ? s.avg_score.toFixed(1) : <span className="text-muted-foreground">—</span>}</td>
                     <td>{s.streak}</td>
