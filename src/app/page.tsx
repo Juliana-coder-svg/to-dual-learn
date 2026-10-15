@@ -142,7 +142,7 @@ export default function Home() {
             <p className="mt-3 text-sm text-muted-foreground">Бесплатно. Пробный урок без входа, пять минут. Дальше пароль не нужен: войдите по почте и имени.</p>
           </div>
         </div>
-        <LessonSketch />
+        <div className="relative"><LessonSketch /></div>
       </section>
 
       <section className="border-t py-20 md:py-24">
