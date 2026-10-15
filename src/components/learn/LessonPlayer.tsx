@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { AiNote } from "@/components/shared/AiNote";
 import { StepMarks } from "@/components/shared/StepMarks";
 import type { Feedback, LessonContent } from "@/lib/lessons/types";
-import { APPEAL_RETRY_HINT, RETRY_HINT, TOO_SHORT, lessonCopy } from "@/lib/lessons/copy";
+import { APPEAL_RETRY_HINT, RETRY_HINT, TOO_SHORT, lessonCopy, scoreMeaning, splitReservation } from "@/lib/lessons/copy";
 import type { Tone } from "@/lib/prompts/tone";
 import { plural } from "@/lib/utils/format";
 
@@ -156,9 +156,13 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
   }, [guest]);
 
   const answerIsLong = answer.length > ANSWER_COLLAPSE_CHARS;
+  const metCount = feedback?.criteria.filter((x) => x.met).length ?? 0;
+  const reservations = feedback?.criteria.filter((x) => splitReservation(x.met, x.comment).reservation).length ?? 0;
   // Разборы до 8 октября 2026 сохранены без worked и nextStep: поля могут отсутствовать, а не только быть null.
   const worked = feedback?.worked?.trim() || null;
   const prevNextStep = feedback?.nextStep?.trim() || null;
+  // nextStep совпадает с первым пунктом improvements (см. ядро разбора): под шагом показываем только остальные.
+  const moreImprovements = feedback ? (prevNextStep ? feedback.improvements.slice(1) : feedback.improvements) : [];
   const topRef = useRef<HTMLElement>(null);
   const firstRender = useRef(true);
   useEffect(() => {
@@ -298,6 +302,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
               ) : null}
             </dl>
           </div>
+          <p className="type-caption text-muted-foreground">{scoreMeaning(feedback.score, metCount, feedback.criteria.length, reservations)}</p>
           {worked || prevNextStep ? (
             <div className={`grid gap-3 ${worked && prevNextStep ? "md:grid-cols-2" : ""}`}>
               {worked ? (
@@ -329,13 +334,14 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
               <h3 className="text-sm font-semibold">По критериям <span className="font-normal text-muted-foreground">· {feedback.criteria.filter((x) => x.met).length} из {feedback.criteria.length}</span></h3>
               <ul className="mt-3 divide-y rounded-lg border">
                 {feedback.criteria.map((cr, i) => {
-                  const comment = cr.comment?.trim();
+                  const { reservation, comment } = splitReservation(cr.met, cr.comment);
                   return (
                     <li key={i} className="flex gap-3 p-4 type-body">
                       <span aria-hidden className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full text-xs ${cr.met ? "bg-primary text-primary-foreground" : "border-2 border-foreground font-bold text-foreground"}`}>{cr.met ? "✓" : "✗"}</span>
                       <span>
-                        <span className="sr-only">{cr.met ? "Выполнено: " : "Не выполнено: "}</span>
+                        <span className="sr-only">{cr.met ? (reservation ? "Выполнено с оговоркой: " : "Выполнено: ") : "Не выполнено: "}</span>
                         <span className={cr.met ? "text-muted-foreground" : "font-medium"}>{cr.criterion}</span>
+                        {reservation ? <Badge variant="soft" className="ml-2 align-middle">С оговоркой</Badge> : null}
                         {comment ? <span className="mt-1 block text-sm text-muted-foreground">{comment}</span> : null}
                       </span>
                     </li>
@@ -345,11 +351,15 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
             </div>
           ) : null}
           {!worked && feedback.strengths.length > 0 ? <div><h3 className="text-sm font-semibold">Что получилось</h3><ul className="mt-2 list-disc pl-5 type-body">{feedback.strengths.map((s, i) => <li key={i}>{s}</li>)}</ul></div> : null}
-          {feedback.improvements.length > 0 ? (
-            <div className="rounded-lg border p-4">
-              <h3 className="text-sm font-semibold">Что улучшить</h3>
-              <ul className="mt-2 space-y-2 type-body">{feedback.improvements.map((s, i) => <li key={i} className="flex gap-3">{arrow}<span>{s}</span></li>)}</ul>
-            </div>
+          {moreImprovements.length > 0 ? (
+            <details className="group rounded-lg border px-4">
+              <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium outline-none focus-visible:ring-3 focus-visible:ring-ring/40 [&::-webkit-details-marker]:hidden">
+                <span>{prevNextStep ? "Что ещё улучшить" : "Что улучшить"} <span className="font-normal text-muted-foreground">· {moreImprovements.length}</span></span>
+                <span aria-hidden className="text-muted-foreground group-open:hidden">Показать</span>
+                <span aria-hidden className="hidden text-muted-foreground group-open:inline">Скрыть</span>
+              </summary>
+              <ul className="space-y-2 pb-4 type-body">{moreImprovements.map((s, i) => <li key={i} className="flex gap-3">{arrow}<span>{s}</span></li>)}</ul>
+            </details>
           ) : null}
           {guest ? null : appealOpen ? (
             <div className="space-y-3 rounded-lg border p-4">
@@ -377,7 +387,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
           {!guest && progress && progress.xp === progress.gained ? (
             <div className="callout">
               <div className="callout-label">Что дальше</div>
-              <p className="mt-2 type-body">Первый урок пройден, серия началась. Серия считает дни подряд: пропустите день, и она начнётся заново. Сегодняшний урок вернётся карточками на повторение: завтра они появятся в разделе «Повторение».</p>
+              <p className="mt-2 type-body">Первый урок пройден, серия началась. Серия считает дни подряд: если день пропущен, она начнётся заново. Сегодняшний урок вернётся карточками на повторение: завтра они появятся в разделе «Повторение».</p>
             </div>
           ) : null}
           {guest ? (
