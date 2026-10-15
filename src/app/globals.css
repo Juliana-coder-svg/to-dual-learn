@@ -281,6 +281,11 @@
   .step-enter {
     @apply animate-in fade-in slide-in-from-bottom-2 duration-300;
   }
+  /* «Думает»: звёздочка-индикатор вращается, пока модель работает. Только на кнопках, не у логотипа. */
+  .asterisk-spin {
+    transform-origin: center;
+    animation: asterisk-spin 1.6s linear infinite;
+  }
 }
 
 @keyframes bar-grow {
@@ -292,9 +297,16 @@
   }
 }
 
+@keyframes asterisk-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .bar-grow,
-  .step-enter {
+  .step-enter,
+  .asterisk-spin {
     animation: none;
   }
 }
