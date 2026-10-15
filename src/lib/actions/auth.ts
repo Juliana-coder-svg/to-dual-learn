@@ -73,8 +73,8 @@ export async function login(formData: FormData): Promise<void> {
     const kind = error.code === "email_address_invalid" ? "email" : "send";
     redirect(`/login?error=${kind}${roleQuery}${safeNext ? `&next=${encodeURIComponent(safeNext)}` : ""}`);
   }
-  await setLoginPrefs({ name, role, next: safeNext, consents });
-  redirect(`/login?sent=1${roleQuery}`);
+  await setLoginPrefs({ name, ...(role ? { role } : {}), next: safeNext, consents });
+  redirect(`/login?sent=1${roleQuery}${safeNext ? `&next=${encodeURIComponent(safeNext)}` : ""}`);
 }
 
 /** Согласие для уже вошедшего пользователя: старая сессия или ссылка из письма, открытая
