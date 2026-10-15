@@ -48,10 +48,10 @@ export async function AppShell({
           <div className="flex shrink-0 items-center gap-1 sm:gap-2">
             <Link
               href="/account/data"
-              className="hidden h-9 items-center rounded-lg px-3 text-sm text-muted-foreground hover:bg-muted/60 hover:text-foreground lg:inline-flex"
+              className="hidden h-9 max-w-40 items-center rounded-lg px-3 text-sm text-muted-foreground hover:bg-muted/60 hover:text-foreground lg:inline-flex"
               title={`${user.name} · ${user.email}`}
             >
-              {user.name}
+              <span className="truncate">{user.name}</span>
             </Link>
             <form action={switchRole}>
               <Button type="submit" variant="ghost" size="sm">

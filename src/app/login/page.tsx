@@ -56,11 +56,11 @@ export default async function LoginPage({
     );
   }
 
-  const submitLabel = magic ? "Получить ссылку для входа" : "Войти";
+  const submitLabel = invite ? (magic ? "Получить ссылку и записаться" : "Записаться на курс") : magic ? "Получить ссылку для входа" : "Войти";
 
   return (
     <PublicShell>
-      <div className="flex flex-1 flex-col justify-center py-8 sm:py-12">
+      <div className="flex flex-1 flex-col justify-center py-4 sm:py-12">
         {invite ? (
           <>
             <p className="eyebrow">Приглашение на курс</p>
@@ -89,13 +89,13 @@ export default async function LoginPage({
           </Notice>
         ) : null}
         {sp.error ? <Notice kind="error" className="mt-5">{ERRORS[sp.error] ?? ERRORS["1"]}</Notice> : null}
-        <form action={login} className="mt-6 space-y-5 sm:mt-8 sm:space-y-6">
+        <form action={login} className="mt-4 space-y-3.5 sm:mt-8 sm:space-y-6">
           {sp.next ? <input type="hidden" name="next" value={sp.next} /> : null}
-          <div className="space-y-2">
+          <div className="space-y-1.5 sm:space-y-2">
             <Label htmlFor="email">Почта</Label>
             <Input id="email" name="email" type="email" required autoComplete="email" placeholder="you@example.com" />
           </div>
-          <div className="space-y-2">
+          <div className="space-y-1.5 sm:space-y-2">
             <Label htmlFor="name">Имя</Label>
             <Input id="name" name="name" required minLength={2} placeholder="Как к вам обращаться" />
             <p className="type-caption text-muted-foreground">
@@ -105,7 +105,7 @@ export default async function LoginPage({
           </div>
           {joinCode ? <input type="hidden" name="role" value="student" /> : <RoleChoice defaultRole={defaultRole} />}
           <ConsentFields />
-          <div className="space-y-3">
+          <div className="space-y-2.5 sm:space-y-3">
             <Button type="submit" size="lg" className="w-full">{submitLabel}</Button>
             <YandexLoginButton error={sp.yandex} />
             <p className="text-center type-caption text-muted-foreground">

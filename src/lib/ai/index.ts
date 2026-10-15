@@ -178,7 +178,7 @@ export async function reviewLessons(
     maxTokens: 32000,
     effort: "high",
   });
-  if (result.lessons.length !== lessons.length) throw new Error("Методист вернул другое количество уроков. Попробуйте ещё раз.");
+  if (result.lessons.length !== lessons.length) throw new Error("Проверка вернула другое количество уроков. Попробуйте ещё раз.");
   return result;
 }
 

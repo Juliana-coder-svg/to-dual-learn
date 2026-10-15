@@ -59,7 +59,7 @@ export function lessonCopy(tone: Tone): LessonCopy {
 /** Что значит балл. Шкала та же, что в промпте разбора (src/lib/prompts/evaluate.ts): 5 — все критерии и своё наблюдение сверх них, 4 — все критерии, 3 — примерно половина, 2 — один, 1 — не по задаче. Говорит сервис, поэтому на «вы» и на «ты» одинаково. */
 export function scoreMeaning(score: number, met: number, total: number, withReservation: number): string {
   const of = total > 0 ? `${met} из ${total}` : "";
-  const reservation = withReservation > 0 ? (withReservation === 1 ? ", один с оговоркой" : `, с оговоркой: ${withReservation}`) : "";
+  const reservation = withReservation > 0 ? (withReservation === 1 ? " (один с оговоркой)" : ` (с оговоркой: ${withReservation})`) : "";
   if (score >= 5) return `Балл 5 из 5: выполнены все критерии${reservation} и есть своё наблюдение сверх них.`;
   if (score === 4) return `Балл 4 из 5: ${total > 0 && met === total ? `выполнены все критерии${reservation}` : `выполнено ${of}`}. Пять ставим, когда в ответе есть ещё и своё наблюдение сверх критериев.`;
   if (score === 3) return `Балл 3 из 5: ${total > 0 ? `выполнено ${of}` : "выполнена примерно половина критериев"}. Четыре ставим, когда выполнены все.`;

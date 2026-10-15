@@ -124,7 +124,7 @@ export default function Home() {
   return (
     <PublicShell width="wide" action={<Button nativeButton={false} render={<Link href="/login" />} size="sm" variant="outline">Войти</Button>}>
       <SessionRedirect />
-      <section className="grid items-center gap-12 py-16 md:grid-cols-[1.15fr_1fr] md:gap-16 md:py-28">
+      <section className="grid items-center gap-10 py-10 md:grid-cols-[1.15fr_1fr] md:gap-16 md:py-28">
         <div className="flex flex-col">
           <p className="eyebrow text-primary-strong">Микрообучение</p>
           <h1 className="mt-5 max-w-3xl text-balance type-display">

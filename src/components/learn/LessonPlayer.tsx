@@ -304,7 +304,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
               ) : null}
             </dl>
           </div>
-          <p className="type-caption text-muted-foreground">{scoreMeaning(feedback.score, metCount, feedback.criteria.length, reservations)}</p>
+          <p className="-mt-4 type-caption text-muted-foreground">{scoreMeaning(feedback.score, metCount, feedback.criteria.length, reservations)}</p>
           {worked || prevNextStep ? (
             <div className={`grid gap-3 ${worked && prevNextStep ? "md:grid-cols-2" : ""}`}>
               {worked ? (

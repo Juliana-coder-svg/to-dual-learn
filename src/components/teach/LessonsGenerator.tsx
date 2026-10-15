@@ -63,7 +63,7 @@ export function LessonsGenerator({ courseId, disabled }: { courseId: string; dis
       if (!res.ok || !data.ok) throw new Error(data.error ?? "Не удалось сохранить ответы. Они остались в полях: нажмите «Сохранить» ещё раз.");
       setNotesSaved(true);
       setQuestions(null);
-      setMsg({ text: `Ответы сохранены как материал курса (${data.saved}). Теперь можно собирать уроки.`, kind: "success" });
+      setMsg({ text: `Сохранено ответов: ${data.saved}. Они стали материалом курса, теперь можно собирать уроки.`, kind: "success" });
       router.refresh();
     } catch (e) {
       setMsg({ text: e instanceof Error ? e.message : "Не удалось выполнить действие. Попробуйте ещё раз через минуту.", kind: "error" });
@@ -114,7 +114,7 @@ export function LessonsGenerator({ courseId, disabled }: { courseId: string; dis
     <Card>
       <CardHeader>
         <CardTitle>Собрать уроки</CardTitle>
-        <CardDescription>ИИ прочитает материалы и соберёт последовательность коротких уроков с задачами и критериями. {review ? "Сборка с проверкой занимает 3–5 минут." : "Сборка без проверки занимает 2–3 минуты."} Вкладку можно не закрывать: результат появится в списке.</CardDescription>
+        <CardDescription>ИИ прочитает материалы и соберёт последовательность коротких уроков с задачами и критериями. {review ? "Сборка с проверкой занимает 3–5 минут." : "Сборка без проверки занимает 2–3 минуты."} Не закрывайте вкладку: результат появится в списке.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
         <div className="space-y-2">
