@@ -133,11 +133,11 @@ export default function Home() {
         <div className="flex flex-col">
           <p className="eyebrow text-primary-strong">Микрообучение</p>
           <h1 className="mt-5 max-w-3xl text-balance type-display">
-            Студенты практикуются по вашим материалам по&nbsp;пять минут в&nbsp;день
+            Пятиминутные уроки из&nbsp;ваших материалов, разбор каждого ответа
           </h1>
           <p className="mt-6 max-w-lg text-lg leading-relaxed text-muted-foreground max-md:order-last max-md:mt-8">
-            Загрузите программу, методичку или конспект лекции. To Dual Learn соберёт из них короткие уроки с задачей
-            и разберёт ответы студентов по критериям. Через день, неделю и месяц пройденное вернётся карточками.
+            Загрузите методичку или конспект, и ИИ соберёт уроки с задачей. Он разберёт ответы студентов
+            по критериям, а итоговое решение останется за вами. Через день, неделю и месяц пройденное вернётся карточками.
           </p>
           <div className="mt-8 max-md:mt-6">
             <EntryButtons trial />
