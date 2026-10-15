@@ -22,7 +22,7 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
     listLessonSummaries(courseId, { publishedOnly: true }),
     latestSubmissionsForCourse(userId, courseId),
     countLessonsStartedToday(userId, courseId),
-    countDueFlashcardsByCourse(userId),
+    countDueFlashcardsByCourse(userId, { courseId }),
   ]);
   if (!ctx) return noCourseAccess(`/learn/${courseId}`);
   const { user, course } = ctx;

@@ -684,16 +684,19 @@ export async function listDueFlashcards(userId: string, now = nowIso()): Promise
   });
 }
 
-/** Сколько карточек ждёт повторения в каждом курсе: course_id → число. Для звёздочки-прогресса (лучи точками) на /learn и в шапке курса. */
-export async function countDueFlashcardsByCourse(userId: string, now = nowIso()): Promise<Map<string, number>> {
+/** Сколько карточек ждёт повторения в каждом курсе: course_id → число. Для звёздочки-прогресса (лучи точками)
+ *  на /learn и в шапке курса; с `courseId` считает только один курс. Считает строки на сервере приложения,
+ *  поэтому упирается в лимит выдачи PostgREST (1000 строк): для одного студента это недостижимо. */
+export async function countDueFlashcardsByCourse(userId: string, opts: { courseId?: string; now?: string } = {}): Promise<Map<string, number>> {
   const sb = await getSupabase();
+  let q = sb
+    .from("flashcards")
+    .select("lesson_id, lessons!inner(course_id)")
+    .eq("user_id", userId)
+    .lte("next_due_at", opts.now ?? nowIso());
+  if (opts.courseId) q = q.eq("lessons.course_id", opts.courseId);
   const rows = unwrap(
-    await sb
-      .from("flashcards")
-      .select("lesson_id, lessons!inner(course_id)")
-      .eq("user_id", userId)
-      .lte("next_due_at", now)
-      .overrideTypes<Array<{ lesson_id: string; lessons: { course_id: string } }>, { merge: false }>(),
+    await q.overrideTypes<Array<{ lesson_id: string; lessons: { course_id: string } }>, { merge: false }>(),
     "due by course",
   );
   const out = new Map<string, number>();

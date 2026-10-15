@@ -111,8 +111,8 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
                       <h3 className="text-balance type-heading">{c.title}</h3>
                       <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{c.description || "Без описания"}</p>
                     </div>
-                    {/* Звёздочка-прогресс на месте бывшей полосы, всегда с числом; лучи точками, если по курсу ждут карточки. */}
-                    <ProgressAsterisk
+                    {/* Звёздочка-прогресс на месте бывшей полосы, всегда с числом; лучи точками, если по курсу ждут карточки. Без уроков считать нечего. */}
+                    {lessons.length > 0 ? <ProgressAsterisk
                       size={24}
                       value={{ done: completed, total: lessons.length }}
                       due={dueCards > 0}
@@ -120,7 +120,7 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
                       count={`${completed} из ${lessons.length}`}
                       countClassName="text-2xl font-semibold tracking-tight"
                       className="mt-4"
-                    />
+                    /> : null}
                     <p className="mt-3 text-sm text-muted-foreground">
                       {next && limitReached ? (
                         <>Сегодня пройдено. Завтра: <span className="text-foreground">{next.title}</span></>
