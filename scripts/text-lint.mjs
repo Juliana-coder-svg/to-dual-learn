@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 // Сканер пользовательских текстов To Dual Learn.
-// Чистый Node 22+, без зависимостей. Правила читает из навыка russian-editing:
-//   .claude/skills/russian-editing/references/cliches.md   (блоки ```lint  — списки фраз)
-//   .claude/skills/russian-editing/references/ai-signs.md  (блоки ```lint-re — регулярки)
+// Чистый Node 22+, без зависимостей. Правила лежат в проекте, внешний навык не нужен:
+//   scripts/text-lint/cliches.md   (блоки ```lint  — списки фраз)
+//   scripts/text-lint/ai-signs.md  (блоки ```lint-re — регулярки)
+// Копии этих файлов лежат в навыке textskill (references/); правим здесь, навык обновляем вслед.
 // Запуск: node scripts/text-lint.mjs [--json] [--no-warn] [--summary] [пути...]
 // Код выхода: 1, если есть жёсткие нарушения; 0, если их нет; 2, если сканер не смог запуститься.
 
@@ -11,7 +12,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const REF_DIR = path.join(ROOT, ".claude/skills/russian-editing/references");
+const REF_DIR = path.join(ROOT, "scripts/text-lint");
 const RULE_FILES = ["cliches.md", "ai-signs.md"];
 
 // ---------------------------------------------------------------- аргументы
@@ -592,7 +593,7 @@ function checkFragment(fr, violations) {
     hits.push({ code, label, level, hint, idx, len, ...extra });
   };
 
-  // списки фраз и регулярки из references
+  // списки фраз и регулярки из scripts/text-lint
   for (const r of RULES) {
     if (r.scopes && !r.scopes.has(surface)) continue;
     r.re.lastIndex = 0;
