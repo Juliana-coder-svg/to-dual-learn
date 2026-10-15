@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { AiNote } from "@/components/shared/AiNote";
 import { StepMarks } from "@/components/shared/StepMarks";
+import { ProgressAsterisk } from "@/components/shared/ProgressAsterisk";
 import type { Feedback, LessonContent } from "@/lib/lessons/types";
 import { APPEAL_RETRY_HINT, RETRY_HINT, TOO_SHORT, lessonCopy } from "@/lib/lessons/copy";
 import type { Tone } from "@/lib/prompts/tone";
@@ -48,9 +49,11 @@ interface Props {
   nextHref: string;
   nextLabel: string;
   tone: Tone;
+  /** Пройдено опубликованных уроков курса до этого ответа и всего уроков: для звёздочки на экране завершения. */
+  course: { done: number; total: number };
 }
 
-export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, tone }: Props) {
+export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, tone, course }: Props) {
   const router = useRouter();
   const c = lesson.content;
   const t = lessonCopy(tone);
@@ -60,6 +63,8 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
   const [answer, setAnswer] = useState(previous?.answer ?? "");
   const [feedback, setFeedback] = useState<Feedback | null>(previous?.feedback ?? null);
   const [progress, setProgress] = useState<{ streak: number; xp: number; gained: number } | null>(null);
+  // Урок засчитан только что: до router.refresh() сервер ещё не знает о нём, прибавляем сами.
+  const [firstTime, setFirstTime] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<ShownError | null>(null);
   const [appealError, setAppealError] = useState<ShownError | null>(null);
@@ -112,6 +117,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
       setScoreNote(feedback ? `Было ${feedback.score}/5, стало ${data.feedback.score}/5.` : null);
       setFeedback(data.feedback);
       if (data.firstTime && data.progress) setProgress(data.progress);
+      if (data.firstTime) setFirstTime(true);
       setStep("feedback");
       router.refresh();
     } catch (e) {
@@ -141,6 +147,9 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
   const stepAnnouncement = step === "feedback" ? "Разбор готов." : "";
 
   const stepIndex = step === "intro" ? 1 : step === "task" ? 2 : 3;
+  // После refresh `previous` появляется и сервер уже считает урок пройденным: прибавка нужна только до этого.
+  const courseDone = Math.min(course.total, course.done + (firstTime && !previous ? 1 : 0));
+  const thinking = <ProgressAsterisk thinking size={16} />;
   const arrow = <span aria-hidden className="shrink-0 text-primary-strong">→</span>;
 
   return (
@@ -227,7 +236,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
           ) : null}
           {!error && answer.trim().length > 0 && answer.trim().length < 10 ? <p id="answer-hint" className="text-sm text-muted-foreground">{TOO_SHORT}</p> : null}
           <div className="flex flex-wrap gap-3">
-            <Button size="lg" onClick={submit} disabled={busy || answer.trim().length < 10}>{busy ? t.busy : error?.retryable ? t.submitRetry : t.submit}</Button>
+            <Button size="lg" onClick={submit} disabled={busy || answer.trim().length < 10}>{busy ? <>{thinking}{t.busy}</> : error?.retryable ? t.submitRetry : t.submit}</Button>
             <Button size="lg" variant="ghost" onClick={() => setStep("intro")} disabled={busy}>{t.back}</Button>
           </div>
         </section>
@@ -326,7 +335,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
                 </div>
               ) : null}
               <div className="flex flex-wrap gap-2">
-                <Button size="lg" onClick={appeal} disabled={busy || objection.trim().length < 10}>{busy ? t.appealBusy : t.appealSubmit}</Button>
+                <Button size="lg" onClick={appeal} disabled={busy || objection.trim().length < 10}>{busy ? <>{thinking}{t.appealBusy}</> : t.appealSubmit}</Button>
                 <Button size="lg" variant="ghost" onClick={() => { setAppealOpen(false); setAppealError(null); }} disabled={busy}>Отменить</Button>
               </div>
             </div>
@@ -337,10 +346,31 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
             <div className="callout-label">Запомнить</div>
             <p className="mt-2 type-body">{c.keyTakeaway}</p>
           </div>
-          <div className="flex flex-wrap gap-3">
-            <Button nativeButton={false} render={<Link href={nextHref} />} size="lg" className="h-auto min-h-11 max-w-full shrink whitespace-normal py-2 text-left">{nextLabel}</Button>
-            <Button size="lg" variant="outline" onClick={() => setStep("task")}>{t.retry}</Button>
-          </div>
+          {/* Завершение: звёздочка курса крупно на оранжевой плашке, рядом число, дальше следующий шаг. */}
+          <section aria-labelledby="course-progress-title" className="accent-panel">
+            <div className="flex flex-wrap items-center gap-x-8 gap-y-6">
+              <ProgressAsterisk
+                tone="inverse"
+                size={96}
+                value={{ done: courseDone, total: course.total }}
+                label={`Пройдено ${courseDone} из ${course.total} уроков курса`}
+                count={`${courseDone} из ${course.total}`}
+                countClassName="type-counter"
+                className="gap-5"
+              />
+              {/* На телефоне подпись уходит под звёздочку, а не сжимается в узкий столбик рядом. */}
+              <div className="min-w-0 flex-1 basis-48">
+                <h2 id="course-progress-title" className="eyebrow">{courseDone >= course.total && course.total > 0 ? "Курс пройден" : "Курс"}</h2>
+                <p aria-hidden className="mt-1 type-body accent-panel-muted">
+                  {courseDone >= course.total && course.total > 0 ? "все уроки позади, дальше повторение" : `${plural(courseDone, "урок пройден", "урока пройдено", "уроков пройдено")}, ещё ${plural(course.total - courseDone, "урок", "урока", "уроков")}`}
+                </p>
+              </div>
+            </div>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Button nativeButton={false} render={<Link href={nextHref} />} size="lg" variant="inverse" className="h-auto min-h-11 max-w-full shrink whitespace-normal py-2 text-left">{nextLabel}</Button>
+              <Button size="lg" variant="inverse-outline" onClick={() => setStep("task")}>{t.retry}</Button>
+            </div>
+          </section>
         </section>
       ) : null}
     </article>

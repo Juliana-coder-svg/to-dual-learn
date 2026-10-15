@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { studentCourse, noCourseAccess } from "@/lib/auth/access";
 import { requireUserId } from "@/lib/auth/session";
-import { countLessonsStartedToday, getLatestSubmission, getLesson, listLessonSummaries } from "@/lib/db/queries";
+import { countLessonsStartedToday, getLatestSubmission, getLesson, latestSubmissionsForCourse, listLessonSummaries } from "@/lib/db/queries";
 import { AppShell } from "@/components/shared/AppShell";
 import { LessonPlayer } from "@/components/learn/LessonPlayer";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -14,12 +14,13 @@ export default async function LessonPage({ params }: { params: Promise<{ courseI
   if (!isUuid(courseId) || !isUuid(lessonId)) notFound();
   const userId = await requireUserId();
   // Всё одним кругом до базы; лимит считает та же RPC, что и /api/evaluate.
-  const [ctx, lesson, previous, startedToday, published] = await Promise.all([
+  const [ctx, lesson, previous, startedToday, published, done] = await Promise.all([
     studentCourse(courseId),
     getLesson(lessonId),
     getLatestSubmission(lessonId, userId),
     countLessonsStartedToday(userId, courseId),
     listLessonSummaries(courseId, { publishedOnly: true }),
+    latestSubmissionsForCourse(userId, courseId),
   ]);
   if (!ctx) return noCourseAccess(`/learn/${courseId}/lesson/${lessonId}`);
   if (!lesson || lesson.course_id !== courseId) notFound();
@@ -28,6 +29,8 @@ export default async function LessonPage({ params }: { params: Promise<{ courseI
   const locked = !previous && !isOwner && ctx.course.daily_limit > 0 && startedToday >= ctx.course.daily_limit;
   const idx = published.findIndex((l) => l.id === lesson.id);
   const nextLesson = idx >= 0 ? published[idx + 1] : undefined;
+  // Для экрана завершения: сколько опубликованных уроков курса пройдено до этого ответа.
+  const course = { done: published.filter((l) => done.has(l.id)).length, total: published.length };
 
   return (
     <AppShell user={ctx.user} width="narrow">
@@ -48,6 +51,7 @@ export default async function LessonPage({ params }: { params: Promise<{ courseI
           previous={previous ? { answer: previous.answer, feedback: previous.feedback } : null}
           nextHref={nextLesson ? `/learn/${courseId}/lesson/${nextLesson.id}` : `/learn/${courseId}`}
           tone={ctx.course.tone}
+          course={course}
           nextLabel={nextLesson ? `Следующий урок: ${nextLesson.title}` : "К списку уроков"}
         /></div>
         )}
