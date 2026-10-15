@@ -9,6 +9,8 @@ export interface NavItem {
   label: string;
   /** Подсвечивать только при точном совпадении пути (для корня раздела). */
   exact?: boolean;
+  /** Пути, на которых пункт не подсвечивается, хотя они внутри его раздела (у «Мои курсы» это /teach/start). */
+  except?: string[];
 }
 
 /** Ссылки разделов с подсветкой текущего. На десктопе в шапке, на телефоне строкой под ней. */
@@ -17,7 +19,7 @@ export function NavLinks({ items, className }: { items: NavItem[]; className?: s
   return (
     <nav aria-label="Разделы" className={cn("flex items-center gap-1", className)}>
       {items.map((item) => {
-        const active = item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(item.href + "/");
+        const active = !item.except?.some((e) => pathname === e || pathname.startsWith(e + "/")) && (item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(item.href + "/"));
         return (
           <Link
             key={item.href}

@@ -22,7 +22,7 @@ export default async function MaterialsPage({ params }: { params: Promise<{ cour
           description="Программа, методички, учебники, статьи. Всё, что вы загрузите, ИИ использует, когда собирает уроки и задания и отвечает на вопросы."
         />
         {materials.length === 0 ? (
-          <EmptyState className="mt-6" title="Материалов пока нет" description="Загрузите хотя бы один файл или вставьте текст справа, чтобы собрать уроки." />
+          <EmptyState className="mt-6" title="Материалов пока нет" description="Загрузите файл или вставьте текст в блоках «Загрузить файлы» и «Вставить текст»: из них соберутся уроки." />
         ) : (
           <ul className="mt-6 divide-y rounded-lg border">
             {materials.map((m) => (
@@ -48,7 +48,7 @@ export default async function MaterialsPage({ params }: { params: Promise<{ cour
           </ul>
         )}
         {materials.length > 0 ? (
-          <p className="mt-3 type-caption text-muted-foreground">Всего {formatChars(totalChars)} (~{Math.max(1, Math.round(totalChars / 3.5 / 1000))} тыс. токенов, по ним считается расход на ИИ). Повторные запросы выходят дешевле: материалы берутся из кэша.</p>
+          <p className="mt-3 type-caption text-muted-foreground">Всего {formatChars(totalChars)}. Чем больше материалов, тем дороже запросы к ИИ; повторные запросы выходят дешевле.</p>
         ) : null}
       </section>
       <aside className="min-w-0">

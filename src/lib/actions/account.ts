@@ -3,9 +3,19 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth/session";
-import { listOwnedCoursesWithStudents, withdrawConsent } from "@/lib/db/queries";
+import { listOwnedCoursesWithStudents, updateProfile, withdrawConsent } from "@/lib/db/queries";
 import { recordConsents } from "@/lib/legal/consents";
 import { createServiceClient, getSupabase } from "@/lib/supabase/server";
+
+/** Смена имени в «Моих данных». Имя видно в шапке, студентам и преподавателю на их экранах, поэтому режем пробелы и длину. */
+export async function updateNameAction(formData: FormData): Promise<void> {
+  const user = await requireUser();
+  const name = String(formData.get("name") ?? "").trim().replace(/\s+/g, " ");
+  if (name.length < 2 || name.length > 80) redirect("/account/data?error=name");
+  await updateProfile(user.id, { name });
+  revalidatePath("/", "layout");
+  redirect("/account/data?saved=name");
+}
 
 /** Письма о программах To Dual: отдельное согласие, включается и отзывается на странице «Мои данные». */
 export async function setMarketingConsentAction(formData: FormData): Promise<void> {

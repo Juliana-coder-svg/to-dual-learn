@@ -1,5 +1,5 @@
 import type { PostgrestMaybeSingleResponse, PostgrestResponse, PostgrestSingleResponse } from "@supabase/supabase-js";
-import { getSupabase } from "@/lib/supabase/server";
+import { createServiceClient, getSupabase } from "@/lib/supabase/server";
 import type {
   AiCallRow,
   CalibrationSampleRow,
@@ -8,6 +8,9 @@ import type {
   ConsentKind,
   ConsentRow,
   CourseRow,
+  CourseSuggestionRow,
+  CourseUpdateRow,
+  FlashcardSignalRow,
   FlashcardRow,
   GenerationRow,
   HomeworkCheckRow,
@@ -19,6 +22,8 @@ import type {
   Role,
   StudentStatsRow,
   SubmissionRow,
+  SuggestionExcerptRow,
+  SuggestionStatus,
   Tone,
   UsageByKindRow,
   UsageSummaryRow,
@@ -29,7 +34,7 @@ import {
   type Feedback,
   type HomeworkResults,
   type LessonContent,
-  type LessonReviewNote,
+  type LessonReviewRecord,
   type StoredHomeworkResults,
 } from "@/lib/lessons/types";
 import { normalizeHomeworkResults } from "@/lib/homework/overview";
@@ -47,11 +52,11 @@ export type Material = MaterialRow;
 export type Flashcard = FlashcardRow;
 export type Generation = GenerationRow;
 export type ChatMessage = ChatMessageRow;
-export type { CalibrationSampleRow };
+export type { CalibrationSampleRow, CourseSuggestionRow, SuggestionExcerptRow, CourseUpdateRow, FlashcardSignalRow };
 
 export interface Lesson extends Omit<LessonRow, "content" | "review"> {
   content: LessonContent;
-  review: LessonReviewNote | null;
+  review: LessonReviewRecord | null;
 }
 
 export interface Submission extends Omit<SubmissionRow, "feedback"> {
@@ -154,6 +159,32 @@ export async function hasActiveConsent(userId: string, kind: ConsentKind, versio
   return Boolean(row);
 }
 
+/** Профиль и признак действующего согласия одним запросом (embed consents по внешнему ключу):
+ *  вместо двух параллельных запросов, каждый из которых мог открыть своё соединение с базой. */
+export async function getUserWithConsent(
+  id: string,
+  kind: ConsentKind,
+  version: string,
+): Promise<{ user: User; consented: boolean } | undefined> {
+  const sb = await getSupabase();
+  const row = unwrapMaybe(
+    await sb
+      .from("profiles")
+      .select("*, consents(id)")
+      .eq("id", id)
+      .eq("consents.kind", kind)
+      .eq("consents.version", version)
+      .is("consents.withdrawn_at", null)
+      .limit(1, { foreignTable: "consents" })
+      .maybeSingle()
+      .overrideTypes<ProfileRow & { consents: Array<{ id: string }> }, { merge: false }>(),
+    "profile with consent",
+  );
+  if (!row) return undefined;
+  const { consents, ...user } = row;
+  return { user, consented: consents.length > 0 };
+}
+
 export async function withdrawConsent(userId: string, kind: ConsentKind): Promise<void> {
   const sb = await getSupabase();
   check(
@@ -206,6 +237,24 @@ export async function updateCourseSettings(
 export async function getCourse(id: string): Promise<Course | undefined> {
   const sb = await getSupabase();
   return unwrapMaybe(await sb.from("courses").select("*").eq("id", id).maybeSingle(), "course");
+}
+
+/** Курс и признак записи текущего студента одним запросом (embed enrollments с фильтром по user_id). */
+export async function getCourseWithEnrollment(id: string, userId: string): Promise<{ course: Course; enrolled: boolean } | undefined> {
+  const sb = await getSupabase();
+  const row = unwrapMaybe(
+    await sb
+      .from("courses")
+      .select("*, enrollments(user_id)")
+      .eq("id", id)
+      .eq("enrollments.user_id", userId)
+      .maybeSingle()
+      .overrideTypes<CourseRow & { enrollments: Array<{ user_id: string }> }, { merge: false }>(),
+    "course with enrollment",
+  );
+  if (!row) return undefined;
+  const { enrollments, ...course } = row;
+  return { course, enrolled: enrollments.length > 0 };
 }
 
 /** Через RPC: до записи на курс RLS не даёт прочитать его напрямую. */
@@ -271,6 +320,25 @@ export async function listCoursesForStudentWithLessons(userId: string): Promise<
     if (!r.course) return [];
     const { lessons, ...course } = r.course;
     return [{ course, lessons: lessons.filter((l) => l.status === "published").sort((a, b) => a.position - b.position) }];
+  });
+}
+
+/** Курсы, которыми пользователь владеет, с опубликованными уроками: преподаватель проходит свой курс
+ *  как студент с экрана /learn, не записываясь на него кодом. */
+export async function listOwnedCoursesWithLessons(ownerId: string): Promise<Array<{ course: Course; lessons: LessonSummary[] }>> {
+  const sb = await getSupabase();
+  const rows = unwrap(
+    await sb
+      .from("courses")
+      .select(`*, lessons(${LESSON_SUMMARY_COLUMNS})`)
+      .eq("owner_id", ownerId)
+      .order("created_at", { ascending: false })
+      .overrideTypes<Array<CourseRow & { lessons: LessonSummary[] }>, { merge: false }>(),
+    "owned courses with lessons",
+  );
+  return rows.map((r) => {
+    const { lessons, ...course } = r;
+    return { course, lessons: lessons.filter((l) => l.status === "published").sort((a, b) => a.position - b.position) };
   });
 }
 
@@ -366,8 +434,19 @@ function rowToLesson(r: LessonRow): Lesson {
     reviewed_at: r.reviewed_at,
     reviewed_by: r.reviewed_by,
     content: normalizeLessonContent(r.content),
-    review: r.review ? (r.review as unknown as LessonReviewNote) : null,
+    review: reviewRecord(r.review),
   };
+}
+
+function reviewRecord(raw: Json | null): LessonReviewRecord | null {
+  if (!raw) return null;
+  const rec = raw as unknown as LessonReviewRecord;
+  if (!rec.proposal) return rec;
+  try {
+    return { ...rec, proposal: normalizeLessonContent(rec.proposal) };
+  } catch {
+    return { ...rec, proposal: null };
+  }
 }
 
 /** reviewed: `{ by }` — текст сохранил преподаватель, урок считается проверенным им;
@@ -391,7 +470,7 @@ export async function updateLessonContent(id: string, courseId: string, content:
   );
 }
 
-export async function setLessonReview(id: string, courseId: string, note: LessonReviewNote | null): Promise<void> {
+export async function setLessonReview(id: string, courseId: string, note: LessonReviewRecord | null): Promise<void> {
   const sb = await getSupabase();
   check(
     await sb
@@ -401,6 +480,86 @@ export async function setLessonReview(id: string, courseId: string, note: Lesson
       .eq("course_id", courseId),
     "lesson review",
   );
+}
+
+async function getLessonReview(id: string, courseId: string): Promise<LessonReviewRecord | null> {
+  const sb = await getSupabase();
+  const row = unwrap(await sb.from("lessons").select("review").eq("id", id).eq("course_id", courseId).maybeSingle(), "lesson review");
+  return row?.review ? (row.review as unknown as LessonReviewRecord) : null;
+}
+
+/** Запись без ключа proposal. Ключ именно удаляется, а не ставится в null: для Postgres `review->'proposal'`
+ *  с JSON null — это не SQL NULL, и фильтр «предложение ещё на месте» его бы пропустил. */
+function withoutProposal(review: LessonReviewRecord, decision: "accepted" | "rejected"): LessonReviewRecord {
+  const { proposal: _dropped, ...rest } = review;
+  void _dropped;
+  return { ...rest, decision };
+}
+
+/** Фильтр «предложение ещё не решено»: `->>` отдаёт текст, для JSON null и отсутствующего ключа это SQL NULL. */
+const PROPOSAL_PENDING = "review->>proposal";
+
+/** Преподаватель принял правку методиста: предложенный текст становится текущим, заметка остаётся с пометкой.
+ *  Один update с условием, что предложение ещё на месте: два клика или две вкладки не разойдутся.
+ *  Текст написала модель, поэтому отметка «проверено преподавателем» снимается, как при переписывании. */
+export async function acceptLessonProposal(id: string, courseId: string): Promise<boolean> {
+  const review = await getLessonReview(id, courseId);
+  if (!review?.proposal) return false;
+  let content: LessonContent;
+  try {
+    content = normalizeLessonContent(review.proposal);
+  } catch {
+    await rejectLessonProposal(id, courseId);
+    return false;
+  }
+  const record = withoutProposal({ ...review, title: content.title }, "accepted");
+  const sb = await getSupabase();
+  const rows = unwrap(
+    await sb
+      .from("lessons")
+      .update({ title: content.title, concept: content.concept, content: content as unknown as Json, review: record as unknown as Json, reviewed_at: null, reviewed_by: null })
+      .eq("id", id)
+      .eq("course_id", courseId)
+      .not(PROPOSAL_PENDING, "is", null)
+      .select("id"),
+    "lesson proposal accept",
+  );
+  return rows.length > 0;
+}
+
+/** Преподаватель оставил свой текст: предложение убираем, заметку и замечания сохраняем. */
+export async function rejectLessonProposal(id: string, courseId: string): Promise<boolean> {
+  const review = await getLessonReview(id, courseId);
+  if (!review?.proposal) return false;
+  const sb = await getSupabase();
+  const rows = unwrap(
+    await sb
+      .from("lessons")
+      .update({ review: withoutProposal(review, "rejected") as unknown as Json })
+      .eq("id", id)
+      .eq("course_id", courseId)
+      .not(PROPOSAL_PENDING, "is", null)
+      .select("id"),
+    "lesson proposal reject",
+  );
+  return rows.length > 0;
+}
+
+/** Преподаватель поправил урок руками: предложение методиста посчитано от старого текста и больше не годится. */
+export async function dropStaleLessonProposal(id: string, courseId: string): Promise<void> {
+  await rejectLessonProposal(id, courseId);
+}
+
+/** Принять или отклонить все предложения методиста по курсу разом. Возвращает число обработанных уроков. */
+export async function decideAllLessonProposals(courseId: string, decision: "accepted" | "rejected"): Promise<number> {
+  const lessons = await listLessons(courseId);
+  let n = 0;
+  for (const l of lessons) {
+    if (!l.review?.proposal) continue;
+    const done = decision === "accepted" ? await acceptLessonProposal(l.id, courseId) : await rejectLessonProposal(l.id, courseId);
+    if (done) n += 1;
+  }
+  return n;
 }
 
 /** Меняет урок местами с соседом: direction -1 — вверх, +1 — вниз. */
@@ -819,7 +978,9 @@ export async function listHomeworkChecks(courseId: string): Promise<HomeworkChec
 
 export interface AiCallRecord {
   courseId: string | null;
-  userId: string;
+  /** null у пробного разбора гостя: тогда обязателен ipHash. */
+  userId: string | null;
+  ipHash?: string;
   kind: string;
   provider: string;
   model: string;
@@ -836,6 +997,7 @@ export async function addAiCall(r: AiCallRecord): Promise<void> {
   const row: Omit<AiCallRow, "id" | "created_at"> = {
     course_id: r.courseId,
     user_id: r.userId,
+    ip_hash: r.ipHash ?? null,
     kind: r.kind,
     provider: r.provider,
     model: r.model,
@@ -902,6 +1064,197 @@ export async function listCalibrationSamples(courseId: string, lessonId?: string
 export async function deleteCalibrationSample(id: string, courseId: string): Promise<void> {
   const sb = await getSupabase();
   check(await sb.from("calibration_samples").delete().eq("id", id).eq("course_id", courseId), "calibration delete");
+}
+
+// ---------- сигналы и предложения («курс учится у студентов») ----------
+
+export interface LessonAnswerForSignals extends Submission {
+  course_id: string;
+}
+
+/** Все сдачи по опубликованным урокам курса, без лимита в 200 строк (listSubmissionsByCourse его имеет):
+ *  функция сигналов сама выбирает первую сдачу каждого студента и считает возражения.
+ *  Идёт от сессии преподавателя: RLS отдаёт ответы по его урокам. */
+export async function listLessonAnswersForSignals(courseId: string): Promise<LessonAnswerForSignals[]> {
+  const sb = await getSupabase();
+  const rows = await fetchAll<SubmissionRow & { lesson: { course_id: string; status: LessonStatus } }>(
+    (from, to) =>
+      sb
+        .from("submissions")
+        .select("*, lesson:lessons!inner(course_id, status)")
+        .eq("lesson.course_id", courseId)
+        .eq("lesson.status", "published")
+        .order("created_at")
+        .order("id")
+        .range(from, to)
+        .overrideTypes<Array<SubmissionRow & { lesson: { course_id: string; status: LessonStatus } }>, { merge: false }>(),
+    "answers for signals",
+  );
+  return rows.map((r) => ({ ...rowToSubmission(r), course_id: r.lesson.course_id }));
+}
+
+/** Сводка по карточкам студентов для сигнала «карточку забывают». Чужие строки flashcards RLS
+ *  не отдаёт, поэтому числа считает RPC с проверкой владельца курса. */
+export async function listFlashcardSignals(courseId: string): Promise<FlashcardSignalRow[]> {
+  const sb = await getSupabase();
+  return unwrap(await sb.rpc("course_flashcard_signals", { c: courseId }), "flashcard signals");
+}
+
+export interface Suggestion extends Omit<CourseSuggestionRow, "previous_content"> {
+  previous_content: LessonContent | null;
+  excerpts: SuggestionExcerptRow[];
+}
+
+function rowToSuggestion(r: CourseSuggestionRow & { excerpts?: SuggestionExcerptRow[] }): Suggestion {
+  return {
+    id: r.id,
+    course_id: r.course_id,
+    lesson_id: r.lesson_id,
+    type: r.type,
+    status: r.status,
+    signal_key: r.signal_key,
+    signal: r.signal,
+    evidence: r.evidence,
+    change: r.change,
+    previous_content: r.previous_content ? normalizeLessonContent(r.previous_content) : null,
+    created_at: r.created_at,
+    decided_at: r.decided_at,
+    excerpts: r.excerpts ?? [],
+  };
+}
+
+export async function listSuggestions(courseId: string): Promise<Suggestion[]> {
+  const sb = await getSupabase();
+  const rows = unwrap(
+    await sb
+      .from("course_suggestions")
+      .select("*, excerpts:suggestion_excerpts(*)")
+      .eq("course_id", courseId)
+      .order("created_at", { ascending: false })
+      .overrideTypes<Array<CourseSuggestionRow & { excerpts: SuggestionExcerptRow[] }>, { merge: false }>(),
+    "suggestions",
+  );
+  return rows.map(rowToSuggestion);
+}
+
+export async function getSuggestion(id: string, courseId: string): Promise<Suggestion | undefined> {
+  const sb = await getSupabase();
+  const r = unwrapMaybe(
+    await sb
+      .from("course_suggestions")
+      .select("*, excerpts:suggestion_excerpts(*)")
+      .eq("id", id)
+      .eq("course_id", courseId)
+      .maybeSingle()
+      .overrideTypes<CourseSuggestionRow & { excerpts: SuggestionExcerptRow[] }, { merge: false }>(),
+    "suggestion",
+  );
+  return r ? rowToSuggestion(r) : undefined;
+}
+
+export interface SuggestionInput {
+  courseId: string;
+  lessonId: string;
+  type: CourseSuggestionRow["type"];
+  signalKey: string;
+  signal: Json;
+  evidence: Json;
+  change: Json;
+  /** Каждая выдержка дословно входит в ответ submission_id: маршрут проверяет это до записи. */
+  excerpts: Array<{ submissionId: string; excerpt: string }>;
+}
+
+/** Вставляет предложения и их выдержки. Предложение с signal_key, по которому уже есть
+ *  ожидающее или отклонённое, отсекает уникальный индекс: такое пропускаем, остальные пишем. */
+export async function insertSuggestions(inputs: SuggestionInput[]): Promise<Suggestion[]> {
+  const sb = await getSupabase();
+  const out: Suggestion[] = [];
+  for (const input of inputs) {
+    const res = await sb
+      .from("course_suggestions")
+      .insert({
+        course_id: input.courseId,
+        lesson_id: input.lessonId,
+        type: input.type,
+        signal_key: input.signalKey,
+        signal: input.signal,
+        evidence: input.evidence,
+        change: input.change,
+      })
+      .select("*")
+      .single();
+    if (res.error?.code === "23505") continue;
+    const row = unwrap(res, "suggestion insert");
+    if (input.excerpts.length > 0) {
+      check(
+        await sb.from("suggestion_excerpts").insert(input.excerpts.map((e) => ({ suggestion_id: row.id, submission_id: e.submissionId, excerpt: e.excerpt }))),
+        "excerpts insert",
+      );
+    }
+    out.push(rowToSuggestion(row));
+  }
+  return out;
+}
+
+/** Решение по предложению. previousContent передаётся при принятии: контент урока до изменения. */
+export async function decideSuggestion(
+  id: string,
+  courseId: string,
+  from: SuggestionStatus,
+  status: Exclude<SuggestionStatus, "pending">,
+  previousContent?: LessonContent,
+): Promise<void> {
+  const sb = await getSupabase();
+  // Меняем только из ожидаемого статуса: двойной клик или две вкладки не затрут previous_content.
+  const rows = unwrap(
+    await sb
+      .from("course_suggestions")
+      .update({
+        status,
+        decided_at: nowIso(),
+        ...(previousContent ? { previous_content: previousContent as unknown as Json } : {}),
+      })
+      .eq("id", id)
+      .eq("course_id", courseId)
+      .eq("status", from)
+      .select("id"),
+    "suggestion decide",
+  );
+  if (rows.length === 0) throw new Error("Предложение уже обработано или не найдено");
+}
+
+/** Кто сдавал урок: уникальные user_id. Нужно, чтобы раздать принятую карточку тем, кто урок уже прошёл. */
+export async function listLessonLearners(lessonId: string): Promise<string[]> {
+  const sb = await getSupabase();
+  const rows = await fetchAll<{ user_id: string }>(
+    (from, to) => sb.from("submissions").select("user_id").eq("lesson_id", lessonId).order("created_at").range(from, to),
+    "lesson learners",
+  );
+  return [...new Set(rows.map((r) => r.user_id))];
+}
+
+/** Когда по курсу в последний раз запускали разбор ответов группы: по ai_calls, kind weekly_review. */
+export async function lastWeeklyReviewAt(courseId: string): Promise<string | null> {
+  const sb = await getSupabase();
+  const row = unwrapMaybe(
+    await sb
+      .from("ai_calls")
+      .select("created_at")
+      .eq("course_id", courseId)
+      .eq("kind", "weekly_review")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .overrideTypes<{ created_at: string }, { merge: false }>(),
+    "last weekly review",
+  );
+  return row?.created_at ?? null;
+}
+
+/** Для студента: что в курсе приняли по ответам группы за 7 дней. Без выдержек и текста изменения. */
+export async function courseUpdates(courseId: string): Promise<CourseUpdateRow[]> {
+  const sb = await getSupabase();
+  return unwrap(await sb.rpc("course_updates", { c: courseId }), "course updates");
 }
 
 // ---------- мои данные: выгрузка и удаление ----------
@@ -1020,4 +1373,64 @@ export async function listOwnedCoursesWithStudents(userId: string): Promise<Owne
       return { id: c.id, title: c.title, students: people.size };
     })
     .filter((c) => c.students > 0);
+}
+
+/** Сколько пробных разборов гость с этим хэшем IP получил за последние сутки. Читает service role. */
+export async function countTryCalls(ipHash: string, since: Date): Promise<number> {
+  const sb = await getSupabase();
+  const { count, error } = await sb.from("ai_calls").select("id", { count: "exact", head: true }).eq("ip_hash", ipHash).gte("created_at", since.toISOString());
+  if (error) throw new Error(`try calls count: ${error.message}`);
+  return count ?? 0;
+}
+
+/** Занимает попытку до вызова модели: параллельные запросы с одного IP видят друг друга. Строка расхода настоящего вызова пишется отдельно, эту удаляют после. */
+export async function reserveTryCall(ipHash: string): Promise<string> {
+  const sb = await getSupabase();
+  const row = unwrap(
+    await sb
+      .from("ai_calls")
+      .insert({ course_id: null, user_id: null, ip_hash: ipHash, kind: "try", provider: "reserved", model: "reserved", input_tokens: 0, output_tokens: 0, cache_read_tokens: 0, cache_write_tokens: 0, cost_usd: 0, duration_ms: 0 })
+      .select("id")
+      .single(),
+    "try reserve",
+  );
+  return row.id;
+}
+
+export async function releaseTryCall(id: string): Promise<void> {
+  const sb = await getSupabase();
+  check(await sb.from("ai_calls").delete().eq("id", id), "try release");
+}
+
+/** Хэш IP живёт не дольше суток: обнуляем у строк старше суток. Строка расхода остаётся. */
+export async function purgeTryIpHashes(olderThan: Date): Promise<void> {
+  const sb = await getSupabase();
+  check(await sb.from("ai_calls").update({ ip_hash: null }).not("ip_hash", "is", null).lt("created_at", olderThan.toISOString()), "try ip purge");
+}
+
+export interface JoinPreview {
+  title: string;
+  authorName: string;
+  lessons: number;
+}
+
+/** Что видит человек на /join/КОД до входа: название, автор, число опубликованных уроков и больше ничего.
+ *  Поиск по коду закрыт для anon (RPC course_by_join_code), поэтому здесь service role и узкая выборка полей;
+ *  ослаблять RLS ради этого не нужно. Вызывать только из серверных компонентов. */
+export async function getJoinPreview(code: string): Promise<JoinPreview | undefined> {
+  const normalized = code.trim().toUpperCase();
+  if (!/^[A-Z0-9]{4,12}$/.test(normalized)) return undefined;
+  const sb = createServiceClient();
+  const row = unwrapMaybe(
+    await sb
+      .from("courses")
+      .select("title, author:profiles!courses_owner_id_fkey(name, email), lessons(status)")
+      .eq("join_code", normalized)
+      .maybeSingle()
+      .overrideTypes<{ title: string; author: { name: string; email: string } | null; lessons: Array<{ status: LessonStatus }> }, { merge: false }>(),
+    "join preview",
+  );
+  if (!row) return undefined;
+  return { title: row.title, // Пока человек не менял имя, там заготовка из почты: её публично не показываем.
+    authorName: row.author && row.author.name !== row.author.email.split("@")[0] ? row.author.name : "", lessons: row.lessons.filter((l) => l.status === "published").length };
 }

@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Markdown } from "@/components/shared/Markdown";
 import { AiNote } from "@/components/shared/AiNote";
 import { Notice } from "@/components/shared/Notice";
-import { ARTIFACT_KINDS, type ArtifactKind } from "@/lib/lessons/types";
+import { ARTIFACT_KINDS, type ArtifactKind } from "@/lib/lessons/artifact-kinds";
 
 export function ArtifactGenerator({ courseId, disabled }: { courseId: string; disabled: boolean }) {
   const router = useRouter();
@@ -32,11 +32,11 @@ export function ArtifactGenerator({ courseId, disabled }: { courseId: string; di
         body: JSON.stringify({ courseId, kind, instructions }),
       });
       const data = (await res.json()) as { ok?: boolean; error?: string; output?: string };
-      if (!res.ok || !data.ok || !data.output) throw new Error(data.error ?? "Не удалось собрать документ");
+      if (!res.ok || !data.ok || !data.output) throw new Error(data.error ?? "Не удалось собрать документ. Попробуйте ещё раз через минуту.");
       setResult(data.output);
       router.refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Ошибка");
+      setError(e instanceof Error ? e.message : "Не удалось выполнить действие. Попробуйте ещё раз через минуту.");
     } finally {
       setBusy(false);
     }

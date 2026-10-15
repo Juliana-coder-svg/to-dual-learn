@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     const card = await getFlashcard(String(body.id ?? ""), user.id);
     if (!card) return jsonError("Карточка не найдена", 404);
     const quality = body.quality as RecallQuality;
-    if (!QUALITIES.includes(quality)) return jsonError("Неизвестная оценка");
+    if (!QUALITIES.includes(quality)) return jsonError("Неизвестный вариант ответа");
     const next = nextReview(card.round, quality);
     await updateFlashcard(card.id, { nextDueAt: next.nextDueAt, round: next.round, quality });
     return NextResponse.json({ ok: true, nextDueAt: next.nextDueAt });

@@ -5,12 +5,14 @@ import { requireUserId } from "@/lib/auth/session";
 import { countLessonsStartedToday, getLatestSubmission, getLesson, latestSubmissionsForCourse, listLessonSummaries } from "@/lib/db/queries";
 import { AppShell } from "@/components/shared/AppShell";
 import { LessonPlayer } from "@/components/learn/LessonPlayer";
+import { Notice } from "@/components/shared/Notice";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Button } from "@/components/ui/button";
 import { isUuid } from "@/lib/utils/ids";
 
-export default async function LessonPage({ params }: { params: Promise<{ courseId: string; lessonId: string }> }) {
+export default async function LessonPage({ params, searchParams }: { params: Promise<{ courseId: string; lessonId: string }>; searchParams: Promise<{ claimed?: string }> }) {
   const { courseId, lessonId } = await params;
+  const claimed = (await searchParams).claimed === "1";
   if (!isUuid(courseId) || !isUuid(lessonId)) notFound();
   const userId = await requireUserId();
   // Всё одним кругом до базы; лимит считает та же RPC, что и /api/evaluate.
@@ -37,6 +39,9 @@ export default async function LessonPage({ params }: { params: Promise<{ courseI
     <AppShell user={ctx.user} width="narrow">
       <div>
         <Link href={`/learn/${courseId}`} className="inline-flex min-h-6 items-center gap-1 text-sm text-muted-foreground hover:text-foreground"><span aria-hidden>←</span> {ctx.course.title}</Link>
+        {claimed ? (
+          <Notice kind="success" className="mt-6">Ответ и разбор сохранены в профиле. Следующий урок откроется завтра, утром пришлём письмо. Этот урок вернётся карточками на повторение.</Notice>
+        ) : null}
         {locked ? (
           <div className="mt-6">
             <EmptyState

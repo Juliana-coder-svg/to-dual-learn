@@ -6,7 +6,7 @@ export const LessonContentSchema = z.object({
   title: z.string().describe("Название урока, до 6 слов"),
   concept: z.string().describe("Одна фраза: какой навык отрабатывает урок"),
   intro: z.string().describe("2–3 предложения: зачем это нужно, с опорой на материалы курса"),
-  keyIdea: z.string().describe("Ключевая мысль урока, 2–4 предложения"),
+  keyIdea: z.string().describe("Главная мысль урока, 2–4 предложения"),
   signals: z.array(z.string()).describe("3–5 коротких признаков или правил, которые стоит запомнить"),
   task: z.string().describe("Практическая задача с открытым ответом на новом материале, выполнимая за 3–5 минут"),
   sample: z.string().nullable().describe("Текст или пример для разбора в задаче, если нужен; иначе null"),
@@ -34,13 +34,20 @@ export const LessonReviewSchema = z.object({
     z.object({
       title: z.string().describe("Название урока из входа"),
       changed: z.boolean(),
-      flags: z.array(z.string()).describe("Что было не так: нет опоры на материалы, задача не выполнима за 5 минут, критерий не проверяем, повтор темы. Пусто, если всё в порядке"),
+      flags: z.array(z.string()).describe("Что предлагается изменить и почему, по одному пункту на правку, с номером пункта проверки. Формулируй как предложение («предлагаю заменить…»), а не как сделанное («заменил»): преподаватель решает, принимать ли. Пусто, если всё в порядке"),
     }),
   ),
-  summary: z.string().describe("2–3 предложения для преподавателя: что поправлено и что стоит проверить руками"),
+  summary: z.string().describe("2–3 предложения для преподавателя: что предлагается поправить и что стоит проверить руками. Это предложения, не отчёт о сделанном"),
 });
 export type LessonReview = z.infer<typeof LessonReviewSchema>;
 export type LessonReviewNote = LessonReview["notes"][number];
+
+/** Что хранится в lessons.review: заметка методиста плюс, пока преподаватель не решил, предложенная версия урока.
+ *  proposal — текст, который методист предлагает вместо текущего; decision — что преподаватель с ним сделал. */
+export interface LessonReviewRecord extends LessonReviewNote {
+  proposal?: LessonContent | null;
+  decision?: "accepted" | "rejected" | null;
+}
 
 export const LessonsBatchSchema = z.object({
   lessons: z.array(LessonContentSchema),
@@ -95,11 +102,11 @@ export const HomeworkResultsSchema = z.object({
       reteach: z
         .array(
           z.object({
-            topic: z.string().describe("Какой фрагмент материалов или какую идею переобъяснить: раздел, правило или приём, как он назван в материалах"),
+            topic: z.string().describe("Какой фрагмент материалов или какую идею объяснить заново: раздел, правило или приём, как он назван в материалах"),
             why: z.string().describe("Почему это видно по работам: одно-два предложения с примером из работ"),
           }),
         )
-        .describe("1–3 пункта, что переобъяснить на занятии. Пусто, если переобъяснять нечего"),
+        .describe("1–3 пункта, что объяснить заново на занятии. Пусто, если объяснять заново нечего"),
       quickWins: z.array(z.string()).describe("Что уже получается у большинства, 1–3 пункта по выполненным критериям. Пусто, если таких нет"),
     })
     .describe("Сводка для преподавателя по всей пачке работ"),
@@ -118,11 +125,33 @@ export const ClarifyingQuestionsSchema = z.object({
 });
 export type ClarifyingQuestions = z.infer<typeof ClarifyingQuestionsSchema>;
 
-export const ARTIFACT_KINDS = {
-  assignment: "Задание для студентов",
-  quiz: "Проверочный тест",
-  notes: "Конспект",
-  lesson_plan: "План занятия",
-  presentation: "Структура презентации",
-} as const;
-export type ArtifactKind = keyof typeof ARTIFACT_KINDS;
+export { ARTIFACT_KINDS, type ArtifactKind } from "./artifact-kinds";
+
+/** План курса до сборки уроков: преподаватель правит его, потом уроки собираются по утверждённому плану. */
+export const CoursePlanSchema = z.object({
+  lessons: z.array(
+    z.object({
+      title: z.string().describe("Название урока, до 6 слов"),
+      concept: z.string().describe("Одна идея урока одной фразой"),
+      result: z.string().describe("Что студент сможет сделать после урока и что покажет в ответе, одна фраза"),
+      sources: z.array(z.string()).describe("Разделы материалов, на которые опирается урок, как они названы в материалах"),
+      why: z.string().describe("Почему урок стоит на этом месте и чем отличается от соседних, одно-два предложения"),
+    }),
+  ),
+  background: z.array(z.string()).describe("Что в материалах оставлено фоном и не стало уроком, с короткой причиной. Пусто, если всё вошло в уроки"),
+  summary: z.string().describe("2–3 предложения для преподавателя: как устроен курс и что стоит проверить в первую очередь"),
+});
+export type CoursePlan = z.infer<typeof CoursePlanSchema>;
+
+/** Подсказки по плану карточками: что можно улучшить, пока уроки ещё не собраны. */
+export const PlanHintsSchema = z.object({
+  hints: z.array(
+    z.object({
+      lesson: z.string().describe("Название урока из плана или «Курс», если подсказка про весь курс"),
+      problem: z.string().describe("Что не так и где именно в плане, одно предложение"),
+      suggestion: z.string().describe("Что поменять в плане, одно предложение"),
+      pattern: z.string().describe("Какое правило проектирования стоит за подсказкой, три-пять слов"),
+    }),
+  ),
+});
+export type PlanHints = z.infer<typeof PlanHintsSchema>;

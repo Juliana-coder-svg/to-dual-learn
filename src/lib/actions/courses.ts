@@ -3,6 +3,10 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import {
+  acceptLessonProposal,
+  dropStaleLessonProposal,
+  rejectLessonProposal,
+  decideAllLessonProposals,
   addCalibrationSample,
   clearChat,
   createCourse,
@@ -59,6 +63,27 @@ export async function publishAllAction(courseId: string): Promise<void> {
   revalidatePath(`/teach/${courseId}/lessons`);
 }
 
+export async function acceptProposalAction(courseId: string, lessonId: string): Promise<void> {
+  const ctx = await teacherCourse(courseId);
+  if (!ctx) return;
+  await acceptLessonProposal(lessonId, courseId);
+  revalidatePath(`/teach/${courseId}/lessons`);
+}
+
+export async function rejectProposalAction(courseId: string, lessonId: string): Promise<void> {
+  const ctx = await teacherCourse(courseId);
+  if (!ctx) return;
+  await rejectLessonProposal(lessonId, courseId);
+  revalidatePath(`/teach/${courseId}/lessons`);
+}
+
+export async function decideAllProposalsAction(courseId: string, decision: "accepted" | "rejected"): Promise<void> {
+  const ctx = await teacherCourse(courseId);
+  if (!ctx) return;
+  await decideAllLessonProposals(courseId, decision);
+  revalidatePath(`/teach/${courseId}/lessons`);
+}
+
 export async function deleteLessonAction(courseId: string, lessonId: string): Promise<void> {
   const ctx = await teacherCourse(courseId);
   if (!ctx) return;
@@ -78,7 +103,8 @@ export async function joinCourseAction(formData: FormData): Promise<void> {
   const code = String(formData.get("code") ?? "").trim().toUpperCase();
   const course = await getCourseByJoinCode(code);
   if (!course) redirect("/learn?error=code");
-  await enroll(user.id, course.id);
+  // Свой курс открыт владельцу и без записи; запись исказила бы число студентов.
+  if (course.owner_id !== user.id) await enroll(user.id, course.id);
   redirect(`/learn/${course.id}`);
 }
 
@@ -111,10 +137,11 @@ export async function updateLessonAction(courseId: string, lessonId: string, for
     sample: sample || null,
     rubricCriteria: lines(formData.get("rubricCriteria")),
     keyTakeaway: String(formData.get("keyTakeaway") ?? "").trim(),
-    flashcards: flashcards.length > 0 ? flashcards : [{ question: "Какая ключевая идея урока?", answer: String(formData.get("keyTakeaway") ?? "").trim() }],
+    flashcards: flashcards.length > 0 ? flashcards : [{ question: "Какая идея у урока?", answer: String(formData.get("keyTakeaway") ?? "").trim() }],
   });
   if (!parsed.success) redirect(`/teach/${courseId}/lessons/${lessonId}/edit?error=1`);
   await updateLessonContent(lessonId, courseId, parsed.data, { by: ctx.user.id });
+  await dropStaleLessonProposal(lessonId, courseId);
   revalidatePath(`/teach/${courseId}/lessons`);
   redirect(`/teach/${courseId}/lessons`);
 }

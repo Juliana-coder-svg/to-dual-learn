@@ -178,7 +178,7 @@
 }
 
 /* Шкала текста. Утилиты, а не токены font-size: иначе cn() из shadcn принимает их за цвет и выкидывает при слиянии классов.
-   display и title текучие: 44 → 72 px и 28 → 40 px от телефона к десктопу, поэтому без md:-префиксов. */
+   display и title текучие: 34 → 72 px и 28 → 40 px от телефона к десктопу, поэтому без md:-префиксов. */
 @utility type-display {
   font-family: var(--font-display) !important;
   font-size: clamp(1.9rem, 1rem + 3.2vw, 3.5rem);

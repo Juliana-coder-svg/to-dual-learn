@@ -45,6 +45,18 @@
         "NEXT_DIST_DIR=.next-3002 PORT=3002 npm run dev -- -p 3002"
       ],
       "port": 3002
+    },
+    {
+      "name": "dev-3006",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "-u",
+        "ANTHROPIC_BASE_URL",
+        "sh",
+        "-c",
+        "NEXT_DIST_DIR=.next-3006 PORT=3006 npm run dev -- -p 3006"
+      ],
+      "port": 3006
     }
   ]
 }

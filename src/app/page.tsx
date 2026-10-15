@@ -1,12 +1,13 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { getCurrentUser, homeFor } from "@/lib/auth/session";
 import { Button } from "@/components/ui/button";
 import { PublicShell } from "@/components/shared/PublicShell";
-import { Building2, Compass, GraduationCap } from "lucide-react";
-import { Asterisk } from "@/components/shared/Asterisk";
 import { StepMarks } from "@/components/shared/StepMarks";
-import { LessonFeedbackScreen, LessonIdeaScreen, LessonTaskScreen } from "@/components/shared/LessonScreens";
+import { Asterisk } from "@/components/shared/Asterisk";
+import { DEFAULT_TRY_SLUG, getTryLesson } from "@/lib/try/catalog";
+import { SessionRedirect } from "@/components/shared/SessionRedirect";
+
+/** Лендинг статический: без чтения cookie и базы в рендере, его отдаёт CDN. Вошедших уводит SessionRedirect. */
+export const dynamic = "force-static";
 
 interface Step {
   title: string;
@@ -36,18 +37,18 @@ const STEPS: Step[] = [
   },
   {
     title: "Студент проходит урок в день",
-    text: "Решает задачу, получает разбор по каждому критерию с цитатой из своего ответа и может оспорить оценку. Карточки по уроку возвращаются на повторение через день, потом через неделю, две недели и месяц. Если студент забыл ответ, карточка вернётся раньше.",
+    text: "Решает задачу, получает разбор по каждому критерию с цитатой из своего ответа и может оспорить разбор. Карточки по уроку возвращаются на повторение через день, потом через неделю, две недели и месяц. Если студент забыл ответ, карточка вернётся раньше.",
   },
 ];
 
 const SEGMENTS: Segment[] = [
   {
     title: "Преподаватель вуза или школы",
-    text: "Нужно, чтобы студенты решали задачи между занятиями, а домашние работы не приходилось проверять по одной. Соберите курс из своей методички, дайте группе ссылку и смотрите ответы на вкладке «Студенты». Пачку домашних работ можно проверить по своим критериям и выгрузить оценки в CSV.",
+    text: "Нужно, чтобы студенты решали задачи между занятиями, а домашние работы не приходилось проверять по одной. Соберите курс из своей методички, дайте группе ссылку и смотрите ответы на вкладке «Студенты». Работы группы можно проверить сразу по своим критериям и выгрузить баллы в CSV.",
   },
   {
     title: "L&D в компании",
-    text: "Нужно, чтобы материал тренинга применяли и после него. Загрузите материалы программы и получите серию заданий на пять минут в день. Видно, кто проходит и что отвечает. Расход на модель показан по каждой операции. Сейчас продукт подходит для пилота на одной группе: корпоративного входа и лицензий на места пока нет.",
+    text: "Нужно, чтобы материал тренинга применяли и после него. Загрузите материалы программы и получите уроки по пять минут в день. Видно, кто проходит и что отвечает. Расход на ИИ показан по каждой операции. Сейчас продукт подходит для пилота на одной группе: корпоративного входа и лицензий на места пока нет.",
   },
   {
     title: "Специалист, который учится сам",
@@ -57,26 +58,26 @@ const SEGMENTS: Segment[] = [
 
 const FINDINGS: Finding[] = [
   {
-    title: "Повторение с перерывами",
-    text: "Метаанализ 317 экспериментов на запоминание: материал, который повторяли с перерывами, помнят лучше, чем повторённый подряд за то же время. Чем дольше нужно помнить, тем длиннее должны быть перерывы. На этом построены наши интервалы.",
+    title: "Возвращаем к теме через паузы",
+    text: "Карточки по уроку возвращаются через день, неделю, две недели и месяц: так материал запоминается лучше. В метаанализе 317 экспериментов повторение с перерывами работало лучше, чем подряд за то же время.",
     source: "Cepeda и др., Psychological Bulletin, 2006",
     href: "https://pubmed.ncbi.nlm.nih.gov/16719566/",
   },
   {
-    title: "Короткие уроки",
-    text: "Метаанализ пяти исследований в вузах, 654 студента: у групп с короткими модулями баллы за итоговый тест выше, чем у групп с обычными занятиями. Исследований пока мало, вывод предварительный.",
+    title: "Учим короткими уроками",
+    text: "Один урок занимает около пяти минут, как короткий модуль. В пяти исследованиях в вузах (654 студента) группы с короткими модулями написали итоговый тест лучше. Исследований пока мало, вывод предварительный.",
     source: "Senandheera и др., Journal of Multidisciplinary & Translational Research, 2024",
     href: "https://jmtr.sljol.info/en/articles/2",
   },
   {
-    title: "ИИ-тьютор",
-    text: "Рандомизированное исследование в Гарварде: 194 студента курса физики, две темы. С ИИ-тьютором, который ведёт вопросами и не выдаёт готовый ответ, прирост знаний оказался более чем вдвое выше, чем на активном занятии в аудитории. Времени на это ушло меньше. Наш наставник пока разбирает готовый ответ, режим с наводящими вопросами в планах.",
+    title: "Куда развиваем наставника",
+    text: "Сейчас наставник разбирает готовый ответ. В планах режим с наводящими вопросами: в Гарварде ИИ-тьютор, который ведёт вопросами, дал прирост знаний более чем вдвое выше, чем занятие в аудитории (194 студента).",
     source: "Kestin и др., Scientific Reports, 2025",
     href: "https://pmc.ncbi.nlm.nih.gov/articles/PMC12179260/",
   },
   {
-    title: "Автоматическая оценка",
-    text: "Пять моделей, среди них Claude 3.5, GPT-4 и Gemini 2.5, оценивали 67 эссе студентов-психологов. Согласие с преподавателями оказалось низким, а при повторных прогонах оценки расходились. Поэтому наш наставник разбирает ответ по каждому критерию с цитатой и сверяется с образцами оценок преподавателя. Студент может оспорить оценку, а преподаватель видит все ответы. Насколько оценки наставника совпадают с оценками преподавателя, мы ещё не измеряли.",
+    title: "Объясняем каждый балл",
+    text: "Наставник разбирает ответ по каждому критерию с цитатой и сверяется с образцами оценок преподавателя. Студент может оспорить разбор, преподаватель видит все ответы. Почему так: когда пять моделей оценивали 67 эссе, оценки слабо совпадали с преподавательскими и менялись при повторных прогонах.",
     source: "Gaggioli и др., arXiv, 2025",
     href: "https://arxiv.org/abs/2508.02442",
   },
@@ -84,152 +85,141 @@ const FINDINGS: Finding[] = [
 
 const TEAM = ["НИУ ВШЭ", "Яндекс", "ВТБ", "Сколково"];
 
-function EntryButtons({ size = "lg", tone = "default" }: { size?: "lg" | "default"; tone?: "default" | "inverse" }) {
+function EntryButtons({ size = "lg", tone = "default", trial = false }: { size?: "lg" | "default"; tone?: "default" | "inverse"; trial?: boolean }) {
   const inverse = tone === "inverse";
   return (
     <div className="flex flex-wrap gap-3">
-      <Button nativeButton={false} render={<Link href="/login?role=teacher" />} size={size} variant={inverse ? "inverse" : "default"}>Я преподаватель</Button>
+      {trial ? (
+        <Button nativeButton={false} render={<Link href={`/try/${DEFAULT_TRY_SLUG}/1`} />} size={size} variant={inverse ? "inverse" : "default"}>Попробовать урок</Button>
+      ) : null}
+      <Button nativeButton={false} render={<Link href="/login?role=teacher" />} size={size} variant={inverse ? (trial ? "inverse-outline" : "inverse") : trial ? "outline" : "default"}>Я преподаватель</Button>
       <Button nativeButton={false} render={<Link href="/login?role=student" />} size={size} variant={inverse ? "inverse-outline" : "outline"}>Я студент</Button>
     </div>
   );
 }
 
-/** Секция в журнальной сетке: слева номер и заголовок на четырёх колонках, справа содержимое на восьми. */
-function MagSection({ n, title, note, children }: { n: string; title: string; note?: string; children: React.ReactNode }) {
+/** Статичный набросок экрана пробного урока: те же название, навык и задача, что в /try, шаг «Задача». Без поля ответа и кнопки: набросок не должен выглядеть рабочим. */
+function LessonSketch() {
+  const lesson = getTryLesson(DEFAULT_TRY_SLUG, 1);
+  if (!lesson) return null;
+  const { title, concept, task } = lesson.content;
   return (
-    <section className="rule grid gap-8 py-16 md:grid-cols-12 md:gap-8 md:py-24">
-      <header className="md:col-span-4">
-        <p className="type-caption tabular-nums text-muted-foreground">{n}</p>
-        <h2 className="mt-2 text-balance type-title">{title}</h2>
-        {note ? <p className="mt-3 max-w-xs text-sm leading-relaxed text-muted-foreground">{note}</p> : null}
-      </header>
-      <div className="md:col-span-8">{children}</div>
-    </section>
+    <figure aria-hidden className="rounded-lg border border-dashed bg-card p-5 text-sm">
+      <figcaption className="eyebrow text-muted-foreground">Так выглядит урок</figcaption>
+      <div className="mt-4 flex items-center justify-between gap-4">
+        <span className="eyebrow">Урок 1 · шаг 2 из 3</span>
+        <StepMarks total={3} filled={2} size="sm" />
+      </div>
+      <p className="mt-3 type-heading">{title}</p>
+      <p className="mt-1 text-muted-foreground">{concept}</p>
+      <div className="mt-5">
+        <p className="eyebrow">Задача</p>
+        <p className="mt-1 line-clamp-5 type-body">{task}</p>
+      </div>
+      <p className="mt-5 type-caption text-muted-foreground">Дальше: ответ своими словами и разбор по критериям. Около пяти минут.</p>
+    </figure>
   );
 }
 
-export default async function Home() {
-  const user = await getCurrentUser();
-  if (user) redirect(homeFor(user));
-
+export default function Home() {
   return (
     <PublicShell width="wide" action={<Button nativeButton={false} render={<Link href="/login" />} size="sm" variant="outline">Войти</Button>}>
-      <section className="relative overflow-clip pt-16 pb-12 md:pt-24 md:pb-20">
-        {/* Фирменная звёздочка огромным бледным фоном, как на страницах брендбука. Плоская заливка линией, без градиента. */}
+      <SessionRedirect />
+      <section className="relative grid items-center gap-10 overflow-clip py-10 md:grid-cols-[1.15fr_1fr] md:gap-16 md:py-28">
+        {/* Фирменная звёздочка огромным бледным фоном, как на страницах брендбука. Плоская линия, без градиента. */}
         <Asterisk className="pointer-events-none absolute -right-24 -top-10 size-[460px] text-muted md:-right-16 md:size-[620px]" />
-        <p className="relative eyebrow text-primary-strong">Микрообучение по вашим материалам</p>
-        <h1 className="relative mt-6 text-balance type-mega">
-          Студенты практикуются по вашим материалам по&nbsp;пять минут в&nbsp;день
-        </h1>
-        {/* Асимметрия: текст в левых пяти колонках, экран урока сдвинут вправо и вниз. */}
-        <div className="relative mt-10 grid gap-12 md:mt-16 md:grid-cols-12 md:gap-8">
-          <div className="flex flex-col md:col-span-5 md:pt-8">
-            <p className="max-w-lg text-lg leading-relaxed text-muted-foreground max-md:order-last max-md:mt-8">
-              Загрузите программу, методичку или конспект лекции. To Dual Learn соберёт из них короткие уроки с задачей
-              и разберёт ответы студентов по критериям. Через день, неделю и месяц пройденное вернётся карточками.
-            </p>
-            <div className="mt-8 max-md:mt-0">
-              <EntryButtons />
-              <p className="mt-3 text-sm text-muted-foreground">Бесплатно. Пароль не нужен: войдите по почте и имени.</p>
-            </div>
-          </div>
-          <div className="md:col-span-6 md:col-start-7 md:mt-24">
-            <LessonTaskScreen />
+        <div className="relative flex flex-col">
+          <p className="eyebrow text-primary-strong">Микрообучение</p>
+          <h1 className="mt-5 max-w-3xl text-balance type-display">
+            Пятиминутные уроки из&nbsp;ваших материалов, разбор каждого ответа
+          </h1>
+          <p className="mt-6 max-w-lg text-lg leading-relaxed text-muted-foreground max-md:order-last max-md:mt-8">
+            Загрузите методичку или конспект, и ИИ соберёт уроки с задачей. Он разберёт ответы студентов
+            по критериям, а итоговое решение останется за вами. Через день, неделю и месяц пройденное вернётся карточками.
+          </p>
+          <div className="mt-8 max-md:mt-6">
+            <EntryButtons trial />
+            <p className="mt-3 text-sm text-muted-foreground">Бесплатно. Пробный урок без входа, пять минут. Дальше пароль не нужен: войдите по почте и имени.</p>
           </div>
         </div>
+        <LessonSketch />
       </section>
 
-      {/* Знак как графика: три сегмента во всю ширину отделяют героя от остального. */}
-      <StepMarks total={3} filled={2} current={3} size="xl" />
-
-      <section className="rule py-16 md:py-24">
-        <p className="type-caption tabular-nums text-muted-foreground">01</p>
-        <h2 className="mt-2 max-w-2xl text-balance type-title">Как это работает</h2>
-        {/* Графитовые карточки с большой цифрой справа сверху, как шаги процесса в брендбуке. */}
-        <ol className="mt-10 grid gap-4 md:grid-cols-3">
+      <section className="border-t py-20 md:py-24">
+        <h2 className="max-w-2xl type-title">Как это работает</h2>
+        <ol className="mt-10 grid gap-10 md:grid-cols-3 md:gap-8">
           {STEPS.map((step, i) => (
-            <li key={step.title} className="flex min-h-72 flex-col justify-between rounded-2xl bg-ink p-6 text-ink-foreground">
-              <span className="type-counter self-end text-ink-foreground">{i + 1}</span>
-              <div>
-                <h3 className="type-heading">{step.title}</h3>
-                <p className="mt-3 text-sm leading-relaxed text-ink-foreground/80">{step.text}</p>
-              </div>
+            <li key={step.title} className="border-t-2 border-primary pt-5">
+              <span className="type-counter text-primary">{String(i + 1).padStart(2, "0")}</span>
+              <h3 className="mt-4 type-heading">{step.title}</h3>
+              <p className="mt-2 max-w-prose text-sm leading-relaxed text-muted-foreground">{step.text}</p>
             </li>
           ))}
         </ol>
       </section>
 
-      <section className="rule py-16 md:py-24">
-        <p className="type-caption tabular-nums text-muted-foreground">02</p>
-        <h2 className="mt-2 max-w-2xl type-title">Так выглядит урок</h2>
-        <p className="mt-3 max-w-prose text-sm text-muted-foreground">Экраны из курса-примера «Критическое мышление в эпоху ИИ». Преподаватель собирает такие же из своих материалов.</p>
-        <div className="mt-10 grid gap-10 md:grid-cols-2 md:gap-8">
-          <LessonIdeaScreen />
-          <div className="md:mt-20"><LessonFeedbackScreen /></div>
+      <section className="border-t py-20 md:py-24">
+        <h2 className="max-w-2xl type-title">Для кого</h2>
+        <div className="mt-10 grid gap-x-8 gap-y-10 md:grid-cols-3">
+          {SEGMENTS.map((segment, i) => (
+            <div key={segment.title} className="border-t pt-5">
+              <StepMarks total={3} filled={i + 1} size="sm" />
+              <h3 className="mt-4 type-heading">{segment.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{segment.text}</p>
+            </div>
+          ))}
         </div>
       </section>
 
-      <MagSection n="03" title="Для кого">
-        <ul className="divide-y border-b">
-          {SEGMENTS.map((segment, i) => {
-            const Icon = [GraduationCap, Building2, Compass][i] ?? Compass;
-            return (
-            <li key={segment.title} className="grid gap-x-8 gap-y-3 py-7 md:grid-cols-[13rem_1fr]">
-              <div>
-                <span className="mb-3 flex size-10 items-center justify-center rounded-xl bg-primary-soft text-primary"><Icon aria-hidden className="size-5" /></span>
-                <h3 className="type-heading">{segment.title}</h3>
-              </div>
-              <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">{segment.text}</p>
-            </li>
-            );
-          })}
-        </ul>
-      </MagSection>
-
-      <MagSection
-        n="04"
-        title="Что говорят исследования"
-        note="Это чужие исследования, а не результаты нашего продукта. Свои цифры опубликуем после первых пилотов."
-      >
-        <ul className="divide-y border-b">
+      <section className="border-t py-20 md:py-24">
+        <div className="max-w-2xl">
+          <h2 className="type-title">На чём построен продукт</h2>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Мы опирались на исследования других команд. Результатов своих пилотов пока нет, добавим, когда появятся.
+          </p>
+        </div>
+        <ul className="mt-10 grid gap-4 md:grid-cols-2">
           {FINDINGS.map((finding) => (
-            <li key={finding.title} className="grid gap-x-8 gap-y-2 py-7 md:grid-cols-[13rem_1fr]">
+            <li key={finding.title} className="flex flex-col rounded-lg bg-surface p-6">
               <h3 className="type-heading">{finding.title}</h3>
-              <div>
-                <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">{finding.text}</p>
-                <a
-                  href={finding.href}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-3 inline-block text-sm text-primary-strong underline decoration-primary/40 underline-offset-4 hover:decoration-primary"
-                >
-                  {finding.source}
-                </a>
-              </div>
+              <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">{finding.text}</p>
+              <a
+                href={finding.href}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-4 inline-block text-sm text-primary-strong underline decoration-primary/40 underline-offset-4 hover:decoration-primary"
+              >
+                {finding.source}
+              </a>
             </li>
           ))}
         </ul>
-      </MagSection>
+      </section>
 
-      <MagSection n="05" title="Кто делает">
-        <p className="max-w-prose type-body text-muted-foreground">
-          Команда To Dual Education. Мы преподаём в НИУ ВШЭ, в магистратуре ИИМУП «AI в маркетинге и продакт-менеджменте»,
-          и ведём программы по ИИ для Яндекса, ВТБ и Сколково.
-        </p>
-        <ul className="mt-5 flex flex-wrap gap-2">
-          {TEAM.map((t) => (
-            <li key={t} className="rounded-full border px-3 py-1 text-sm">{t}</li>
-          ))}
-        </ul>
-      </MagSection>
+      <section className="border-t py-20 md:py-24">
+        <div className="grid gap-6 md:grid-cols-[1fr_1fr] md:gap-16">
+          <h2 className="type-title">Кто делает</h2>
+          <div className="max-w-lg">
+            <p className="type-body text-muted-foreground">
+              Команда To Dual Education. Преподаём в магистратуре ИИМУП «AI в маркетинге и продакт-менеджменте» (Яндекс и НИУ ВШЭ)
+              и проводим программы по ИИ для Яндекса, ВТБ и Сколково. В занятиях у нас 25% теории и 75% практики, в уроках сервиса так же:
+              короткая теория и сразу задача.
+            </p>
+            <ul className="mt-5 flex flex-wrap gap-2">
+              {TEAM.map((t) => (
+                <li key={t} className="rounded-full border px-3 py-1 text-sm">{t}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
 
-      <section className="accent-panel relative mb-20 overflow-clip md:mb-24 md:p-12">
-        <Asterisk className="pointer-events-none absolute -right-10 -bottom-10 size-72 text-primary-foreground/15 md:size-96" />
-        <div className="relative max-w-2xl">
-          <StepMarks total={3} filled={3} size="xl" tone="inverse" />
+      <section className="accent-panel mb-20 md:mb-24 md:p-12">
+        <div className="max-w-2xl">
+          <StepMarks total={3} filled={3} size="md" tone="inverse" />
           <h2 className="mt-6 text-balance type-title">Попробуйте на своём материале</h2>
           <p className="mt-3 max-w-lg type-body accent-panel-muted">
-            Преподаватель собирает курс и даёт студентам ссылку. Студент входит по ссылке или по коду курса.
+            Преподаватель собирает курс и даёт студентам ссылку. Студент записывается на курс по ссылке или по коду.
           </p>
           <div className="mt-8">
             <EntryButtons tone="inverse" />

@@ -5,19 +5,7 @@ import path from "node:path";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth/session";
 import { addMaterial, createCourse, insertLessons, setAllLessonsStatus, updateCourseSettings } from "@/lib/db/queries";
-import { LessonContentSchema } from "@/lib/lessons/types";
-import { z } from "zod";
-
-const SeedSchema = z.object({
-  slug: z.string(),
-  title: z.string(),
-  description: z.string(),
-  audience: z.string(),
-  outcomes: z.string(),
-  tone: z.enum(["ty", "vy"]),
-  materials: z.array(z.object({ filename: z.string(), kind: z.string(), content: z.string() })),
-  lessons: z.array(LessonContentSchema),
-});
+import { SeedSchema } from "@/lib/lessons/seed-schema";
 
 /** Создает готовый курс из content/courses/<slug>.json: материалы, уроки, сразу опубликованные. */
 export async function createDemoCourseAction(slug: string): Promise<void> {
