@@ -684,6 +684,23 @@ export async function listDueFlashcards(userId: string, now = nowIso()): Promise
   });
 }
 
+/** Сколько карточек ждёт повторения в каждом курсе: course_id → число. Для звёздочки-прогресса (лучи точками) на /learn и в шапке курса. */
+export async function countDueFlashcardsByCourse(userId: string, now = nowIso()): Promise<Map<string, number>> {
+  const sb = await getSupabase();
+  const rows = unwrap(
+    await sb
+      .from("flashcards")
+      .select("lesson_id, lessons!inner(course_id)")
+      .eq("user_id", userId)
+      .lte("next_due_at", now)
+      .overrideTypes<Array<{ lesson_id: string; lessons: { course_id: string } }>, { merge: false }>(),
+    "due by course",
+  );
+  const out = new Map<string, number>();
+  for (const r of rows) out.set(r.lessons.course_id, (out.get(r.lessons.course_id) ?? 0) + 1);
+  return out;
+}
+
 export async function countDueFlashcards(userId: string, now = nowIso()): Promise<number> {
   const sb = await getSupabase();
   const res = await sb.from("flashcards").select("id", { count: "exact", head: true }).eq("user_id", userId).lte("next_due_at", now);
