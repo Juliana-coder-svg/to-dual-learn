@@ -30,7 +30,8 @@ export default async function LessonPage({ params }: { params: Promise<{ courseI
   const idx = published.findIndex((l) => l.id === lesson.id);
   const nextLesson = idx >= 0 ? published[idx + 1] : undefined;
   // Для экрана завершения: сколько опубликованных уроков курса пройдено до этого ответа.
-  const course = { done: published.filter((l) => done.has(l.id)).length, total: published.length };
+  // Черновик, который владелец открыл для проверки, в счёт не идёт: его нет среди опубликованных.
+  const course = { done: published.filter((l) => done.has(l.id)).length, total: published.length, counted: idx >= 0 };
 
   return (
     <AppShell user={ctx.user} width="narrow">

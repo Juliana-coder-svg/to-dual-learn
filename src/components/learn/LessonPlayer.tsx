@@ -49,8 +49,9 @@ interface Props {
   nextHref: string;
   nextLabel: string;
   tone: Tone;
-  /** Пройдено опубликованных уроков курса до этого ответа и всего уроков: для звёздочки на экране завершения. */
-  course: { done: number; total: number };
+  /** Пройдено опубликованных уроков курса до этого ответа и всего уроков: для звёздочки на экране завершения.
+   *  `counted`: этот урок опубликован и входит в счёт (черновик владельца не входит). */
+  course: { done: number; total: number; counted: boolean };
 }
 
 export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, tone, course }: Props) {
@@ -148,7 +149,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
 
   const stepIndex = step === "intro" ? 1 : step === "task" ? 2 : 3;
   // После refresh `previous` появляется и сервер уже считает урок пройденным: прибавка нужна только до этого.
-  const courseDone = Math.min(course.total, course.done + (firstTime && !previous ? 1 : 0));
+  const courseDone = Math.min(course.total, course.done + (firstTime && !previous && course.counted ? 1 : 0));
   const thinking = <ProgressAsterisk thinking size={16} />;
   const arrow = <span aria-hidden className="shrink-0 text-primary-strong">→</span>;
 
@@ -353,7 +354,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
                 tone="inverse"
                 size={96}
                 value={{ done: courseDone, total: course.total }}
-                label={`Пройдено ${courseDone} из ${course.total} уроков курса`}
+                label={`Пройдено ${courseDone} из ${course.total}`}
                 count={`${courseDone} из ${course.total}`}
                 countClassName="type-counter"
                 className="gap-5"
@@ -361,7 +362,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
               {/* На телефоне подпись уходит под звёздочку, а не сжимается в узкий столбик рядом. */}
               <div className="min-w-0 flex-1 basis-48">
                 <h2 id="course-progress-title" className="eyebrow">{courseDone >= course.total && course.total > 0 ? "Курс пройден" : "Курс"}</h2>
-                <p aria-hidden className="mt-1 type-body accent-panel-muted">
+                <p className="mt-1 type-body accent-panel-muted">
                   {courseDone >= course.total && course.total > 0 ? "все уроки позади, дальше повторение" : `${plural(courseDone, "урок пройден", "урока пройдено", "уроков пройдено")}, ещё ${plural(course.total - courseDone, "урок", "урока", "уроков")}`}
                 </p>
               </div>
