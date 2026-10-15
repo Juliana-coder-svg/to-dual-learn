@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { requireUser, requireUserId } from "@/lib/auth/session";
-import { countDueFlashcards, countLessonsStartedToday, latestScoresByCourse, listCoursesForStudentWithLessons } from "@/lib/db/queries";
+import { countDueFlashcardsByCourse, countLessonsStartedToday, latestScoresByCourse, listCoursesForStudentWithLessons } from "@/lib/db/queries";
 import { joinCourseAction } from "@/lib/actions/courses";
 import { setDailyEmailAction } from "@/lib/actions/auth";
 import { AppShell } from "@/components/shared/AppShell";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Notice } from "@/components/shared/Notice";
+import { ProgressAsterisk } from "@/components/shared/ProgressAsterisk";
 import { StepMarks } from "@/components/shared/StepMarks";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,13 +33,15 @@ function Stat({ label, value, hint, href, accent }: { label: string; value: stri
 export default async function LearnPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   // Четыре независимых запроса одним кругом до базы: профиль, курсы с уроками, карточки, баллы по всем курсам.
   const userId = await requireUserId();
-  const [user, sp, enrolled, due, scores] = await Promise.all([
+  const [user, sp, enrolled, dueByCourse, scores] = await Promise.all([
     requireUser(),
     searchParams,
     listCoursesForStudentWithLessons(userId),
-    countDueFlashcards(userId),
+    countDueFlashcardsByCourse(userId),
     latestScoresByCourse(userId),
   ]);
+  // Общий счётчик повторения складывается из карточек по курсам: один запрос вместо двух.
+  const due = Array.from(dueByCourse.values()).reduce((a, b) => a + b, 0);
   // Дневной лимит считает та же RPC, что и /api/evaluate, чтобы страница и проверка ответа не расходились.
   // Второй круг до базы только для курсов с лимитом, параллельно по курсам.
   const startedToday = await Promise.all(
@@ -51,7 +54,7 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
     const next = lessons.find((l) => !done.has(l.id));
     const nextIndex = next ? lessons.indexOf(next) : lessons.length;
     const limitReached = c.owner_id !== user.id && c.daily_limit > 0 && startedToday[i] >= c.daily_limit;
-    return { course: c, lessons, completed, next, nextIndex, limitReached };
+    return { course: c, lessons, completed, next, nextIndex, limitReached, dueCards: dueByCourse.get(c.id) ?? 0 };
   });
   // Урок дня: первый курс, где есть непройденный урок и не исчерпан дневной лимит. Остальные курсы ждут в списке.
   const today = cards.find((card) => card.next && !card.limitReached);
@@ -101,19 +104,23 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
             <EmptyState className="mt-5" title="Пока нет курсов" description="Введите код от преподавателя справа, и курс появится здесь." />
           ) : (
             <ul className="mt-5 space-y-3">
-              {cards.map(({ course: c, lessons, completed, next, nextIndex, limitReached }) => (
+              {cards.map(({ course: c, lessons, completed, next, limitReached, dueCards }) => (
                 <li key={c.id}>
                   <Link href={`/learn/${c.id}`} className="card-link block rounded-lg p-5 outline-none">
-                    <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
-                      <div className="min-w-0 max-w-xl">
-                        <h3 className="text-balance type-heading">{c.title}</h3>
-                        <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{c.description || "Без описания"}</p>
-                      </div>
-                      <span className="shrink-0 text-2xl font-semibold tracking-tight tabular-nums">
-                        {completed}<span className="text-muted-foreground">/{lessons.length}</span>
-                      </span>
+                    <div className="min-w-0 max-w-xl">
+                      <h3 className="text-balance type-heading">{c.title}</h3>
+                      <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{c.description || "Без описания"}</p>
                     </div>
-                    <StepMarks total={lessons.length} filled={nextIndex} current={next ? nextIndex + 1 : undefined} size="sm" className="mt-4" />
+                    {/* Звёздочка-прогресс на месте бывшей полосы, всегда с числом; лучи точками, если по курсу ждут карточки. */}
+                    <ProgressAsterisk
+                      size={24}
+                      value={{ done: completed, total: lessons.length }}
+                      due={dueCards > 0}
+                      label={`Пройдено ${completed} из ${lessons.length}${dueCards > 0 ? `, ${plural(dueCards, "карточка ждёт", "карточки ждут", "карточек ждут")} повторения` : ""}`}
+                      count={`${completed} из ${lessons.length}`}
+                      countClassName="text-2xl font-semibold tracking-tight"
+                      className="mt-4"
+                    />
                     <p className="mt-3 text-sm text-muted-foreground">
                       {next && limitReached ? (
                         <>Сегодня пройдено. Завтра: <span className="text-foreground">{next.title}</span></>
