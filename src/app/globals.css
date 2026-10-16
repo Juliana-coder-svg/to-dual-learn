@@ -241,6 +241,44 @@
   .empty-state {
     @apply flex flex-col items-center gap-3 rounded-xl border border-dashed px-6 py-10 text-center;
   }
+  /* Контейнеры 16 px (rounded-xl), органы управления 12 px (rounded-lg), бейджи и чипы пилюлями. Внутри контейнера
+     вложенный блок на ступень мельче: rounded-lg. Классы ниже закрепляют это, чтобы экраны не собирали рамки заново. */
+  /* Карточка: рамка 1 px, белый фон. Основной контейнер экрана. */
+  .panel {
+    @apply rounded-xl border bg-card p-5;
+  }
+  /* Мягкая панель: серая подложка без рамки. Боковые колонки и справочные блоки: письмо дня, готовые курсы, код курса. */
+  .panel-soft {
+    @apply rounded-xl bg-surface p-5;
+  }
+  /* Рамка для списка строк: строки внутри разделяются divide-y, рамки у каждой строки нет. */
+  .frame {
+    @apply overflow-hidden rounded-xl border;
+  }
+  /* Рамка таблицы: прокрутка внутри, отступы крайних ячеек задаёт сама рамка. */
+  .table-frame {
+    @apply overflow-x-auto rounded-xl border;
+  }
+  .table-frame .data-table th:first-child,
+  .table-frame .data-table td:first-child {
+    padding-left: 1rem;
+  }
+  .table-frame .data-table th:last-child,
+  .table-frame .data-table td:last-child {
+    padding-right: 1rem;
+  }
+  /* Плитка выбора (радио, чекбокс, тон, тип): отмеченная обводится акцентом и получает подложку. */
+  .tile {
+    @apply flex cursor-pointer items-start gap-3 rounded-lg border border-input px-3 py-2.5 text-sm transition-colors hover:border-foreground/40 has-[:checked]:border-primary has-[:checked]:bg-primary-soft has-[:focus-visible]:ring-3 has-[:focus-visible]:ring-ring/40;
+  }
+  /* Нативный select в одном ряду с Input: 36 px, рамка --input. */
+  .field-select {
+    @apply h-9 w-full rounded-lg border border-input bg-background px-3 text-base outline-none transition-colors hover:border-foreground/40 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/40 md:text-sm;
+  }
+  /* Чип-пилюля: пары «ключ: значение» в шапке курса, фильтры. */
+  .chip {
+    @apply inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-sm;
+  }
   /* Таблица данных: числа табличные, шапка приглушена, на телефоне прокрутка. */
   .data-table {
     @apply w-full text-sm tabular-nums;

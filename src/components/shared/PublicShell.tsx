@@ -1,6 +1,6 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
 import { Brand } from "@/components/shared/Brand";
+import { SiteFooter } from "@/components/shared/SiteFooter";
 
 /** Каркас страниц без сессии: лендинг, вход, согласие, документы. Шапка с логотипом и одним действием, подвал со ссылками. */
 export function PublicShell({
@@ -22,16 +22,7 @@ export function PublicShell({
         </div>
       </header>
       <main className={`mx-auto flex w-full flex-1 flex-col px-4 ${width === "wide" ? "max-w-5xl" : "max-w-md"}`}>{children}</main>
-      <footer className="border-t py-5 type-caption text-muted-foreground">
-        <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center gap-x-5 gap-y-0 px-4">
-          <span className="font-medium text-foreground/70">To Dual Education</span>
-          <Link href="/about/data" className="inline-block py-2 hover:text-foreground">Данные и безопасность</Link>
-          <Link href="/pilot" className="inline-block py-2 hover:text-foreground">Пилот</Link>
-          <Link href="/legal/privacy" className="inline-block py-2 hover:text-foreground">Политика</Link>
-          <Link href="/legal/terms" className="inline-block py-2 hover:text-foreground">Соглашение</Link>
-          <Link href="/legal/consent" className="inline-block py-2 hover:text-foreground">Согласие</Link>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

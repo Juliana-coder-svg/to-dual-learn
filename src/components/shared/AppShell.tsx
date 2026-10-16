@@ -5,6 +5,7 @@ import { logout, switchRole } from "@/lib/actions/auth";
 import { currentUserConsented } from "@/lib/auth/session";
 import { Button } from "@/components/ui/button";
 import { Brand } from "@/components/shared/Brand";
+import { SiteFooter } from "@/components/shared/SiteFooter";
 import { NavLinks, type NavItem } from "@/components/shared/NavLinks";
 
 const TEACHER_NAV: NavItem[] = [
@@ -69,15 +70,7 @@ export async function AppShell({
         </div>
       </header>
       <main className={`mx-auto w-full flex-1 px-4 py-8 md:py-10 ${width === "narrow" ? "max-w-2xl" : "max-w-5xl"}`}>{children}</main>
-      <footer className="border-t py-5 type-caption text-muted-foreground">
-        <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center gap-x-5 gap-y-2 px-4">
-          <span className="font-medium text-foreground/70">To Dual Education</span>
-          <Link href="/legal/privacy" className="hover:text-foreground">Политика</Link>
-          <Link href="/legal/terms" className="hover:text-foreground">Соглашение</Link>
-          <Link href="/legal/consent" className="hover:text-foreground">Согласие</Link>
-          <Link href="/account/data" className="hover:text-foreground">Мои данные</Link>
-        </div>
-      </footer>
+      <SiteFooter signedIn />
     </div>
   );
 }
