@@ -10,8 +10,7 @@ import {
 } from "@/lib/db/queries";
 import { sendMail } from "@/lib/mail";
 import { runAsService } from "@/lib/supabase/server";
-
-const escapeHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+import { dailyMailHtml, escapeHtml, type DailyMailItem } from "@/lib/mail-template";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -35,21 +34,24 @@ export async function GET(req: Request) {
   let skipped = 0;
   for (const user of await listUsersForDigest()) {
     if (user.last_digest_at && new Date(user.last_digest_at).getTime() > cutoff) continue;
-    const items: string[] = [];
+    const items: DailyMailItem[] = [];
     const lessonTitles: string[] = [];
     for (const course of await listCoursesForStudent(user.id)) {
       const lessons = await listLessons(course.id, { publishedOnly: true });
       const done = await latestSubmissionsForCourse(user.id, course.id);
       const next = lessons.find((l) => !done.has(l.id));
-      if (next) items.push(`<li><a href="${site}/learn/${course.id}/lesson/${next.id}">${escapeHtml(course.title)}: урок ${next.position} «${escapeHtml(next.title)}»</a></li>`);
+      if (next) items.push({ href: `${site}/learn/${course.id}/lesson/${next.id}`, html: `${escapeHtml(course.title)}: урок ${next.position} «${escapeHtml(next.title)}»` });
       if (next) lessonTitles.push(next.title);
     }
     const due = await countDueFlashcards(user.id);
     if (items.length === 0 && due === 0) continue;
-    const html = `<p>${escapeHtml(user.name)}, на сегодня:</p>
-<ul>${items.join("")}${due > 0 ? `<li><a href="${site}/learn/review">Повторить карточки: ${due}</a></li>` : ""}</ul>
-<p>Пять минут, и серия ${user.streak > 0 ? `дойдёт до ${user.streak + 1}` : "начнётся"}.</p>
-<p style="color:#888;font-size:12px">Отключить письма можно на <a href="${site}/account/data">странице «Мои данные»</a>.</p>`;
+    const html = dailyMailHtml({
+      name: user.name,
+      items,
+      due: due > 0 ? { href: `${site}/learn/review`, count: due } : null,
+      streakLine: `Пять минут, и серия ${user.streak > 0 ? `дойдёт до ${user.streak + 1}` : "начнётся"}.`,
+      settingsHref: `${site}/account/data`,
+    });
     // Тема называет урок, чтобы письмо было видно в ленте: при нескольких курсах — первый и счётчик остальных. Переводы строк убираем: тема уходит в заголовок письма.
     const first = lessonTitles[0]?.replace(/\s+/g, " ").trim().slice(0, 80);
     const subject = first ? `Урок дня: ${first}${lessonTitles.length > 1 ? ` и ещё ${lessonTitles.length - 1}` : ""}` : "Пора повторить карточки";
