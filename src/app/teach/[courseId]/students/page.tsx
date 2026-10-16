@@ -11,9 +11,9 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { AiNote } from "@/components/shared/AiNote";
 import { ProgressAsterisk } from "@/components/shared/ProgressAsterisk";
 
-export default async function StudentsPage({ params, searchParams }: { params: Promise<{ courseId: string }>; searchParams: Promise<{ state?: string }> }) {
+export default async function StudentsPage({ params, searchParams }: { params: Promise<{ courseId: string }>; searchParams: Promise<{ state?: string | string[] }> }) {
   const { courseId } = await params;
-  const filter = parseStateFilter((await searchParams).state);
+  const filter = parseStateFilter([(await searchParams).state].flat()[0]);
   const [ctx, students, publishedLessons, allSubmissions, answers] = await Promise.all([
     teacherCourse(courseId),
     // RPC бросает 42501 чужому пользователю, а запрос идёт параллельно с проверкой владельца: тогда пусто, дальше 404.
@@ -23,7 +23,10 @@ export default async function StudentsPage({ params, searchParams }: { params: P
     }),
     listLessonSummaries(courseId, { publishedOnly: true }),
     listSubmissionsByCourse(courseId),
-    listLessonAnswersForSignals(courseId).catch(() => []),
+    listLessonAnswersForSignals(courseId).catch((e: unknown) => {
+      if (String(e).includes("not a course owner") || String(e).includes("42501")) return [];
+      throw e;
+    }),
   ]);
   if (!ctx) return noCourseAccess(`/teach/${courseId}/students`);
   const published = publishedLessons.length;
@@ -39,7 +42,7 @@ export default async function StudentsPage({ params, searchParams }: { params: P
   const base = `/teach/${courseId}/students`;
   const shown = filter ? students.filter((s) => stateOf(s.user_id) === filter) : students;
   const csvRows: (string | number)[][] = [["Имя", "Почта", "Состояние", `Пройдено (из ${published})`, "Последний ответ", "Средний балл"]];
-  for (const s of students) {
+  for (const s of shown) {
     const p = progress.get(s.user_id);
     csvRows.push([
       s.name,
