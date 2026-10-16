@@ -7,7 +7,7 @@ import Link from "next/link";
 export function ConsentFields({ showMarketing = true }: { showMarketing?: boolean }) {
   const row = "flex cursor-pointer items-start gap-3 px-3 py-2.5 text-sm leading-snug has-[:focus-visible]:bg-muted/60";
   return (
-    <div className="divide-y overflow-hidden rounded-lg border border-input">
+    <div className="divide-y overflow-hidden rounded-xl border border-input">
       <label className={row}>
         <input type="checkbox" name="consent_processing" value="1" required className="mt-0.5 size-4 shrink-0" />
         <span>
