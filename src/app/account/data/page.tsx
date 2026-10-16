@@ -134,7 +134,7 @@ export default async function MyDataPage({ searchParams }: { searchParams: Promi
           <CardContent>
             {blockingCourses.length > 0 ? (
               <div className="space-y-3 text-sm">
-                <p>Аккаунт сейчас удалить нельзя: на этих курсах есть студенты или их ответы, и вместе с аккаунтом пропали бы и они.</p>
+                <p>Аккаунт сейчас удалить нельзя: на этих курсах есть студенты или их ответы, и вместе с аккаунтом пропали бы и они. Курс со студентами самому не удалить: это делаем мы, по письму.</p>
                 <ul className="list-disc pl-5 text-muted-foreground">
                   {blockingCourses.map((c) => <li key={c.id}>{c.title}: {plural(c.students, "студент", "студента", "студентов")}</li>)}
                 </ul>
@@ -151,7 +151,7 @@ export default async function MyDataPage({ searchParams }: { searchParams: Promi
               <form action={deleteAccountAction} className="space-y-4">
                 {vanishing.length > 0 ? (
                   <div className="border-l-2 border-destructive pl-3 text-sm">
-                    <p className="font-medium">Вместе с аккаунтом пропадут {plural(vanishing.length, "курс", "курса", "курсов")}: материалы, уроки и ссылки-приглашения перестанут работать.</p>
+                    <p className="font-medium">Вместе с аккаунтом пропадут {plural(vanishing.length, "курс", "курса", "курсов")}: материалы и уроки удалятся, ссылка и код курса перестанут работать.</p>
                     <ul className="mt-2 list-disc pl-5 text-muted-foreground">{vanishing.map((c) => <li key={c.id}>{c.title}</li>)}</ul>
                   </div>
                 ) : null}

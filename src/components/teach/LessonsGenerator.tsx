@@ -53,7 +53,7 @@ export function LessonsGenerator({ courseId, disabled, builds }: { courseId: str
         body: JSON.stringify({ courseId, answers: payload }),
       });
       const data = (await res.json()) as { ok?: boolean; error?: string; saved?: number };
-      if (!res.ok || !data.ok) throw new Error(data.error ?? "Не удалось сохранить ответы. Они остались в полях: нажмите «Сохранить» ещё раз.");
+      if (!res.ok || !data.ok) throw new Error(data.error ?? "Не удалось сохранить ответы. Они остались в полях: нажмите «Сохранить ответы» ещё раз.");
       setNotesSaved(true);
       setQuestions(null);
       setMsg({ text: `Сохранено ответов: ${data.saved}. Они стали материалом курса, теперь можно собирать уроки.`, kind: "success" });
@@ -174,7 +174,7 @@ export function LessonsGenerator({ courseId, disabled, builds }: { courseId: str
               {plural(count, "урок", "урока", "уроков")} {review ? "с проверкой" : "без проверки"}: {formatEstimate(estimate.seconds)}{estimate.fromHistory ? ", по прошлым сборкам этого курса" : ""}.
             </p>
           ) : (
-            <div role="status" className="space-y-2 rounded-lg bg-surface p-3 text-sm">
+            <div className="space-y-2 rounded-lg bg-surface p-3 text-sm">
               <ol className="space-y-1">
                 {stages.map((st, i) => (
                   <li key={st.label} className={i === stage ? "font-medium" : i < stage ? "text-muted-foreground" : "text-muted-foreground/70"}>

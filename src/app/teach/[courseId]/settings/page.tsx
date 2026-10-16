@@ -86,7 +86,7 @@ export default async function SettingsPage({ params, searchParams }: { params: P
         <section className="py-10">
           <SectionHeader title="Образцы оценок" description="Покажите на примерах, что для вас «5» и что «2»: ответ студента, балл и пояснение. ИИ оценивает ответы с оглядкой на эти образцы." />
           <div className="mt-5 space-y-4">
-            {sp.error === "sample" ? <Notice kind="error">Нужен ответ длиннее 10 символов и балл от 1 до 5.</Notice> : null}
+            {sp.error === "sample" ? <Notice kind="error">Нужен ответ длиннее 10 знаков и балл от 1 до 5.</Notice> : null}
             {samples.length > 0 ? (
               <ul className="divide-y border-y">
                 {samples.map((s) => (

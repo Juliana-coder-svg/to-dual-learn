@@ -294,7 +294,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
               <h2 data-step-heading tabIndex={-1} className="type-heading outline-none">Разбор</h2>
               {scoreNote ? <p className="mt-2 text-sm text-muted-foreground">{scoreNote}</p> : null}
               <AiNote kind={guest ? "feedbackGuest" : "feedback"} className="mt-2" />
-              {guest ? null : <p className="mt-1 type-caption text-muted-foreground">Кто видит ваши ответы: вы и преподаватель курса. Другим студентам они не показываются.</p>}
+              {guest ? null : <p className="mt-1 type-caption text-muted-foreground">Ваши ответы видите вы и преподаватель курса. Другие студенты их не видят.</p>}
             </div>
             <dl className="flex shrink-0 gap-8">
               <div>
@@ -402,7 +402,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
           {!guest && progress && progress.xp === progress.gained ? (
             <div className="callout">
               <div className="callout-label">Что дальше</div>
-              <p className="mt-2 type-body">Первый урок пройден, серия началась. Серия считает дни подряд. Если пропустить день, счёт серии начнётся с единицы, а баллы и пройденные уроки останутся. Сегодняшний урок вернётся карточками на повторение: завтра они появятся в разделе «Повторение».</p>
+              <p className="mt-2 type-body">Первый урок пройден, серия началась: она считает дни подряд. Если пропустить день, серия начнётся с единицы, а баллы и пройденные уроки останутся. Сегодняшний урок вернётся карточками на повторение: завтра они появятся в разделе «Повторение».</p>
             </div>
           ) : null}
           {guest ? (

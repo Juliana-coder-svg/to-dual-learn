@@ -44,7 +44,7 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
             <>
               {lessons.length > 0 && hasMaterials ? <ReviewButton courseId={courseId} /> : null}
               {drafts > 0 ? (
-                <form action={publishAllAction.bind(null, courseId)}>
+                <form action={publishAllAction.bind(null, courseId)} className="min-w-0 max-w-full">
                   <ConfirmSubmitButton
                     size="sm"
                     message={draftsWithProposal > 0 ? `В ${plural(draftsWithProposal, "уроке", "уроках", "уроках")} из ${drafts} есть правки проверки, которые вы не приняли и не отклонили. Студенты увидят эти уроки без правок. Опубликовать все ${drafts}?` : undefined}
@@ -116,7 +116,7 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
                     <form action={moveLessonAction.bind(null, courseId, l.id, -1)}><Button type="submit" variant="ghost" size="icon-sm" disabled={i === 0} aria-label="Выше">↑</Button></form>
                     <form action={moveLessonAction.bind(null, courseId, l.id, 1)}><Button type="submit" variant="ghost" size="icon-sm" disabled={i === lessons.length - 1} aria-label="Ниже">↓</Button></form>
                     <Button nativeButton={false} render={<Link href={`/teach/${courseId}/lessons/${l.id}/edit`} />} variant="outline" size="sm">Править</Button>
-                    <form action={setLessonStatusAction.bind(null, courseId, l.id, l.status === "published" ? "draft" : "published")}>
+                    <form action={setLessonStatusAction.bind(null, courseId, l.id, l.status === "published" ? "draft" : "published")} className="min-w-0 max-w-full">
                       <ConfirmSubmitButton
                         variant={l.status === "published" ? "outline" : "secondary"}
                         size="sm"
