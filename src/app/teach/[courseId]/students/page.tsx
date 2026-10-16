@@ -76,7 +76,7 @@ export default async function StudentsPage({ params, searchParams }: { params: P
                   key={c.label}
                   href={c.key ? `${base}?state=${c.key}` : base}
                   aria-current={filter === c.key ? "page" : undefined}
-                  className={cn("inline-flex min-h-8 items-center rounded-full border px-3", filter === c.key ? "border-primary bg-primary-soft text-primary-strong" : "text-muted-foreground hover:text-foreground")}
+                  className={cn("inline-flex min-h-9 items-center rounded-full border px-3.5 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring sm:min-h-8", filter === c.key ? "border-primary bg-primary-soft font-medium text-primary-strong" : "text-muted-foreground hover:bg-muted hover:text-foreground")}
                 >
                   {c.label}
                 </Link>
@@ -84,11 +84,11 @@ export default async function StudentsPage({ params, searchParams }: { params: P
             </nav>
             <DownloadStudentsButton rows={csvRows} filename="students.csv" />
           </div>
-          <p className="mt-3 type-caption text-muted-foreground">
-            Баллы — очки опыта за уроки и повторение. Дней подряд — сколько дней студент проходит уроки без пропуска. Застрял: последняя оценка 1–2 или нет ответов больше трёх дней.
+          <p className="mt-4 max-w-prose type-caption text-muted-foreground">
+            Баллы копятся за уроки и повторение. Серия — дни без пропуска. Застрял: последний балл 1–2 или нет ответов больше трёх дней.
           </p>
-          <div className="mt-4 overflow-x-auto rounded-lg border">
-            <table className="data-table min-w-[720px]">
+          <div className="mt-4 overflow-x-auto rounded-lg border" tabIndex={0} role="region" aria-label="Таблица студентов">
+            <table className="data-table min-w-[760px] whitespace-nowrap">
               <thead>
                 <tr>
                   <th className="pl-4">Студент</th>
@@ -96,14 +96,14 @@ export default async function StudentsPage({ params, searchParams }: { params: P
                   <th>Пройдено</th>
                   <th>Последний ответ</th>
                   <th>Средний балл</th>
-                  <th>Дней подряд</th>
+                  <th>Серия</th>
                   <th className="pr-4 text-right">Баллы</th>
                 </tr>
               </thead>
               <tbody>
                 {shown.map((s) => (
                   <tr key={s.user_id}>
-                    <td className="pl-4"><div className="font-medium">{s.name}</div><div className="type-caption text-muted-foreground">{s.email}</div></td>
+                    <td className="pl-4"><div className="font-medium">{s.name}</div><div className="type-caption font-normal text-muted-foreground">{s.email}</div></td>
                     <td><Badge variant={stateOf(s.user_id) === "stuck" ? "destructive" : stateOf(s.user_id) === "done" ? "default" : "outline"}>{STATE_LABEL[stateOf(s.user_id)]}</Badge></td>
                     <td>
                       <ProgressAsterisk size={16} value={{ done: progress.get(s.user_id)?.completed ?? 0, total: published }} label={`Пройдено ${progress.get(s.user_id)?.completed ?? 0} из ${published}`} count={`${progress.get(s.user_id)?.completed ?? 0}/${published}`} />
@@ -116,7 +116,7 @@ export default async function StudentsPage({ params, searchParams }: { params: P
                 ))}
               </tbody>
             </table>
-            {shown.length === 0 ? <p className="p-4 text-sm text-muted-foreground">В этом состоянии никого нет.</p> : null}
+            {shown.length === 0 ? <p className="p-4 text-sm text-muted-foreground">Студентов с таким состоянием нет.</p> : null}
           </div>
           </>
         )}
