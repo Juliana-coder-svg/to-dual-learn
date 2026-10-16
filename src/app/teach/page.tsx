@@ -21,6 +21,7 @@ import { plural } from "@/lib/utils/format";
 
 /** Курсы-примеры из content/courses/<slug>.json. */
 const DEMO_COURSES = [
+  // text-lint-ignore: название курса-примера
   { slug: "critical-thinking-ai", title: "Критическое мышление в эпоху ИИ", short: "Критическое мышление", note: "пять уроков для маркетологов и продактов, обращение на «ты»" },
   { slug: "ai-grading", title: "Как проверять работы студентов с помощью ИИ", short: "Проверка работ с ИИ", note: "шесть уроков для преподавателей, обращение на «вы»" },
 ];
@@ -98,7 +99,7 @@ export default async function TeachPage({ searchParams }: { searchParams: Promis
               <form action={createCourseAction} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="title">Название</Label>
-                  <Input id="title" name="title" required placeholder="Критическое мышление в эпоху ИИ" />
+                  <Input id="title" name="title" required placeholder="Например, «Переговоры с клиентами»" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="description">О чём курс</Label>

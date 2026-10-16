@@ -226,7 +226,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
       ) : null}
 
       {step === "task" ? (
-        <section key="task" className="step-enter mt-10 space-y-8">
+        <section key="task" className="step-enter mt-10 space-y-6 md:space-y-8">
           <div>
             <h2 data-step-heading tabIndex={-1} className="eyebrow outline-none">Задача</h2>
             <p className="mt-2 text-lg leading-relaxed">{c.task}</p>
@@ -235,7 +235,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
           {sample ? (
             <div>
               <div className="eyebrow">Данные к задаче</div>
-              <blockquote id="lesson-sample" className={`mt-2 whitespace-pre-wrap rounded-lg bg-muted p-4 type-body ${sampleIsLong && !sampleOpen ? "line-clamp-12 md:line-clamp-none" : ""}`}>{sample}</blockquote>
+              <blockquote id="lesson-sample" className={`mt-2 whitespace-pre-wrap rounded-lg bg-muted p-4 type-body ${sampleIsLong && !sampleOpen ? "line-clamp-8 md:line-clamp-none" : ""}`}>{sample}</blockquote>
               {sampleIsLong ? (
                 <button type="button" onClick={() => setSampleOpen((v) => !v)} aria-expanded={sampleOpen} aria-controls="lesson-sample" className="mt-1 inline-flex min-h-11 items-center rounded-sm text-sm font-medium text-foreground underline decoration-primary decoration-2 underline-offset-4 outline-none focus-visible:ring-3 focus-visible:ring-ring/40 md:hidden">
                   {sampleOpen ? "Свернуть" : "Показать полностью"}

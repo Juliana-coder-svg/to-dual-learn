@@ -203,6 +203,7 @@ export default function Home() {
           <h2 className="type-title">Кто делает</h2>
           <div className="max-w-lg">
             <p className="type-body text-muted-foreground">
+              {/* text-lint-ignore: «AI» из официального названия программы */}
               Команда To Dual Education. Преподаём в магистратуре ИИМУП «AI в маркетинге и продакт-менеджменте» (Яндекс и НИУ ВШЭ)
               и проводим программы по ИИ для Яндекса, ВТБ и Сколково. В занятиях у нас 25% теории и 75% практики, в уроках сервиса так же:
               короткая теория и сразу задача.
