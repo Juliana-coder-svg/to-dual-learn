@@ -294,6 +294,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
               <h2 data-step-heading tabIndex={-1} className="type-heading outline-none">Разбор</h2>
               {scoreNote ? <p className="mt-2 text-sm text-muted-foreground">{scoreNote}</p> : null}
               <AiNote kind={guest ? "feedbackGuest" : "feedback"} className="mt-2" />
+              {guest ? null : <p className="mt-1 type-caption text-muted-foreground">Кто видит ваши ответы: вы и преподаватель курса. Другим студентам они не показываются.</p>}
             </div>
             <dl className="flex shrink-0 gap-8">
               <div>
