@@ -108,7 +108,7 @@ function LessonSketch() {
   if (!lesson) return null;
   const { title, concept, task } = lesson.content;
   return (
-    <figure aria-hidden className="rounded-lg border border-dashed bg-card p-5 text-sm">
+    <figure aria-hidden className="rounded-xl border border-dashed bg-card p-5 text-sm">
       <figcaption className="eyebrow text-muted-foreground">Так выглядит урок</figcaption>
       <div className="mt-4 flex items-center justify-between gap-4">
         <span className="eyebrow">Урок 1 · шаг 2 из 3</span>
@@ -182,7 +182,7 @@ export default function Home() {
         </div>
         <ul className="mt-10 grid gap-4 md:grid-cols-2">
           {FINDINGS.map((finding) => (
-            <li key={finding.title} className="flex flex-col rounded-lg bg-surface p-6">
+            <li key={finding.title} className="flex flex-col rounded-xl bg-surface p-6">
               <h3 className="type-heading">{finding.title}</h3>
               <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">{finding.text}</p>
               <a
