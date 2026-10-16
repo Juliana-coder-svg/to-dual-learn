@@ -7,6 +7,8 @@ import { SectionHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Notice } from "@/components/shared/Notice";
 
+export const metadata = { title: "Сигналы" };
+
 /** Прототип, часть 1: сигналы без модели в простой таблице. За флагом CONCEPT_SIGNALS=1. */
 export default async function SignalsPage({ params }: { params: Promise<{ courseId: string }> }) {
   if (process.env.CONCEPT_SIGNALS !== "1") notFound();

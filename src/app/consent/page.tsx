@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { PublicShell } from "@/components/shared/PublicShell";
 import { Notice } from "@/components/shared/Notice";
 
+export const metadata = { title: "Согласие на обработку данных" };
+
 /** Согласие для уже вошедшего пользователя без записи в consents: старая сессия или ссылка из письма,
  *  открытая в другом браузере. Без AppShell, иначе его проверка согласия зациклит редирект. */
 export default async function ConsentPage({ searchParams }: { searchParams: Promise<{ next?: string; error?: string }> }) {

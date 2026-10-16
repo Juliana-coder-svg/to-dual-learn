@@ -7,6 +7,8 @@ import { SectionHeader } from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
 import { plural } from "@/lib/utils/format";
 
+export const metadata = { title: "Вопросы по материалам" };
+
 export default async function ChatPage({ params }: { params: Promise<{ courseId: string }> }) {
   const { courseId } = await params;
   const userId = await requireUserId();

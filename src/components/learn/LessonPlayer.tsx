@@ -237,7 +237,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
               <div className="eyebrow">Данные к задаче</div>
               <blockquote id="lesson-sample" className={`mt-2 whitespace-pre-wrap rounded-xl bg-muted p-4 type-body ${sampleIsLong && !sampleOpen ? "line-clamp-8 md:line-clamp-none" : ""}`}>{sample}</blockquote>
               {sampleIsLong ? (
-                <button type="button" onClick={() => setSampleOpen((v) => !v)} aria-expanded={sampleOpen} aria-controls="lesson-sample" className="mt-1 inline-flex min-h-11 items-center rounded-sm text-sm font-medium text-foreground underline decoration-primary decoration-2 underline-offset-4 outline-none focus-visible:ring-3 focus-visible:ring-ring/40 md:hidden">
+                <button type="button" onClick={() => setSampleOpen((v) => !v)} aria-expanded={sampleOpen} aria-controls="lesson-sample" className="mt-1 inline-flex min-h-11 items-center rounded-sm text-sm font-medium text-foreground underline decoration-primary decoration-2 underline-offset-4 outline-none focus-visible:ring-3 focus-visible:ring-ring md:hidden">
                   {sampleOpen ? "Свернуть" : "Показать полностью"}
                 </button>
               ) : null}
@@ -276,7 +276,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
           </div>
           {c.signals.length > 0 ? (
             <details className="group rounded-xl border px-4">
-              <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium outline-none focus-visible:ring-3 focus-visible:ring-ring/40 [&::-webkit-details-marker]:hidden">
+              <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium outline-none focus-visible:ring-3 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
                 <span>На что смотреть <span className="font-normal text-muted-foreground">· {plural(c.signals.length, "признак", "признака", "признаков")}</span></span>
                 <span aria-hidden className="text-muted-foreground group-open:hidden">Показать</span>
                 <span aria-hidden className="hidden text-muted-foreground group-open:inline">Скрыть</span>
@@ -368,7 +368,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
           {!worked && feedback.strengths.length > 0 ? <div><h3 className="text-sm font-semibold">Что получилось</h3><ul className="mt-2 list-disc pl-5 type-body">{feedback.strengths.map((s, i) => <li key={i}>{s}</li>)}</ul></div> : null}
           {moreImprovements.length > 0 ? (
             <details className="group rounded-xl border px-4">
-              <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium outline-none focus-visible:ring-3 focus-visible:ring-ring/40 [&::-webkit-details-marker]:hidden">
+              <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium outline-none focus-visible:ring-3 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
                 <span>{prevNextStep ? "Что ещё улучшить" : "Что улучшить"} <span className="font-normal text-muted-foreground">· {moreImprovements.length}</span></span>
                 <span aria-hidden className="text-muted-foreground group-open:hidden">Показать</span>
                 <span aria-hidden className="hidden text-muted-foreground group-open:inline">Скрыть</span>
@@ -393,7 +393,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
               </div>
             </div>
           ) : (
-            <button type="button" onClick={() => setAppealOpen(true)} className="inline-flex min-h-11 items-center rounded-sm text-sm text-muted-foreground underline underline-offset-4 outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/40">Оспорить разбор</button>
+            <button type="button" onClick={() => setAppealOpen(true)} className="inline-flex min-h-11 items-center rounded-sm text-sm text-muted-foreground underline underline-offset-4 outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring">Оспорить разбор</button>
           )}
           <div className="callout">
             <div className="callout-label">Запомнить</div>

@@ -20,6 +20,8 @@ const KIND_LABELS: Record<string, string> = {
   chat: "Вопросы по материалам",
 };
 
+export const metadata = { title: "Настройки курса" };
+
 export default async function SettingsPage({ params, searchParams }: { params: Promise<{ courseId: string }>; searchParams: Promise<{ saved?: string; error?: string }> }) {
   const { courseId } = await params;
   const [sp, ctx, lessons, samples, usage] = await Promise.all([

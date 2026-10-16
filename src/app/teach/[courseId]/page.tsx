@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatChars, formatDate } from "@/lib/utils/format";
 
+export const metadata = { title: "Материалы" };
+
 export default async function MaterialsPage({ params }: { params: Promise<{ courseId: string }> }) {
   const { courseId } = await params;
   const [ctx, materials] = await Promise.all([teacherCourse(courseId), listMaterials(courseId)]);

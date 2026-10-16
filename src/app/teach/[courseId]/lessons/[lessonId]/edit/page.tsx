@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Notice } from "@/components/shared/Notice";
 
+export const metadata = { title: "Правка урока" };
+
 export default async function EditLessonPage({ params, searchParams }: { params: Promise<{ courseId: string; lessonId: string }>; searchParams: Promise<{ error?: string }> }) {
   const { courseId, lessonId } = await params;
   const [sp, ctx, lesson] = await Promise.all([searchParams, teacherCourse(courseId), getLesson(lessonId)]);

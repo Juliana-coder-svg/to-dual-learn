@@ -20,6 +20,8 @@ import { Badge } from "@/components/ui/badge";
 import { ConfirmSubmitButton } from "@/components/teach/ConfirmSubmitButton";
 import { formatDateTime, plural } from "@/lib/utils/format";
 
+export const metadata = { title: "Уроки" };
+
 export default async function LessonsPage({ params }: { params: Promise<{ courseId: string }> }) {
   const { courseId } = await params;
   const [ctx, lessons, materialsCount, builds] = await Promise.all([teacherCourse(courseId), listLessons(courseId), countMaterials(courseId), listLessonBuilds(courseId)]);

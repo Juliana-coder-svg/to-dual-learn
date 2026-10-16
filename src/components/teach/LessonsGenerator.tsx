@@ -179,9 +179,9 @@ export function LessonsGenerator({ courseId, disabled, builds }: { courseId: str
             </p>
           ) : (
             <div className="space-y-2 rounded-xl bg-surface p-3 text-sm">
-              <ol className="space-y-1">
+              <ol aria-live="polite" className="space-y-1">
                 {stages.map((st, i) => (
-                  <li key={st.label} className={i === stage ? "font-medium" : i < stage ? "text-muted-foreground" : "text-muted-foreground/70"}>
+                  <li key={st.label} className={i === stage ? "font-medium" : i < stage ? "text-muted-foreground" : "text-muted-foreground"}>
                     <span aria-hidden className="mr-2">{i < stage ? "✓" : i === stage ? "→" : "·"}</span>
                     {st.label}
                   </li>

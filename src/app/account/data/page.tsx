@@ -38,6 +38,8 @@ function describeVersion(version: string): string {
   return parts.map(([k, v]) => `${DOC_NAMES[k] ?? k} ${v}`).join(", ");
 }
 
+export const metadata = { title: "Мои данные" };
+
 export default async function MyDataPage({ searchParams }: { searchParams: Promise<{ error?: string; saved?: string }> }) {
   const user = await requireUser();
   const sp = await searchParams;

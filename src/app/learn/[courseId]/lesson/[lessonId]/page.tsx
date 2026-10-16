@@ -10,6 +10,8 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { Button } from "@/components/ui/button";
 import { isUuid } from "@/lib/utils/ids";
 
+export const metadata = { title: "Урок" };
+
 export default async function LessonPage({ params, searchParams }: { params: Promise<{ courseId: string; lessonId: string }>; searchParams: Promise<{ claimed?: string }> }) {
   const { courseId, lessonId } = await params;
   const claimed = (await searchParams).claimed === "1";

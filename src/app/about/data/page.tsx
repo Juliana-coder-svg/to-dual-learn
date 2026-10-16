@@ -9,7 +9,7 @@ import { CONTACT_EMAIL, PILOT_MAILTO } from "@/lib/pilot";
 export const dynamic = "force-static";
 
 export const metadata: Metadata = {
-  title: "Данные и безопасность · TO DUAL Learn",
+  title: "Данные и безопасность",
   description: "Что хранит TO DUAL Learn, где, кто видит ответы студентов и что получает поставщик ИИ.",
 };
 

@@ -24,11 +24,13 @@ function Stat({ label, value, hint, href, accent }: { label: string; value: stri
   );
   const cls = "block border-t-2 pt-4";
   return href ? (
-    <Link href={href} className={`${cls} border-primary transition-colors outline-none hover:text-primary-strong focus-visible:ring-3 focus-visible:ring-ring/40`}>{body}</Link>
+    <Link href={href} className={`${cls} border-primary transition-colors outline-none hover:text-primary-strong focus-visible:ring-3 focus-visible:ring-ring`}>{body}</Link>
   ) : (
     <div className={`${cls} border-foreground`}>{body}</div>
   );
 }
+
+export const metadata = { title: "Сегодня" };
 
 export default async function LearnPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   // Четыре независимых запроса одним кругом до базы: профиль, курсы с уроками, карточки, баллы по всем курсам.

@@ -12,6 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { isUuid } from "@/lib/utils/ids";
 
+export const metadata = { title: "Курс" };
+
 export default async function CoursePage({ params }: { params: Promise<{ courseId: string }> }) {
   const { courseId } = await params;
   if (!isUuid(courseId)) notFound();
@@ -96,7 +98,7 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
                 <Link
                   href={locked ? `/learn/${courseId}` : `/learn/${courseId}/lesson/${l.id}`}
                   aria-disabled={locked}
-                  className={`group flex items-center justify-between gap-4 py-4 transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/40 ${locked ? "opacity-60" : ""}`}
+                  className={`group flex items-center justify-between gap-4 py-4 transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring ${locked ? "opacity-60" : ""}`}
                 >
                   <div className="flex min-w-0 items-start gap-4">
                     <span className={`w-10 shrink-0 text-2xl font-semibold tracking-tight tabular-nums ${number}`}>{String(l.position).padStart(2, "0")}</span>

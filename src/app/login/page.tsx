@@ -22,6 +22,8 @@ const ERRORS: Record<string, string> = {
   consent: "Отметьте согласие на обработку данных: без него сервис не сможет хранить ваши ответы.",
 };
 
+export const metadata = { title: "Вход" };
+
 export default async function LoginPage({
   searchParams,
 }: {

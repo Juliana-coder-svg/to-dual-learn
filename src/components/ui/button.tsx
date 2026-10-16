@@ -8,11 +8,11 @@ import { cn } from "cn"
  * остальные outline или ghost. Красная только для необратимого.
  */
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-colors outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/40 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-colors outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary-strong",
+        default: "bg-primary text-primary-foreground hover:bg-[color-mix(in_oklch,var(--primary),white_14%)]",
         outline:
           "border-input bg-background text-foreground hover:border-foreground/40 hover:bg-surface aria-expanded:bg-muted",
         secondary:
@@ -20,11 +20,11 @@ const buttonVariants = cva(
         ghost:
           "text-foreground hover:bg-muted aria-expanded:bg-muted",
         destructive:
-          "bg-destructive text-primary-foreground hover:bg-[color-mix(in_oklch,var(--destructive),black_12%)] focus-visible:ring-destructive/30",
+          "bg-destructive text-white hover:bg-[color-mix(in_oklch,var(--destructive),black_12%)] focus-visible:ring-destructive/30",
         link: "h-auto px-0 text-primary-strong underline-offset-4 hover:underline",
-        /** Белая кнопка на оранжевой плашке (.accent-panel): главное действие внутри фирменного блока. */
-        inverse: "bg-primary-foreground text-primary-strong hover:bg-primary-soft focus-visible:border-primary-foreground focus-visible:ring-primary-foreground/70",
-        /** Прозрачная кнопка с белой рамкой на оранжевой плашке: второе действие рядом с inverse. */
+        /** Графитовая кнопка на оранжевой плашке (.accent-panel): главное действие внутри фирменного блока. */
+        inverse: "bg-primary-foreground text-background hover:bg-ink focus-visible:border-primary-foreground focus-visible:ring-primary-foreground/70",
+        /** Прозрачная кнопка с графитовой рамкой на оранжевой плашке: второе действие рядом с inverse. */
         "inverse-outline": "border-primary-foreground/60 text-primary-foreground hover:border-primary-foreground hover:bg-primary-foreground/10 focus-visible:border-primary-foreground focus-visible:ring-primary-foreground/70",
       },
       size: {

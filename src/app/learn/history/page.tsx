@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { AiNote } from "@/components/shared/AiNote";
 import { formatDateTime, plural } from "@/lib/utils/format";
 
+export const metadata = { title: "Мои ответы" };
+
 export default async function HistoryPage() {
   const userId = await requireUserId();
   const [user, items] = await Promise.all([requireUser(), listUserSubmissions(userId)]);

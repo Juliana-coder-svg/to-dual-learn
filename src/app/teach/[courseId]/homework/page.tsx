@@ -5,6 +5,8 @@ import { HomeworkResultsView } from "@/components/teach/HomeworkResultsView";
 import { SectionHeader } from "@/components/shared/PageHeader";
 import { formatDateTime, plural } from "@/lib/utils/format";
 
+export const metadata = { title: "Проверка работ" };
+
 export default async function HomeworkPage({ params }: { params: Promise<{ courseId: string }> }) {
   const { courseId } = await params;
   const [ctx, history] = await Promise.all([teacherCourse(courseId), listHomeworkChecks(courseId)]);

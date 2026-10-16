@@ -9,11 +9,11 @@ import { cn } from "cn"
  * soft — светло-оранжевая подложка с тёмным текстом (отметки, которые не должны кричать).
  */
 const badgeVariants = cva(
-  "group/badge inline-flex h-[22px] w-fit shrink-0 items-center justify-center gap-1 rounded-full border border-transparent px-2.5 text-xs font-medium whitespace-nowrap tabular-nums transition-colors focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40 [&>svg]:pointer-events-none [&>svg]:size-3!",
+  "group/badge inline-flex h-[22px] w-fit shrink-0 items-center justify-center gap-1 rounded-full border border-transparent px-2.5 text-xs font-medium whitespace-nowrap tabular-nums transition-colors focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring [&>svg]:pointer-events-none [&>svg]:size-3!",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground [a]:hover:bg-primary-strong",
+        default: "bg-primary text-primary-foreground [a]:hover:bg-[color-mix(in_oklch,var(--primary),white_14%)]",
         secondary: "bg-secondary text-secondary-foreground [a]:hover:bg-muted",
         soft: "bg-primary-soft text-primary-strong",
         destructive: "bg-destructive/10 text-destructive",

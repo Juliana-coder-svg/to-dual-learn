@@ -77,7 +77,7 @@ export function ArtifactGenerator({ courseId, disabled }: { courseId: string; di
           {error ? <Notice kind="error">{error}</Notice> : null}
         </CardContent>
       </Card>
-      <div className={`min-h-60 rounded-xl border p-5 ${result ? "" : "flex items-center justify-center"}`}>
+      <div aria-live="polite" className={`min-h-60 rounded-xl border p-5 ${result ? "" : "flex items-center justify-center"}`}>
         {result ? (
           <>
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b pb-4">

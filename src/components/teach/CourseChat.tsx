@@ -42,7 +42,7 @@ export function CourseChat({ courseId, initial }: { courseId: string; initial: M
 
   return (
     <div className="flex flex-col gap-4">
-      <div className={`min-h-72 space-y-5 rounded-xl border p-4 md:p-5 ${messages.length === 0 ? "flex items-center justify-center" : ""}`}>
+      <div role="log" aria-live="polite" className={`min-h-72 space-y-5 rounded-xl border p-4 md:p-5 ${messages.length === 0 ? "flex items-center justify-center" : ""}`}>
         {messages.length === 0 ? (
           <p className="max-w-md text-center text-sm text-muted-foreground">
             Пока пусто. Например: «Какие темы есть в материалах?» или «Составь три вопроса для обсуждения по второму разделу».

@@ -7,6 +7,8 @@ import { AiNote } from "@/components/shared/AiNote";
 import { SectionHeader } from "@/components/shared/PageHeader";
 import { formatDateTime } from "@/lib/utils/format";
 
+export const metadata = { title: "Для занятий" };
+
 export default async function GeneratePage({ params }: { params: Promise<{ courseId: string }> }) {
   const { courseId } = await params;
   const [ctx, history, materialsCount] = await Promise.all([teacherCourse(courseId), listGenerations(courseId), countMaterials(courseId)]);

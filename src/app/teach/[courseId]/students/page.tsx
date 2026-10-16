@@ -11,6 +11,8 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { AiNote } from "@/components/shared/AiNote";
 import { ProgressAsterisk } from "@/components/shared/ProgressAsterisk";
 
+export const metadata = { title: "Студенты" };
+
 export default async function StudentsPage({ params, searchParams }: { params: Promise<{ courseId: string }>; searchParams: Promise<{ state?: string | string[] }> }) {
   const { courseId } = await params;
   const filter = parseStateFilter([(await searchParams).state].flat()[0]);

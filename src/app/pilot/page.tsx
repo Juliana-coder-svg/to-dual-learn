@@ -8,7 +8,7 @@ import { CONTACT_EMAIL, PILOT_MAILTO } from "@/lib/pilot";
 export const dynamic = "force-static";
 
 export const metadata: Metadata = {
-  title: "Пилот для компании или вуза · TO DUAL Learn",
+  title: "Пилот для компании или вуза",
   description: "Пилот TO DUAL Learn на одной группе: что входит, сроки, что нужно от заказчика и что вы получите.",
 };
 

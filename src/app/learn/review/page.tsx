@@ -4,6 +4,8 @@ import { AppShell } from "@/components/shared/AppShell";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { FlashcardReview } from "@/components/learn/FlashcardReview";
 
+export const metadata = { title: "Повторение" };
+
 export default async function ReviewPage() {
   const userId = await requireUserId();
   const [user, due] = await Promise.all([requireUser(), listDueFlashcards(userId)]);

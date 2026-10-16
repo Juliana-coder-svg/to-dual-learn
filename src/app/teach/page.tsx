@@ -26,6 +26,8 @@ const DEMO_COURSES = [
   { slug: "ai-grading", title: "Как проверять работы студентов с помощью ИИ", short: "Проверка работ с ИИ", note: "шесть уроков для преподавателей, обращение на «вы»" },
 ];
 
+export const metadata = { title: "Мои курсы" };
+
 export default async function TeachPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   // Профиль и курсы со счётчиками грузятся параллельно: id берём из JWT без похода за профилем.
   const userId = await requireUserId();
