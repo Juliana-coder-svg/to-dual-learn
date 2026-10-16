@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { teacherCourse, noCourseAccess } from "@/lib/auth/access";
-import { countMaterials, listLessons } from "@/lib/db/queries";
+import { countMaterials, listLessonBuilds, listLessons } from "@/lib/db/queries";
 import {
   acceptProposalAction,
   decideAllProposalsAction,
@@ -22,7 +22,7 @@ import { formatDateTime, plural } from "@/lib/utils/format";
 
 export default async function LessonsPage({ params }: { params: Promise<{ courseId: string }> }) {
   const { courseId } = await params;
-  const [ctx, lessons, materialsCount] = await Promise.all([teacherCourse(courseId), listLessons(courseId), countMaterials(courseId)]);
+  const [ctx, lessons, materialsCount, builds] = await Promise.all([teacherCourse(courseId), listLessons(courseId), countMaterials(courseId), listLessonBuilds(courseId)]);
   if (!ctx) return noCourseAccess(`/teach/${courseId}/lessons`);
   const hasMaterials = materialsCount > 0;
   const drafts = lessons.filter((l) => l.status === "draft").length;
@@ -181,7 +181,7 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
         )}
       </section>
       <aside className="min-w-0">
-        <LessonsGenerator courseId={courseId} disabled={!hasMaterials} />
+        <LessonsGenerator courseId={courseId} disabled={!hasMaterials} builds={builds} />
       </aside>
     </div>
   );
