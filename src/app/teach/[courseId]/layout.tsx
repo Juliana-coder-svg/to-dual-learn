@@ -76,7 +76,7 @@ function UsageBadge({ usage }: { usage?: Awaited<ReturnType<typeof courseUsage>>
             ≈ {formatRub(usdToRub(usage.cost_usd))} <span className="font-normal text-muted-foreground">· {plural(usage.calls, "запрос", "запроса", "запросов")}</span>
           </>
         ) : (
-          <span className="text-muted-foreground">считаем…</span>
+          <span role="status" aria-label="Считаем расход" className="inline-block h-4 w-24 animate-pulse rounded-sm bg-muted align-middle" />
         )}
       </dd>
     </div>
