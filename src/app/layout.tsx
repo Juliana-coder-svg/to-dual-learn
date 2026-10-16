@@ -8,7 +8,7 @@ const unbounded = Unbounded({ subsets: ["latin", "cyrillic"], variable: "--font-
 const onest = Onest({ subsets: ["latin", "cyrillic"], variable: "--font-onest", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "To Dual Learn",
+  title: "TO DUAL Learn",
   description:
     "Преподаватель загружает материалы, сервис собирает из них короткие уроки, студенты учатся по 5 минут в день.",
 };

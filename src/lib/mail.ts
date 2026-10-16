@@ -43,7 +43,7 @@ function mask(email: string): string {
 }
 
 export async function sendMail(to: string, subject: string, html: string): Promise<"sent" | "skipped" | "failed"> {
-  const from = process.env.MAIL_FROM ?? "To Dual Learn <learn@to-dual.education>";
+  const from = process.env.MAIL_FROM ?? "TO DUAL Learn <learn@to-dual.education>";
   try {
     const transport = smtp();
     if (transport) {

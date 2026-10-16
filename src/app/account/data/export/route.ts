@@ -22,7 +22,7 @@ export async function GET(): Promise<NextResponse> {
 
   const payload: Record<string, unknown> = {
     exported_at: new Date().toISOString(),
-    service: "To Dual Learn",
+    service: "TO DUAL Learn",
     documents_version: LEGAL_VERSIONS,
     account: authUser ? { email: authUser.email, created_at: authUser.created_at, last_sign_in_at: authUser.last_sign_in_at ?? null } : null,
     ...data,

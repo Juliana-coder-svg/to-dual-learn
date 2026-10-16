@@ -26,7 +26,7 @@ function isSlug(v: string): v is LegalSlug {
 export async function generateMetadata({ params }: { params: Promise<{ doc: string }> }): Promise<Metadata> {
   const { doc } = await params;
   if (!isSlug(doc)) return {};
-  return { title: `${loadLegalDocument(doc).title} · To Dual Learn`, robots: { index: false, follow: false } };
+  return { title: `${loadLegalDocument(doc).title} · TO DUAL Learn`, robots: { index: false, follow: false } };
 }
 
 export default async function LegalPage({ params }: { params: Promise<{ doc: string }> }) {

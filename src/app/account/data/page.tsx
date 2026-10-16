@@ -24,7 +24,7 @@ const ERRORS: Record<string, string> = {
 const KIND_LABELS = {
   processing: "Обработка данных для работы сервиса",
   terms: "Пользовательское соглашение",
-  marketing: "Письма о программах To Dual",
+  marketing: "Письма о программах TO DUAL",
 } as const;
 
 /** «Мои данные»: что храним, согласия, выгрузка в JSON и удаление аккаунта (ст. 14 152-ФЗ).
@@ -113,7 +113,7 @@ export default async function MyDataPage({ searchParams }: { searchParams: Promi
             <form action={setMarketingConsentAction} className="flex flex-wrap items-center justify-between gap-3 border-t pt-4 text-sm">
               <span className="flex items-center gap-2">
                 <span aria-hidden className={`size-2 rounded-full ${marketingOn ? "bg-primary" : "bg-border"}`} />
-                Письма о программах To Dual: {marketingOn ? "включены" : "выключены"}
+                Письма о программах TO DUAL: {marketingOn ? "включены" : "выключены"}
               </span>
               <input type="hidden" name="enabled" value={marketingOn ? "0" : "1"} />
               <Button type="submit" variant="outline" size="sm">{marketingOn ? "Отозвать согласие" : "Дать согласие"}</Button>

@@ -51,7 +51,7 @@ export function openAiCompatibleProvider(): AiProvider {
             "Content-Type": "application/json",
             Authorization: `Bearer ${apiKey}`,
             "HTTP-Referer": process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
-            "X-Title": "To Dual Learn",
+            "X-Title": "TO DUAL Learn",
           },
           body: JSON.stringify(b),
         });

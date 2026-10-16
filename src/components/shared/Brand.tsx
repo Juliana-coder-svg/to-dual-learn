@@ -8,7 +8,7 @@ export function Brand({ href = "/", className }: { href?: string; className?: st
     <Link href={href} className={cn("inline-flex items-center gap-2 whitespace-nowrap text-base font-bold tracking-tight", className)}>
       <Asterisk className="size-[18px] text-primary" />
       <span>
-        <span className="uppercase tracking-wide">To Dual</span>
+        <span className="uppercase tracking-wide">TO DUAL</span>
         <span className="hidden font-normal text-muted-foreground sm:inline"> Learn</span>
       </span>
     </Link>
