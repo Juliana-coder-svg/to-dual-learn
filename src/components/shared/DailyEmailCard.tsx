@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 export function DailyEmailCard({ user, next }: { user: User; next: "/learn" | "/teach" | "/account/data" }) {
   const teacher = user.role === "teacher";
   return (
-    <section className="rounded-lg bg-surface p-5">
+    <section className={next === "/account/data" ? "panel" : "panel-soft"}>
       <h2 className="text-base font-semibold">Письмо с уроком дня</h2>
       <p className="mt-1 text-sm text-muted-foreground">
         {teacher

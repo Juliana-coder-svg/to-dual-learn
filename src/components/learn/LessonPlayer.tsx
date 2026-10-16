@@ -235,7 +235,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
           {sample ? (
             <div>
               <div className="eyebrow">Данные к задаче</div>
-              <blockquote id="lesson-sample" className={`mt-2 whitespace-pre-wrap rounded-lg bg-muted p-4 type-body ${sampleIsLong && !sampleOpen ? "line-clamp-12 md:line-clamp-none" : ""}`}>{sample}</blockquote>
+              <blockquote id="lesson-sample" className={`mt-2 whitespace-pre-wrap rounded-xl bg-muted p-4 type-body ${sampleIsLong && !sampleOpen ? "line-clamp-12 md:line-clamp-none" : ""}`}>{sample}</blockquote>
               {sampleIsLong ? (
                 <button type="button" onClick={() => setSampleOpen((v) => !v)} aria-expanded={sampleOpen} aria-controls="lesson-sample" className="mt-1 inline-flex min-h-11 items-center rounded-sm text-sm font-medium text-foreground underline decoration-primary decoration-2 underline-offset-4 outline-none focus-visible:ring-3 focus-visible:ring-ring/40 md:hidden">
                   {sampleOpen ? "Свернуть" : "Показать полностью"}
@@ -244,7 +244,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
             </div>
           ) : null}
           {feedback && (prevNextStep || feedback.improvements.length > 0) ? (
-            <div className="rounded-lg border p-4">
+            <div className="rounded-xl border p-4">
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className="text-sm font-semibold">В прошлый раз: что улучшить</h3>
                 <Badge variant="secondary">{feedback.score}/5</Badge>
@@ -275,7 +275,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
             <Button size="lg" variant="ghost" onClick={() => setStep("intro")} disabled={busy}>{t.back}</Button>
           </div>
           {c.signals.length > 0 ? (
-            <details className="group rounded-lg border px-4">
+            <details className="group rounded-xl border px-4">
               <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium outline-none focus-visible:ring-3 focus-visible:ring-ring/40 [&::-webkit-details-marker]:hidden">
                 <span>На что смотреть <span className="font-normal text-muted-foreground">· {plural(c.signals.length, "признак", "признака", "признаков")}</span></span>
                 <span aria-hidden className="text-muted-foreground group-open:hidden">Показать</span>
@@ -318,7 +318,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
           {worked || prevNextStep ? (
             <div className={`grid gap-3 ${worked && prevNextStep ? "md:grid-cols-2" : ""}`}>
               {worked ? (
-                <section aria-label="Что получилось" className="rounded-lg border p-4">
+                <section aria-label="Что получилось" className="rounded-xl border p-4">
                   <h3 className="eyebrow">Что получилось</h3>
                   <p className="mt-2 type-body">{worked}</p>
                 </section>
@@ -344,7 +344,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
           {feedback.criteria.length > 0 ? (
             <div>
               <h3 className="text-sm font-semibold">По критериям <span className="font-normal text-muted-foreground">· {feedback.criteria.filter((x) => x.met).length} из {feedback.criteria.length}</span></h3>
-              <ul className="mt-3 divide-y rounded-lg border">
+              <ul className="mt-3 frame divide-y">
                 {feedback.criteria.map((cr, i) => {
                   const { reservation, comment } = splitReservation(cr.met, cr.comment);
                   return (
@@ -364,7 +364,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
           ) : null}
           {!worked && feedback.strengths.length > 0 ? <div><h3 className="text-sm font-semibold">Что получилось</h3><ul className="mt-2 list-disc pl-5 type-body">{feedback.strengths.map((s, i) => <li key={i}>{s}</li>)}</ul></div> : null}
           {moreImprovements.length > 0 ? (
-            <details className="group rounded-lg border px-4">
+            <details className="group rounded-xl border px-4">
               <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium outline-none focus-visible:ring-3 focus-visible:ring-ring/40 [&::-webkit-details-marker]:hidden">
                 <span>{prevNextStep ? "Что ещё улучшить" : "Что улучшить"} <span className="font-normal text-muted-foreground">· {moreImprovements.length}</span></span>
                 <span aria-hidden className="text-muted-foreground group-open:hidden">Показать</span>
@@ -374,7 +374,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
             </details>
           ) : null}
           {guest ? null : appealOpen ? (
-            <div className="space-y-3 rounded-lg border p-4">
+            <div className="space-y-3 rounded-xl border p-4">
               <label htmlFor="objection" className="text-sm font-semibold">{t.appealTitle}</label>
               <Textarea id="objection" autoFocus rows={3} value={objection} onChange={(e) => setObjection(e.target.value)} placeholder={t.appealPlaceholder} />
               {!appealError && objection.trim().length > 0 && objection.trim().length < 10 ? <p className="text-sm text-muted-foreground">Нужно хотя бы несколько слов: возражение короче 10 знаков наставник не разберёт.</p> : null}
@@ -403,7 +403,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
             </div>
           ) : null}
           {guest ? (
-            <div className="rounded-lg border p-6">
+            <div className="rounded-xl border p-6">
               <h3 className="text-balance type-heading">{guest.signedIn ? "Сохраните разбор в профиле" : "Войдите, чтобы сохранить разбор и получать урок каждый день"}</h3>
               <p className="mt-2 type-body text-muted-foreground">Перенесём ответ и разбор в профиль. Завтра утром пришлём письмо со следующим уроком, а этот урок вернётся карточками на повторение, чтобы проверить, что запомнилось. {guest.signedIn ? "Без сохранения разбор останется только в этом браузере." : "Пароль не нужен, вход по почте. Без входа разбор останется только в этом браузере."}</p>
               <div className="mt-6 flex flex-wrap gap-3">

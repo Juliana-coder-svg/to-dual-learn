@@ -116,13 +116,13 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
             <div className="mt-5 space-y-4">
               <p className="text-muted-foreground">Курсы появятся здесь. Выберите, как начать.</p>
               <div className="grid gap-3 md:grid-cols-2">
-                <section className="rounded-lg border border-primary p-5">
+                <section className="panel border-primary">
                   <h3 className="type-heading">У меня есть код</h3>
                   <p className="mt-1 text-sm text-muted-foreground">Если у вас ссылка, откройте её. Если код из шести символов, введите его ниже.</p>
                   {sp.error ? <Notice kind="error" className="mt-4">Курс с таким кодом не найден. Проверьте код или попросите преподавателя прислать ссылку.</Notice> : null}
                   {joinForm}
                 </section>
-                <section className="rounded-lg border p-5">
+                <section className="panel">
                   <h3 className="type-heading">Кода нет</h3>
                   <p className="mt-1 text-sm text-muted-foreground">Пройдите первый урок примера: идея, задача, разбор. Это пять минут, настраивать ничего не нужно.</p>
                   <Button nativeButton={false} render={<Link href={`/try/${DEFAULT_TRY_SLUG}/1?from=learn`} />} variant="outline" className="mt-4">Попробовать урок</Button>
@@ -133,7 +133,7 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
             <ul className="mt-5 space-y-3">
               {cards.map(({ course: c, lessons, completed, next, limitReached, dueCards }) => (
                 <li key={c.id}>
-                  <Link href={`/learn/${c.id}`} className="card-link block rounded-lg p-5 outline-none">
+                  <Link href={`/learn/${c.id}`} className="card-link block rounded-xl p-5 outline-none">
                     <div className="min-w-0 max-w-xl">
                       <h3 className="text-balance type-heading">{c.title}{c.owner_id === user.id ? <span className="ml-2 align-middle type-caption font-normal text-muted-foreground">ваш курс</span> : null}</h3>
                       <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{c.description || "Без описания"}</p>

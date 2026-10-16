@@ -24,7 +24,7 @@ export default async function HistoryPage() {
       ) : (
         <ul className="mt-8 space-y-3">
           {items.map((s) => (
-            <li key={s.id} className="rounded-lg border p-4 text-sm md:p-5">
+            <li key={s.id} className="rounded-xl border p-4 text-sm md:p-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="type-caption text-muted-foreground">{s.course_title} · {formatDateTime(s.created_at)}</div>

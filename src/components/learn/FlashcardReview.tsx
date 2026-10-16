@@ -67,7 +67,7 @@ export function FlashcardReview({ cards }: { cards: CardData[] }) {
         <p className="eyebrow">{index + 1} из {cards.length} · {card.course}</p>
         <StepMarks total={cards.length} filled={index} current={index + 1} size="sm" />
       </div>
-      <div key={card.id} className="step-enter mt-4 rounded-lg border p-6 md:p-8">
+      <div key={card.id} className="step-enter mt-4 rounded-xl border p-6 md:p-8">
         <p className="eyebrow">Вопрос</p>
         <p className="mt-2 text-balance type-heading md:text-2xl">{card.question}</p>
         {revealed ? (
