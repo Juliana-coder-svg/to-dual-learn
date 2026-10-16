@@ -1,4 +1,5 @@
 import type { PostgrestMaybeSingleResponse, PostgrestResponse, PostgrestSingleResponse } from "@supabase/supabase-js";
+import { BUILD_KIND, parseBuildOutput, parseBuildParams, type BuildOutput, type BuildParams, type BuildState } from "@/lib/lessons/build";
 import { createServiceClient, getSupabase } from "@/lib/supabase/server";
 import type {
   AiCallRow,
@@ -900,9 +901,39 @@ export async function addGeneration(input: { courseId: string; userId: string; k
 export async function listGenerations(courseId: string): Promise<Generation[]> {
   const sb = await getSupabase();
   return unwrap(
-    await sb.from("generations").select("*").eq("course_id", courseId).order("created_at", { ascending: false }).limit(50),
+    // Записи сборки уроков живут в той же таблице, но это не материалы для занятий: в историю не попадают.
+    await sb.from("generations").select("*").eq("course_id", courseId).neq("kind", BUILD_KIND).order("created_at", { ascending: false }).limit(50),
     "generations",
   );
+}
+
+// ---------- сборка уроков: состояние в generations ----------
+
+/** Последние сборки уроков курса, новые первыми. По ним страница показывает «идёт/готово» и считает оценку времени. */
+export async function listLessonBuilds(courseId: string, limit = 8): Promise<BuildState[]> {
+  const sb = await getSupabase();
+  const rows = unwrap(
+    await sb.from("generations").select("id,prompt,output,created_at").eq("course_id", courseId).eq("kind", BUILD_KIND).order("created_at", { ascending: false }).limit(limit),
+    "lesson builds",
+  );
+  const now = Date.now();
+  return rows.map((r) => ({
+    id: r.id,
+    startedAt: r.created_at,
+    params: parseBuildParams(r.prompt),
+    ageSeconds: Math.max(0, Math.round((now - new Date(r.created_at).getTime()) / 1000)),
+    output: parseBuildOutput(r.output),
+  }));
+}
+
+export async function startLessonBuild(input: { courseId: string; userId: string; params: BuildParams }): Promise<string> {
+  const row = await addGeneration({ courseId: input.courseId, userId: input.userId, kind: BUILD_KIND, prompt: JSON.stringify(input.params), output: JSON.stringify({ status: "running" } satisfies BuildOutput) });
+  return row.id;
+}
+
+export async function finishLessonBuild(id: string, output: BuildOutput): Promise<void> {
+  const sb = await getSupabase();
+  check(await sb.from("generations").update({ output: JSON.stringify(output) }).eq("id", id), "lesson build update");
 }
 
 // ---------- chat ----------
@@ -1316,7 +1347,7 @@ export async function exportUserData(userId: string): Promise<UserDataExport | u
     inCourses<MaterialRow>("materials", "export materials"),
     inCourses<LessonRow>("lessons", "export lessons"),
     inCourses<CalibrationSampleRow>("calibration_samples", "export calibration"),
-    fetchAll<GenerationRow>((from, to) => sb.from("generations").select("*").eq("user_id", userId).order("created_at").range(from, to), "export generations"),
+    fetchAll<GenerationRow>((from, to) => sb.from("generations").select("*").eq("user_id", userId).neq("kind", BUILD_KIND).order("created_at").range(from, to), "export generations"),
     fetchAll<ChatMessageRow>((from, to) => sb.from("chat_messages").select("*").eq("user_id", userId).order("created_at").range(from, to), "export chat"),
     fetchAll<HomeworkCheckRow>((from, to) => sb.from("homework_checks").select("*").eq("user_id", userId).order("created_at").range(from, to), "export homework"),
   ]);

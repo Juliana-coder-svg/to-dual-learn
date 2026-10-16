@@ -88,7 +88,7 @@ export default async function StudentsPage({ params, searchParams }: { params: P
             <DownloadStudentsButton rows={csvRows} filename="students.csv" />
           </div>
           <p className="mt-4 max-w-prose type-caption text-muted-foreground">
-            Баллы копятся за уроки и повторение. Серия — дни без пропуска. Застрял: последний балл 1–2 или нет ответов больше трёх дней.
+            Баллы копятся за уроки и повторение. Серия считает дни без пропуска. Застрял: последний балл 1–2 или нет ответов больше трёх дней.
           </p>
           <div className="table-frame mt-4" tabIndex={0} role="region" aria-label="Таблица студентов">
             <table className="data-table min-w-[760px] whitespace-nowrap">

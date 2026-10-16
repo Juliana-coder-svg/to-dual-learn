@@ -30,7 +30,7 @@ export default async function MaterialsPage({ params }: { params: Promise<{ cour
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="truncate font-medium">{m.filename}</span>
-                    <Badge variant="outline">{m.kind.toUpperCase()}</Badge>
+                    <Badge variant="outline">{m.kind === "txt" && !/\.txt$/i.test(m.filename) ? "Текст" : m.kind.toUpperCase()}</Badge>
                   </div>
                   <div className="mt-0.5 type-caption text-muted-foreground tabular-nums">
                     {formatChars(m.char_count)} · {formatDate(m.created_at)}

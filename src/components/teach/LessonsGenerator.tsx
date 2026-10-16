@@ -9,23 +9,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Notice } from "@/components/shared/Notice";
 import { plural } from "@/lib/utils/format";
-
-/** Этапы сборки и их ориентировочная длительность в секундах. Сервер отдаёт ответ одним куском и хода не сообщает,
- *  поэтому текущий этап определяется по прошедшему времени: это оценка, а не отчёт сервера. Цифры из замера 15 октября 2026:
- *  сборка пяти уроков с проверкой заняла 4,1 минуты. */
-const STAGES = [
-  { label: "Читаю материалы", seconds: 20 },
-  { label: "Собираю уроки", seconds: 100 },
-] as const;
-const REVIEW_STAGE = { label: "Проверяю уроки", seconds: 100 } as const;
+import { buildStages, buildStatus, currentStage, estimateBuildSeconds, formatEstimate, type BuildState, type FinishedBuild } from "@/lib/lessons/build";
 
 function clock(sec: number): string {
   return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`;
 }
 
-export function LessonsGenerator({ courseId, disabled }: { courseId: string; disabled: boolean }) {
+export function LessonsGenerator({ courseId, disabled, builds }: { courseId: string; disabled: boolean; builds: BuildState[] }) {
   const router = useRouter();
-  const [count, setCount] = useState(5);
+  const [count, setCount] = useState(3);
   const [review, setReview] = useState(true);
   const [questions, setQuestions] = useState<{ question: string; why: string }[] | null>(null);
   const [answers, setAnswers] = useState<string[]>([]);
@@ -61,7 +53,7 @@ export function LessonsGenerator({ courseId, disabled }: { courseId: string; dis
         body: JSON.stringify({ courseId, answers: payload }),
       });
       const data = (await res.json()) as { ok?: boolean; error?: string; saved?: number };
-      if (!res.ok || !data.ok) throw new Error(data.error ?? "Не удалось сохранить ответы. Они остались в полях: нажмите «Сохранить» ещё раз.");
+      if (!res.ok || !data.ok) throw new Error(data.error ?? "Не удалось сохранить ответы. Они остались в полях: нажмите «Сохранить ответы» ещё раз.");
       setNotesSaved(true);
       setQuestions(null);
       setMsg({ text: `Сохранено ответов: ${data.saved}. Они стали материалом курса, теперь можно собирать уроки.`, kind: "success" });
@@ -85,6 +77,7 @@ export function LessonsGenerator({ courseId, disabled }: { courseId: string; dis
         body: JSON.stringify({ courseId, count, review }),
       });
       const data = (await res.json()) as { ok?: boolean; error?: string; added?: number; reviewSummary?: string };
+      if (res.status === 409) router.refresh();
       if (!res.ok || !data.ok) throw new Error(data.error ?? "Не удалось собрать уроки. Попробуйте ещё раз: если не выйдет, уменьшите число уроков.");
       setMsg({ text: `Собрано ${plural(data.added ?? 0, "урок", "урока", "уроков")}. ${data.reviewSummary ?? "Откройте их, поправьте и опубликуйте."}`, kind: "success" });
       router.refresh();
@@ -95,27 +88,46 @@ export function LessonsGenerator({ courseId, disabled }: { courseId: string; dis
     }
   }
 
+  // Сборку могли начать раньше и закрыть страницу: тогда она идёт на сервере, и запись в generations это помнит.
+  const latest = builds[0] as BuildState | undefined;
+  const latestStatus = latest ? buildStatus(latest) : null;
+  const serverRunning = !busy && latestStatus === "running";
+  const active = busy || serverRunning;
+  const params = serverRunning && latest ? latest.params : { count, review };
+  const finished: FinishedBuild[] = builds.flatMap((b) => (b.output.status === "done" ? [{ count: b.params.count, review: b.params.review, seconds: b.output.seconds }] : []));
+  const estimate = estimateBuildSeconds(params.count, params.review, finished);
+  const stages = buildStages(params.review);
+
   const [elapsed, setElapsed] = useState(0);
   useEffect(() => {
-    if (!busy) return;
+    if (!active) return;
+    // Для сборки с другой вкладки или после закрытия страницы счёт идёт от запуска на сервере.
+    const offset = serverRunning && latest ? latest.ageSeconds : 0;
     const started = Date.now();
-    const id = window.setInterval(() => setElapsed(Math.floor((Date.now() - started) / 1000)), 1000);
+    const tick = () => setElapsed(offset + Math.floor((Date.now() - started) / 1000));
+    tick();
+    const id = window.setInterval(tick, 1000);
     return () => {
       window.clearInterval(id);
       setElapsed(0);
     };
-  }, [busy]);
-  const stages = review ? [...STAGES, REVIEW_STAGE] : [...STAGES];
-  let spent = 0;
-  const currentStage = Math.max(0, stages.findIndex((st) => (spent += st.seconds) > elapsed));
+  }, [active, serverRunning, latest]);
+  // Пока сборка идёт без этой вкладки, подтягиваем состояние с сервера: когда запись станет «готово», уроки появятся в списке.
+  useEffect(() => {
+    if (!serverRunning) return;
+    const id = window.setInterval(() => router.refresh(), 10000);
+    return () => window.clearInterval(id);
+  }, [serverRunning, router]);
+  const stage = currentStage(stages, estimate.seconds, elapsed);
+  const overtime = elapsed > estimate.seconds * 1.3;
 
-  const working = busy || asking || saving;
+  const working = active || asking || saving;
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Собрать уроки</CardTitle>
-        <CardDescription>ИИ прочитает материалы и соберёт последовательность коротких уроков с задачами и критериями. {review ? "Сборка с проверкой занимает 3–5 минут." : "Сборка без проверки занимает 2–3 минуты."} Не закрывайте вкладку: результат появится в списке.</CardDescription>
+        <CardDescription>ИИ прочитает материалы и соберёт последовательность коротких уроков с задачами и критериями. Сборка идёт на сервере: страницу можно закрыть и вернуться, уроки появятся в списке.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
         <div className="space-y-2">
@@ -156,27 +168,38 @@ export function LessonsGenerator({ courseId, disabled }: { courseId: string; dis
           <label className="tile py-3">
             <input type="checkbox" checked={review} onChange={(e) => setReview(e.target.checked)} className="mt-0.5 size-4 shrink-0" />
             <span>
-              <span className="font-medium">Проверить уроки <span className="font-normal text-muted-foreground">· +1–2 минуты</span></span>
+              <span className="font-medium">Проверить уроки <span className="font-normal text-muted-foreground">· дольше примерно на треть</span></span>
               <span className="mt-0.5 block type-caption text-muted-foreground">Второй проход: ИИ сверит уроки с материалами и результатами курса и поправит их до того, как вы их увидите. Снимите галочку, чтобы получить черновик быстрее и проверить его позже кнопкой «Проверить уроки».</span>
             </span>
           </label>
-          <Button onClick={generate} disabled={working || disabled} className="w-full">{busy ? <><ProgressAsterisk thinking size={16} />{review ? "Собираю и проверяю…" : "Собираю…"}</> : "Собрать уроки"}</Button>
-          {busy ? (
-            <div role="status" className="space-y-2 rounded-xl bg-surface p-3 text-sm">
+          <Button onClick={generate} disabled={working || disabled} className="w-full">{active ? <><ProgressAsterisk thinking size={16} />{params.review ? "Собираю и проверяю…" : "Собираю…"}</> : "Собрать уроки"}</Button>
+          {!active ? (
+            <p className="type-caption text-muted-foreground">
+              {plural(count, "урок", "урока", "уроков")} {review ? "с проверкой" : "без проверки"}: {formatEstimate(estimate.seconds)}{estimate.fromHistory ? ", по прошлым сборкам этого курса" : ""}.
+            </p>
+          ) : (
+            <div className="space-y-2 rounded-xl bg-surface p-3 text-sm">
               <ol className="space-y-1">
                 {stages.map((st, i) => (
-                  <li key={st.label} className={i === currentStage ? "font-medium" : i < currentStage ? "text-muted-foreground" : "text-muted-foreground/70"}>
-                    <span aria-hidden className="mr-2">{i < currentStage ? "✓" : i === currentStage ? "→" : "·"}</span>
-                    {st.label} <span className="font-normal text-muted-foreground">· около {st.seconds < 60 ? `${st.seconds} с` : `${Math.round(st.seconds / 60 * 2) / 2} мин`}</span>
+                  <li key={st.label} className={i === stage ? "font-medium" : i < stage ? "text-muted-foreground" : "text-muted-foreground/70"}>
+                    <span aria-hidden className="mr-2">{i < stage ? "✓" : i === stage ? "→" : "·"}</span>
+                    {st.label}
                   </li>
                 ))}
               </ol>
-              <p className="type-caption text-muted-foreground">Прошло {clock(elapsed)}. Шаги примерные: точный ход сервер не сообщает.</p>
+              <p className="type-caption text-muted-foreground">
+                Прошло {clock(elapsed)}, обычно {formatEstimate(estimate.seconds)}. {overtime ? "Идёт дольше обычного, подождите ещё немного. " : ""}Страницу можно закрыть: сборка продолжится, уроки появятся в списке.
+              </p>
             </div>
-          ) : null}
+          )}
           {disabled ? <p className="type-caption text-muted-foreground">Сначала загрузите материалы.</p> : null}
         </div>
         {msg ? <Notice kind={msg.kind}>{msg.text}</Notice> : null}
+        {!active && !msg && latest && latestStatus === "stale" ? <Notice kind="error">Прошлая сборка не дошла до конца: сервер её оборвал. Уроки не добавлены. Запустите сборку ещё раз, лучше с меньшим числом уроков.</Notice> : null}
+        {!active && !msg && latest && latest.output.status === "failed" ? <Notice kind="error">{latest.output.error}</Notice> : null}
+        {!active && !msg && latest && latest.output.status === "done" ? (
+          <p className="type-caption text-muted-foreground">Последняя сборка: {plural(latest.output.added, "урок", "урока", "уроков")} за {formatEstimate(latest.output.seconds).replace("около ", "")}.</p>
+        ) : null}
       </CardContent>
     </Card>
   );

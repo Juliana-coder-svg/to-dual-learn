@@ -226,7 +226,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
       ) : null}
 
       {step === "task" ? (
-        <section key="task" className="step-enter mt-10 space-y-8">
+        <section key="task" className="step-enter mt-10 space-y-6 md:space-y-8">
           <div>
             <h2 data-step-heading tabIndex={-1} className="eyebrow outline-none">Задача</h2>
             <p className="mt-2 text-lg leading-relaxed">{c.task}</p>
@@ -235,7 +235,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
           {sample ? (
             <div>
               <div className="eyebrow">Данные к задаче</div>
-              <blockquote id="lesson-sample" className={`mt-2 whitespace-pre-wrap rounded-xl bg-muted p-4 type-body ${sampleIsLong && !sampleOpen ? "line-clamp-12 md:line-clamp-none" : ""}`}>{sample}</blockquote>
+              <blockquote id="lesson-sample" className={`mt-2 whitespace-pre-wrap rounded-xl bg-muted p-4 type-body ${sampleIsLong && !sampleOpen ? "line-clamp-8 md:line-clamp-none" : ""}`}>{sample}</blockquote>
               {sampleIsLong ? (
                 <button type="button" onClick={() => setSampleOpen((v) => !v)} aria-expanded={sampleOpen} aria-controls="lesson-sample" className="mt-1 inline-flex min-h-11 items-center rounded-sm text-sm font-medium text-foreground underline decoration-primary decoration-2 underline-offset-4 outline-none focus-visible:ring-3 focus-visible:ring-ring/40 md:hidden">
                   {sampleOpen ? "Свернуть" : "Показать полностью"}
@@ -294,6 +294,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
               <h2 data-step-heading tabIndex={-1} className="type-heading outline-none">Разбор</h2>
               {scoreNote ? <p className="mt-2 text-sm text-muted-foreground">{scoreNote}</p> : null}
               <AiNote kind={guest ? "feedbackGuest" : "feedback"} className="mt-2" />
+              {guest ? null : <p className="mt-1 type-caption text-muted-foreground">Ваши ответы видите вы и преподаватель курса. Другие студенты их не видят.</p>}
             </div>
             <dl className="flex shrink-0 gap-8">
               <div>
@@ -308,7 +309,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
                   </div>
                   <div>
                     <dt className="eyebrow">Серия</dt>
-                    <dd className="mt-1 type-counter">{progress.streak}<span className="ml-1 text-base font-normal text-muted-foreground">{plural(progress.streak, "день", "дня", "дней").replace(/^\d+\s/, "")}</span></dd>
+                    <dd className="mt-1 type-counter">{progress.streak}{" "}<span className="text-base font-normal text-muted-foreground">{plural(progress.streak, "день", "дня", "дней").replace(/^\d+\s/, "")}</span></dd>
                   </div>
                 </>
               ) : null}
@@ -344,17 +345,19 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
           {feedback.criteria.length > 0 ? (
             <div>
               <h3 className="text-sm font-semibold">По критериям <span className="font-normal text-muted-foreground">· {feedback.criteria.filter((x) => x.met).length} из {feedback.criteria.length}</span></h3>
-              <ul className="mt-3 frame divide-y">
+              <ul className="mt-3 divide-y rounded-xl border">
                 {feedback.criteria.map((cr, i) => {
                   const { reservation, comment } = splitReservation(cr.met, cr.comment);
                   return (
                     <li key={i} className="flex gap-3 p-4 type-body">
                       <span aria-hidden className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full text-xs ${cr.met ? "bg-primary text-primary-foreground" : "border-2 border-foreground font-bold text-foreground"}`}>{cr.met ? "✓" : "✗"}</span>
                       <span>
-                        <span className="sr-only">{cr.met ? (reservation ? "Выполнено с оговоркой: " : "Выполнено: ") : "Не выполнено: "}</span>
+                        <span className="sr-only">{cr.met ? (reservation ? "Выполнено, но с оговоркой: " : "Выполнено: ") : "Не выполнено: "}</span>
                         <span className={cr.met ? "text-muted-foreground" : "font-medium"}>{cr.criterion}</span>
                         {reservation ? <Badge variant="soft" className="ml-2 align-middle">С оговоркой</Badge> : null}
-                        {comment ? <span className="mt-1 block text-sm text-muted-foreground">{comment}</span> : null}
+                        {reservation ? (
+                          <span className="mt-1 block text-sm text-muted-foreground"><span className="font-medium text-foreground">Оговорка: </span>{comment || "критерий выполнен не до конца."}</span>
+                        ) : comment ? <span className="mt-1 block text-sm text-muted-foreground">{comment}</span> : null}
                       </span>
                     </li>
                   );
@@ -399,7 +402,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
           {!guest && progress && progress.xp === progress.gained ? (
             <div className="callout">
               <div className="callout-label">Что дальше</div>
-              <p className="mt-2 type-body">Первый урок пройден, серия началась. Серия считает дни подряд: если день пропущен, она начнётся заново. Сегодняшний урок вернётся карточками на повторение: завтра они появятся в разделе «Повторение».</p>
+              <p className="mt-2 type-body">Первый урок пройден, серия началась: она считает дни подряд. Если пропустить день, серия начнётся с единицы, а баллы и пройденные уроки останутся. Сегодняшний урок вернётся карточками на повторение: завтра они появятся в разделе «Повторение».</p>
             </div>
           ) : null}
           {guest ? (

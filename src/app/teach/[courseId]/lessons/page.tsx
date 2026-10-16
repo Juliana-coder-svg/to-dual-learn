@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { teacherCourse, noCourseAccess } from "@/lib/auth/access";
-import { countMaterials, listLessons } from "@/lib/db/queries";
+import { countMaterials, listLessonBuilds, listLessons } from "@/lib/db/queries";
 import {
   acceptProposalAction,
   decideAllProposalsAction,
@@ -22,7 +22,7 @@ import { formatDateTime, plural } from "@/lib/utils/format";
 
 export default async function LessonsPage({ params }: { params: Promise<{ courseId: string }> }) {
   const { courseId } = await params;
-  const [ctx, lessons, materialsCount] = await Promise.all([teacherCourse(courseId), listLessons(courseId), countMaterials(courseId)]);
+  const [ctx, lessons, materialsCount, builds] = await Promise.all([teacherCourse(courseId), listLessons(courseId), countMaterials(courseId), listLessonBuilds(courseId)]);
   if (!ctx) return noCourseAccess(`/teach/${courseId}/lessons`);
   const hasMaterials = materialsCount > 0;
   const drafts = lessons.filter((l) => l.status === "draft").length;
@@ -44,10 +44,10 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
             <>
               {lessons.length > 0 && hasMaterials ? <ReviewButton courseId={courseId} /> : null}
               {drafts > 0 ? (
-                <form action={publishAllAction.bind(null, courseId)}>
+                <form action={publishAllAction.bind(null, courseId)} className="min-w-0 max-w-full">
                   <ConfirmSubmitButton
                     size="sm"
-                    message={draftsWithProposal > 0 ? `${plural(draftsWithProposal, "урок", "урока", "уроков")} с непринятыми правками проверки. Студенты увидят их без этих правок. Опубликовать все?` : undefined}
+                    message={draftsWithProposal > 0 ? `В ${plural(draftsWithProposal, "уроке", "уроках", "уроках")} из ${drafts} есть правки проверки, которые вы не приняли и не отклонили. Студенты увидят эти уроки без правок. Опубликовать все ${drafts}?` : undefined}
                   >
                     Опубликовать все ({drafts})
                   </ConfirmSubmitButton>
@@ -83,9 +83,9 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
                       <Badge variant={l.status === "published" ? "default" : "secondary"}>{l.status === "published" ? "Опубликован" : "Черновик"}</Badge>
                       <span
                         className="type-caption text-muted-foreground"
-                        title={l.reviewed_at ? "Вы сохранили урок в редакторе. Студенты видят, что урок проверен." : "Урок собрала модель. Чтобы отметить его проверенным, нажмите «Править» и сохраните."}
+                        title={l.reviewed_at ? "Вы сохранили урок в редакторе. Студенты видят, что урок проверен." : "Урок собрал ИИ. Откройте «Править» и сохраните: тогда он отметится как проверенный, и студенты это увидят."}
                       >
-                        {l.reviewed_at ? `Проверен ${formatDateTime(l.reviewed_at)}` : "Собран моделью, вы его не правили"}
+                        {l.reviewed_at ? `Проверен ${formatDateTime(l.reviewed_at)}` : "Черновик ИИ, вы его ещё не правили"}
                       </span>
                     </div>
                     <h3 className="mt-3 type-heading">{l.title}</h3>
@@ -116,11 +116,11 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
                     <form action={moveLessonAction.bind(null, courseId, l.id, -1)}><Button type="submit" variant="ghost" size="icon-sm" disabled={i === 0} aria-label="Выше">↑</Button></form>
                     <form action={moveLessonAction.bind(null, courseId, l.id, 1)}><Button type="submit" variant="ghost" size="icon-sm" disabled={i === lessons.length - 1} aria-label="Ниже">↓</Button></form>
                     <Button nativeButton={false} render={<Link href={`/teach/${courseId}/lessons/${l.id}/edit`} />} variant="outline" size="sm">Править</Button>
-                    <form action={setLessonStatusAction.bind(null, courseId, l.id, l.status === "published" ? "draft" : "published")}>
+                    <form action={setLessonStatusAction.bind(null, courseId, l.id, l.status === "published" ? "draft" : "published")} className="min-w-0 max-w-full">
                       <ConfirmSubmitButton
                         variant={l.status === "published" ? "outline" : "secondary"}
                         size="sm"
-                        message={l.status === "draft" && l.review?.proposal ? "У урока есть непринятые правки проверки. Студенты увидят текст без них. Опубликовать?" : undefined}
+                        message={l.status === "draft" && l.review?.proposal ? "У урока есть правки проверки, которые вы не приняли и не отклонили. Студенты увидят текст без них. Опубликовать?" : undefined}
                       >
                         {l.status === "published" ? "Снять с публикации" : "Опубликовать"}
                       </ConfirmSubmitButton>
@@ -181,7 +181,7 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
         )}
       </section>
       <aside className="min-w-0">
-        <LessonsGenerator courseId={courseId} disabled={!hasMaterials} />
+        <LessonsGenerator courseId={courseId} disabled={!hasMaterials} builds={builds} />
       </aside>
     </div>
   );
