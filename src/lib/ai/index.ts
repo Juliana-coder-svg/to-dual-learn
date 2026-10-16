@@ -178,7 +178,7 @@ export async function reviewLessons(
     maxTokens: 32000,
     effort: "high",
   });
-  if (result.lessons.length !== lessons.length) throw new Error("Методист вернул другое количество уроков. Попробуйте ещё раз.");
+  if (result.lessons.length !== lessons.length) throw new Error("Проверка вернула другое количество уроков. Попробуйте ещё раз.");
   return result;
 }
 
@@ -221,7 +221,7 @@ export async function reevaluateAnswer(
   answer: string,
   previous: Feedback,
   objection: string,
-  opts: { tone: Course["tone"] },
+  opts: { tone: Course["tone"]; samples?: CalibrationSample[] },
 ): Promise<Feedback> {
   if (isDemoMode()) {
     const f = demo.feedback(lesson, answer);
@@ -229,7 +229,7 @@ export async function reevaluateAnswer(
   }
   return completeJson("evaluate", ctx, FeedbackSchema, {
     task: reevaluatePrompt(lesson, answer, previous.summary, previous.score, objection, opts),
-    messages: [{ role: "user", content: "Пересмотри оценку с учётом возражения." }],
+    messages: [{ role: "user", content: "Пересмотри оценку по возражению." }],
     maxTokens: 8000,
     effort: "medium",
   });

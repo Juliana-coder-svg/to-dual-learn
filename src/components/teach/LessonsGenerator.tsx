@@ -1,12 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { ProgressAsterisk } from "@/components/shared/ProgressAsterisk";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Notice } from "@/components/shared/Notice";
+import { plural } from "@/lib/utils/format";
+
+/** Этапы сборки и их ориентировочная длительность в секундах. Сервер отдаёт ответ одним куском и хода не сообщает,
+ *  поэтому текущий этап определяется по прошедшему времени: это оценка, а не отчёт сервера. Цифры из замера 15 октября 2026:
+ *  сборка пяти уроков с проверкой заняла 4,1 минуты. */
+const STAGES = [
+  { label: "Читаю материалы", seconds: 20 },
+  { label: "Собираю уроки", seconds: 100 },
+] as const;
+const REVIEW_STAGE = { label: "Проверяю уроки", seconds: 100 } as const;
+
+function clock(sec: number): string {
+  return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`;
+}
 
 export function LessonsGenerator({ courseId, disabled }: { courseId: string; disabled: boolean }) {
   const router = useRouter();
@@ -24,11 +39,11 @@ export function LessonsGenerator({ courseId, disabled }: { courseId: string; dis
     try {
       const res = await fetch(`/api/lessons/questions?courseId=${encodeURIComponent(courseId)}`);
       const data = (await res.json()) as { ok?: boolean; error?: string; questions?: { question: string; why: string }[] };
-      if (!res.ok || !data.ok || !data.questions) throw new Error(data.error ?? "Не удалось получить вопросы");
+      if (!res.ok || !data.ok || !data.questions) throw new Error(data.error ?? "Не удалось получить вопросы. Попробуйте ещё раз через минуту.");
       setQuestions(data.questions);
       setAnswers(data.questions.map(() => ""));
     } catch (e) {
-      setMsg({ text: e instanceof Error ? e.message : "Ошибка", kind: "error" });
+      setMsg({ text: e instanceof Error ? e.message : "Не удалось выполнить действие. Попробуйте ещё раз через минуту.", kind: "error" });
     } finally {
       setAsking(false);
     }
@@ -46,13 +61,13 @@ export function LessonsGenerator({ courseId, disabled }: { courseId: string; dis
         body: JSON.stringify({ courseId, answers: payload }),
       });
       const data = (await res.json()) as { ok?: boolean; error?: string; saved?: number };
-      if (!res.ok || !data.ok) throw new Error(data.error ?? "Не удалось сохранить ответы");
+      if (!res.ok || !data.ok) throw new Error(data.error ?? "Не удалось сохранить ответы. Они остались в полях: нажмите «Сохранить» ещё раз.");
       setNotesSaved(true);
       setQuestions(null);
-      setMsg({ text: `Ответы сохранены как материал курса (${data.saved}). Теперь можно собирать уроки.`, kind: "success" });
+      setMsg({ text: `Сохранено ответов: ${data.saved}. Они стали материалом курса, теперь можно собирать уроки.`, kind: "success" });
       router.refresh();
     } catch (e) {
-      setMsg({ text: e instanceof Error ? e.message : "Ошибка", kind: "error" });
+      setMsg({ text: e instanceof Error ? e.message : "Не удалось выполнить действие. Попробуйте ещё раз через минуту.", kind: "error" });
     } finally {
       setSaving(false);
     }
@@ -70,15 +85,29 @@ export function LessonsGenerator({ courseId, disabled }: { courseId: string; dis
         body: JSON.stringify({ courseId, count, review }),
       });
       const data = (await res.json()) as { ok?: boolean; error?: string; added?: number; reviewSummary?: string };
-      if (!res.ok || !data.ok) throw new Error(data.error ?? "Не удалось собрать уроки");
-      setMsg({ text: `Добавлено уроков: ${data.added}. ${data.reviewSummary ?? "Проверьте и опубликуйте."}`, kind: "success" });
+      if (!res.ok || !data.ok) throw new Error(data.error ?? "Не удалось собрать уроки. Попробуйте ещё раз: если не выйдет, уменьшите число уроков.");
+      setMsg({ text: `Собрано ${plural(data.added ?? 0, "урок", "урока", "уроков")}. ${data.reviewSummary ?? "Откройте их, поправьте и опубликуйте."}`, kind: "success" });
       router.refresh();
     } catch (e) {
-      setMsg({ text: e instanceof Error ? e.message : "Ошибка", kind: "error" });
+      setMsg({ text: e instanceof Error ? e.message : "Не удалось выполнить действие. Попробуйте ещё раз через минуту.", kind: "error" });
     } finally {
       setBusy(false);
     }
   }
+
+  const [elapsed, setElapsed] = useState(0);
+  useEffect(() => {
+    if (!busy) return;
+    const started = Date.now();
+    const id = window.setInterval(() => setElapsed(Math.floor((Date.now() - started) / 1000)), 1000);
+    return () => {
+      window.clearInterval(id);
+      setElapsed(0);
+    };
+  }, [busy]);
+  const stages = review ? [...STAGES, REVIEW_STAGE] : [...STAGES];
+  let spent = 0;
+  const currentStage = Math.max(0, stages.findIndex((st) => (spent += st.seconds) > elapsed));
 
   const working = busy || asking || saving;
 
@@ -86,7 +115,7 @@ export function LessonsGenerator({ courseId, disabled }: { courseId: string; dis
     <Card>
       <CardHeader>
         <CardTitle>Собрать уроки</CardTitle>
-        <CardDescription>ИИ прочитает материалы и соберёт последовательность коротких уроков с задачами и критериями. Это 1–3 минуты.</CardDescription>
+        <CardDescription>ИИ прочитает материалы и соберёт последовательность коротких уроков с задачами и критериями. {review ? "Сборка с проверкой занимает 3–5 минут." : "Сборка без проверки занимает 2–3 минуты."} Не закрывайте вкладку: результат появится в списке.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
         <div className="space-y-2">
@@ -127,11 +156,24 @@ export function LessonsGenerator({ courseId, disabled }: { courseId: string; dis
           <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-input px-3 py-3 text-sm has-[:checked]:border-primary">
             <input type="checkbox" checked={review} onChange={(e) => setReview(e.target.checked)} className="mt-0.5 size-4 shrink-0" />
             <span>
-              <span className="font-medium">Проверить методистом</span>
-              <span className="mt-0.5 block type-caption text-muted-foreground">Второй проход до публикации: ИИ-методист сверяет уроки с материалами и результатами курса и правит их сразу, вы ещё не видели черновик. Удваивает время и расход.</span>
+              <span className="font-medium">Проверить уроки <span className="font-normal text-muted-foreground">· +1–2 минуты</span></span>
+              <span className="mt-0.5 block type-caption text-muted-foreground">Второй проход: ИИ сверит уроки с материалами и результатами курса и поправит их до того, как вы их увидите. Снимите галочку, чтобы получить черновик быстрее и проверить его позже кнопкой «Проверить уроки».</span>
             </span>
           </label>
-          <Button onClick={generate} disabled={working || disabled} className="w-full">{busy ? (review ? "Собираю и проверяю…" : "Собираю…") : "Собрать уроки"}</Button>
+          <Button onClick={generate} disabled={working || disabled} className="w-full">{busy ? <><ProgressAsterisk thinking size={16} />{review ? "Собираю и проверяю…" : "Собираю…"}</> : "Собрать уроки"}</Button>
+          {busy ? (
+            <div role="status" className="space-y-2 rounded-lg bg-surface p-3 text-sm">
+              <ol className="space-y-1">
+                {stages.map((st, i) => (
+                  <li key={st.label} className={i === currentStage ? "font-medium" : i < currentStage ? "text-muted-foreground" : "text-muted-foreground/70"}>
+                    <span aria-hidden className="mr-2">{i < currentStage ? "✓" : i === currentStage ? "→" : "·"}</span>
+                    {st.label} <span className="font-normal text-muted-foreground">· около {st.seconds < 60 ? `${st.seconds} с` : `${Math.round(st.seconds / 60 * 2) / 2} мин`}</span>
+                  </li>
+                ))}
+              </ol>
+              <p className="type-caption text-muted-foreground">Прошло {clock(elapsed)}. Шаги примерные: точный ход сервер не сообщает.</p>
+            </div>
+          ) : null}
           {disabled ? <p className="type-caption text-muted-foreground">Сначала загрузите материалы.</p> : null}
         </div>
         {msg ? <Notice kind={msg.kind}>{msg.text}</Notice> : null}

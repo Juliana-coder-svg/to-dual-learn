@@ -2,10 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { studentCourse, noCourseAccess } from "@/lib/auth/access";
 import { requireUserId } from "@/lib/auth/session";
-import { countLessonsStartedToday, latestSubmissionsForCourse, listLessonSummaries } from "@/lib/db/queries";
+import { countDueFlashcardsByCourse, countLessonsStartedToday, latestSubmissionsForCourse, listLessonSummaries } from "@/lib/db/queries";
 import { AppShell } from "@/components/shared/AppShell";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { ProgressAsterisk } from "@/components/shared/ProgressAsterisk";
 import { StepMarks } from "@/components/shared/StepMarks";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,11 +17,12 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
   if (!isUuid(courseId)) notFound();
   const userId = await requireUserId();
   // Всё одним кругом до базы; лимит считает та же RPC, что и /api/evaluate.
-  const [ctx, lessons, done, startedToday] = await Promise.all([
+  const [ctx, lessons, done, startedToday, dueByCourse] = await Promise.all([
     studentCourse(courseId),
     listLessonSummaries(courseId, { publishedOnly: true }),
     latestSubmissionsForCourse(userId, courseId),
     countLessonsStartedToday(userId, courseId),
+    countDueFlashcardsByCourse(userId, { courseId }),
   ]);
   if (!ctx) return noCourseAccess(`/learn/${courseId}`);
   const { user, course } = ctx;
@@ -28,6 +30,7 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
   const isOwner = course.owner_id === user.id;
   const limitReached = !isOwner && course.daily_limit > 0 && startedToday >= course.daily_limit;
   const completed = lessons.filter((l) => done.has(l.id)).length;
+  const dueCards = dueByCourse.get(courseId) ?? 0;
 
   return (
     <AppShell user={user} width="narrow">
@@ -37,14 +40,21 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
         description={course.description || undefined}
       />
       {lessons.length > 0 ? (
-        <div className="mt-8">
-          <div className="flex items-end justify-between gap-4">
-            <span className="eyebrow">Пройдено</span>
-            <span className="text-2xl font-semibold tracking-tight tabular-nums">
-              {completed}<span className="text-muted-foreground">/{lessons.length}</span>
-            </span>
+        <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 border-t-2 border-foreground pt-5">
+          {/* Подпись рядом читается как текст, поэтому label звёздочки короткий и не повторяет её. */}
+          <ProgressAsterisk
+            size={40}
+            value={{ done: completed, total: lessons.length }}
+            due={dueCards > 0}
+            label={`Пройдено ${completed} из ${lessons.length}`}
+            count={`${completed} из ${lessons.length}`}
+            countClassName="text-3xl font-semibold tracking-tight"
+            className="gap-4"
+          />
+          <div className="type-caption text-muted-foreground">
+            <div>уроков пройдено</div>
+            {dueCards > 0 ? <div><Link href="/learn/review" className="underline underline-offset-4 hover:text-foreground">карточки ждут повторения</Link></div> : null}
           </div>
-          <StepMarks total={lessons.length} filled={next ? lessons.indexOf(next) : lessons.length} current={next ? lessons.indexOf(next) + 1 : undefined} size="lg" label="Пройдено уроков" className="mt-2" />
         </div>
       ) : null}
 

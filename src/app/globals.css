@@ -7,8 +7,8 @@
 /*
   Дизайн-токены To Dual Learn. Словарь и правила: docs/design.md.
   Плоский минимализм: один акцент (фирменный оранжевый), шрифт Onest с системным запасным,
-  рамки и воздух вместо теней и градиентов. Радиусов два: 8 px для блоков и
-  полный круг для бейджей, шагов и аватаров.
+  рамки и воздух вместо теней и градиентов. Радиус один: 2 px у блоков и кнопок, углы почти
+  прямые. Сегменты шага и бейджи тоже прямоугольные.
 */
 @theme inline {
   --color-background: var(--background);
@@ -47,6 +47,11 @@
   --color-primary-soft: var(--primary-soft);
   /* Фон страницы за карточками, когда нужно отделить колонку или шапку. */
   --color-surface: var(--surface);
+  --color-paper: var(--paper);
+  /* Графит из брендбука: тёмные поверхности и карточки на них. Нейтраль, не акцент. */
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-foreground: var(--ink-foreground);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
@@ -54,7 +59,7 @@
   --radius-sm: calc(var(--radius) * 0.75);
   --radius-md: var(--radius);
   --radius-lg: var(--radius);
-  --radius-xl: var(--radius);
+  --radius-xl: 1rem;
   --radius-2xl: calc(var(--radius) * 1.5);
   --radius-3xl: calc(var(--radius) * 2);
   --radius-4xl: 9999px;
@@ -62,6 +67,7 @@
 
 :root {
   /* Onest подключён через next/font в layout.tsx; пока он не загрузился или его нет, работает системный. */
+  --font-display: var(--font-unbounded), var(--font-onest), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-onest), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --background: oklch(1 0 0);
   --foreground: oklch(0.17 0.005 60);
@@ -75,6 +81,11 @@
   --primary-strong: oklch(0.52 0.19 36);
   --primary-soft: oklch(0.97 0.02 50);
   --surface: oklch(0.985 0.002 60);
+  /* Бумага разбора: тёплый светлый фон тетради. Не акцент, а нейтраль с оттенком. */
+  --paper: oklch(0.975 0.014 85);
+  --ink: oklch(0.3 0.002 60);
+  --ink-soft: oklch(0.45 0.002 60);
+  --ink-foreground: oklch(0.99 0 0);
   --secondary: oklch(0.965 0.003 60);
   --secondary-foreground: oklch(0.21 0.005 60);
   --muted: oklch(0.965 0.003 60);
@@ -82,7 +93,7 @@
   --accent: oklch(0.965 0.003 60);
   --accent-foreground: oklch(0.21 0.005 60);
   --destructive: oklch(0.55 0.22 27);
-  --border: oklch(0.9 0.004 60);
+  --border: oklch(0.84 0.005 60);
   --input: oklch(0.86 0.005 60);
   --ring: oklch(0.67 0.22 36);
   --chart-1: oklch(0.67 0.22 36);
@@ -90,7 +101,7 @@
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --radius: 0.5rem;
+  --radius: 0.75rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -113,6 +124,10 @@
   --primary-strong: oklch(0.78 0.17 45);
   --primary-soft: oklch(0.25 0.03 40);
   --surface: oklch(0.17 0 0);
+  --paper: oklch(0.2 0.01 85);
+  --ink: oklch(0.3 0.002 60);
+  --ink-soft: oklch(0.45 0.002 60);
+  --ink-foreground: oklch(0.99 0 0);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
@@ -163,24 +178,35 @@
 }
 
 /* Шкала текста. Утилиты, а не токены font-size: иначе cn() из shadcn принимает их за цвет и выкидывает при слиянии классов.
-   display и title текучие: 44 → 72 px и 28 → 40 px от телефона к десктопу, поэтому без md:-префиксов. */
+   display и title текучие: 34 → 72 px и 28 → 40 px от телефона к десктопу, поэтому без md:-префиксов. */
 @utility type-display {
-  font-size: clamp(2.75rem, 1.5rem + 4vw, 4.5rem);
+  font-family: var(--font-display) !important;
+  font-size: clamp(1.9rem, 1rem + 3.2vw, 3.5rem);
   line-height: 1.02;
   letter-spacing: -0.03em;
   font-weight: 600;
 }
+/* Мега: только герой лендинга. 44 → 104 px, плотный интерлиньяж, заголовок занимает всю ширину. */
+@utility type-mega {
+  font-family: var(--font-display) !important;
+  font-size: clamp(1.9rem, 0.6rem + 5.2vw, 4.5rem);
+  line-height: 0.96;
+  letter-spacing: -0.03em;
+  font-weight: 600;
+}
 @utility type-title {
-  font-size: clamp(1.75rem, 1.25rem + 1.6vw, 2.5rem);
+  font-family: var(--font-display) !important;
+  font-size: clamp(1.4rem, 1rem + 1.4vw, 2.1rem);
   line-height: 1.1;
   letter-spacing: -0.025em;
   font-weight: 600;
 }
 /* Счётчик: большие табличные цифры для номера урока, серии дней, баллов. Цифры одной ширины, чтобы не прыгали. */
 @utility type-counter {
-  font-size: clamp(2.5rem, 2rem + 1.5vw, 3.5rem);
+  font-family: var(--font-display) !important;
+  font-size: clamp(2rem, 1.6rem + 1.4vw, 3rem);
   line-height: 1;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.02em;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
@@ -202,25 +228,25 @@
 @layer components {
   /* Блок с акцентом: подложка без рамки, подпись тёмно-оранжевая. */
   .callout {
-    @apply rounded-lg bg-primary-soft p-4;
+    @apply rounded-xl bg-primary-soft p-4;
   }
   .callout-label {
-    @apply type-caption font-semibold uppercase tracking-wide text-primary-strong;
+    @apply type-caption font-semibold text-primary-strong;
   }
   /* Подпись к разделу: «Урок 3 · шаг 2 из 3», «Опубликовано 5 из 5». */
   .eyebrow {
-    @apply type-caption font-medium uppercase tracking-wide text-muted-foreground;
+    @apply type-caption font-medium text-muted-foreground;
   }
   /* Пустое состояние: рамка пунктиром, текст по центру, действие внутри. */
   .empty-state {
-    @apply flex flex-col items-center gap-3 rounded-lg border border-dashed px-6 py-10 text-center;
+    @apply flex flex-col items-center gap-3 rounded-xl border border-dashed px-6 py-10 text-center;
   }
   /* Таблица данных: числа табличные, шапка приглушена, на телефоне прокрутка. */
   .data-table {
     @apply w-full text-sm tabular-nums;
   }
   .data-table th {
-    @apply border-b py-2 pr-4 text-left type-caption font-medium uppercase tracking-wide text-muted-foreground;
+    @apply border-b py-2 pr-4 text-left type-caption font-medium text-muted-foreground;
   }
   .data-table td {
     @apply border-b py-3 pr-4 align-top;
@@ -231,7 +257,7 @@
   /* Оранжевая плашка: сплошной фирменный цвет как поверхность, а не только кнопка. Текст белый,
      подписи белые с прозрачностью. Один главный блок на экран: «Урок дня», финальный призыв на лендинге. */
   .accent-panel {
-    @apply rounded-lg bg-primary p-6 text-primary-foreground md:p-8;
+    @apply rounded-xl bg-primary p-6 text-primary-foreground md:p-8;
   }
   .accent-panel .eyebrow,
   .accent-panel-muted {
@@ -239,7 +265,12 @@
   }
   /* Карточка-ссылка: на наведении рамка становится фирменной, заголовок темнеет. Без тени и сдвига. */
   .card-link {
+    border: 2px solid var(--foreground);
     @apply transition-colors hover:border-primary focus-visible:border-primary focus-visible:ring-3 focus-visible:ring-ring/40;
+  }
+  /* Толстая линия вместо мягкой карточки: разделитель секции и верх блока. */
+  .rule {
+    border-top: 2px solid var(--foreground);
   }
   /* Полоса прогресса вырастает слева направо при появлении на странице (ширину задаёт style). */
   .bar-grow {
@@ -249,6 +280,11 @@
   /* Смена шага урока и появление разбора: короткий подъём снизу. */
   .step-enter {
     @apply animate-in fade-in slide-in-from-bottom-2 duration-300;
+  }
+  /* «Думает»: звёздочка-индикатор вращается, пока модель работает. Только на кнопках, не у логотипа. */
+  .asterisk-spin {
+    transform-origin: center;
+    animation: asterisk-spin 1.6s linear infinite;
   }
 }
 
@@ -261,9 +297,16 @@
   }
 }
 
+@keyframes asterisk-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .bar-grow,
-  .step-enter {
+  .step-enter,
+  .asterisk-spin {
     animation: none;
   }
 }

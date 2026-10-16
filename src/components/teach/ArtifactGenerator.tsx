@@ -3,13 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { ProgressAsterisk } from "@/components/shared/ProgressAsterisk";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Markdown } from "@/components/shared/Markdown";
 import { AiNote } from "@/components/shared/AiNote";
 import { Notice } from "@/components/shared/Notice";
-import { ARTIFACT_KINDS, type ArtifactKind } from "@/lib/lessons/types";
+import { ARTIFACT_KINDS, type ArtifactKind } from "@/lib/lessons/artifact-kinds";
 
 export function ArtifactGenerator({ courseId, disabled }: { courseId: string; disabled: boolean }) {
   const router = useRouter();
@@ -31,11 +32,11 @@ export function ArtifactGenerator({ courseId, disabled }: { courseId: string; di
         body: JSON.stringify({ courseId, kind, instructions }),
       });
       const data = (await res.json()) as { ok?: boolean; error?: string; output?: string };
-      if (!res.ok || !data.ok || !data.output) throw new Error(data.error ?? "Не удалось собрать документ");
+      if (!res.ok || !data.ok || !data.output) throw new Error(data.error ?? "Не удалось собрать документ. Попробуйте ещё раз через минуту.");
       setResult(data.output);
       router.refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Ошибка");
+      setError(e instanceof Error ? e.message : "Не удалось выполнить действие. Попробуйте ещё раз через минуту.");
     } finally {
       setBusy(false);
     }
@@ -71,7 +72,7 @@ export function ArtifactGenerator({ courseId, disabled }: { courseId: string; di
             <Label htmlFor="instructions">Пожелания</Label>
             <Textarea id="instructions" rows={4} value={instructions} onChange={(e) => setInstructions(e.target.value)} placeholder="Тема и что обязательно включить" />
           </div>
-          <Button onClick={generate} disabled={busy || disabled} className="w-full">{busy ? "Собираю…" : "Собрать"}</Button>
+          <Button onClick={generate} disabled={busy || disabled} className="w-full">{busy ? <><ProgressAsterisk thinking size={16} />Собираю…</> : "Собрать"}</Button>
           {disabled ? <p className="type-caption text-muted-foreground">Сначала загрузите материалы.</p> : null}
           {error ? <Notice kind="error">{error}</Notice> : null}
         </CardContent>

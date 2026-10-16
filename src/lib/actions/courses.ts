@@ -103,7 +103,8 @@ export async function joinCourseAction(formData: FormData): Promise<void> {
   const code = String(formData.get("code") ?? "").trim().toUpperCase();
   const course = await getCourseByJoinCode(code);
   if (!course) redirect("/learn?error=code");
-  await enroll(user.id, course.id);
+  // Свой курс открыт владельцу и без записи; запись исказила бы число студентов.
+  if (course.owner_id !== user.id) await enroll(user.id, course.id);
   redirect(`/learn/${course.id}`);
 }
 
@@ -136,7 +137,7 @@ export async function updateLessonAction(courseId: string, lessonId: string, for
     sample: sample || null,
     rubricCriteria: lines(formData.get("rubricCriteria")),
     keyTakeaway: String(formData.get("keyTakeaway") ?? "").trim(),
-    flashcards: flashcards.length > 0 ? flashcards : [{ question: "Какая ключевая идея урока?", answer: String(formData.get("keyTakeaway") ?? "").trim() }],
+    flashcards: flashcards.length > 0 ? flashcards : [{ question: "Какая идея у урока?", answer: String(formData.get("keyTakeaway") ?? "").trim() }],
   });
   if (!parsed.success) redirect(`/teach/${courseId}/lessons/${lessonId}/edit?error=1`);
   await updateLessonContent(lessonId, courseId, parsed.data, { by: ctx.user.id });

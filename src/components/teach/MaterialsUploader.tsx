@@ -23,14 +23,14 @@ export function MaterialsUploader({ courseId }: { courseId: string }) {
     try {
       const res = await fetch("/api/materials", { method: "POST", body: form });
       const data = (await res.json()) as { ok?: boolean; error?: string; added?: number };
-      if (!res.ok || !data.ok) throw new Error(data.error ?? "Не удалось загрузить");
-      setMsg({ text: `Добавлено: ${data.added}`, kind: "success" });
+      if (!res.ok || !data.ok) throw new Error(data.error ?? "Не удалось загрузить материал. Проверьте файл и попробуйте ещё раз.");
+      setMsg({ text: data.added === 1 ? "Материал добавлен." : `Материалов добавлено: ${data.added}.`, kind: "success" });
       if (fileRef.current) fileRef.current.value = "";
       setPasteText("");
       setPasteTitle("");
       router.refresh();
     } catch (e) {
-      setMsg({ text: e instanceof Error ? e.message : "Ошибка", kind: "error" });
+      setMsg({ text: e instanceof Error ? e.message : "Не удалось выполнить действие. Попробуйте ещё раз через минуту.", kind: "error" });
     } finally {
       setBusy(false);
     }

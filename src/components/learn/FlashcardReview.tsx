@@ -50,12 +50,12 @@ export function FlashcardReview({ cards }: { cards: CardData[] }) {
         body: JSON.stringify({ id: card.id, quality }),
       });
       const data = (await res.json()) as { ok?: boolean; error?: string };
-      if (!res.ok || !data.ok) throw new Error(data.error ?? "Не удалось сохранить");
+      if (!res.ok || !data.ok) throw new Error(data.error ?? "Не удалось сохранить ответ. Нажмите на вариант ещё раз.");
       setRevealed(false);
       setIndex((i) => i + 1);
       router.refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Ошибка");
+      setError(e instanceof Error ? e.message : "Не удалось выполнить действие. Попробуйте ещё раз через минуту.");
     } finally {
       setBusy(false);
     }

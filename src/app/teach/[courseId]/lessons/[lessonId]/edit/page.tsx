@@ -25,7 +25,7 @@ export default async function EditLessonPage({ params, searchParams }: { params:
       {sp.error ? <Notice kind="error" className="mt-4">Не удалось сохранить: проверьте, что заполнены все поля, есть хотя бы два признака и два критерия.</Notice> : null}
       {lesson.review?.flags.length ? (
         <div className="mt-4 rounded-lg border border-dashed p-4 text-sm">
-          <div className="font-medium">Что предлагал методист</div>
+          <div className="font-medium">Что нашла проверка уроков</div>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground">{lesson.review.flags.map((f, i) => <li key={i}>{f}</li>)}</ul>
         </div>
       ) : null}
@@ -33,7 +33,7 @@ export default async function EditLessonPage({ params, searchParams }: { params:
         <div className="space-y-2"><Label htmlFor="title">Название</Label><Input id="title" name="title" defaultValue={c.title} required /></div>
         <div className="space-y-2"><Label htmlFor="concept">Навык (одна фраза)</Label><Input id="concept" name="concept" defaultValue={c.concept} required /></div>
         <div className="space-y-2"><Label htmlFor="intro">Зачем это нужно</Label><Textarea id="intro" name="intro" rows={3} defaultValue={c.intro} required /></div>
-        <div className="space-y-2"><Label htmlFor="keyIdea">Ключевая идея</Label><Textarea id="keyIdea" name="keyIdea" rows={3} defaultValue={c.keyIdea} required /></div>
+        <div className="space-y-2"><Label htmlFor="keyIdea">Идея урока</Label><Textarea id="keyIdea" name="keyIdea" rows={3} defaultValue={c.keyIdea} required /></div>
         <div className="space-y-2"><Label htmlFor="signals">Признаки, по одному на строку</Label><Textarea id="signals" name="signals" rows={4} defaultValue={c.signals.join("\n")} required /></div>
         <div className="space-y-2"><Label htmlFor="task">Задача</Label><Textarea id="task" name="task" rows={3} defaultValue={c.task} required /></div>
         <div className="space-y-2"><Label htmlFor="sample">Текст или пример для разбора (пусто, если не нужен)</Label><Textarea id="sample" name="sample" rows={4} defaultValue={c.sample ?? ""} /></div>
@@ -44,7 +44,7 @@ export default async function EditLessonPage({ params, searchParams }: { params:
           <Textarea id="flashcards" name="flashcards" rows={4} defaultValue={c.flashcards.map((f) => `${f.question} | ${f.answer}`).join("\n")} />
         </div>
         <p className="text-xs text-muted-foreground">
-          Кнопка «Сохранить» отмечает урок как проверенный вами, студенты увидят эту отметку. Если вы примете правку методиста, отметка снимется: текст снова от модели.
+          Кнопка «Сохранить» отмечает урок как проверенный вами, студенты увидят эту отметку. Если вы примете правку проверки, отметка снимется: текст снова от модели.
         </p>
         <div className="flex gap-3 border-t pt-5">
           <Button type="submit">Сохранить</Button>

@@ -1,5 +1,5 @@
 /** Выбор роли при входе: две плитки-радио с подписью, что даёт каждая роль. Отмеченная обведена акцентом. */
-export function RoleChoice({ defaultRole }: { defaultRole: "teacher" | "student" }) {
+export function RoleChoice({ defaultRole }: { defaultRole?: "teacher" | "student" }) {
   const options = [
     { value: "teacher", title: "Преподаватель", text: "Загружаю материалы и собираю уроки" },
     { value: "student", title: "Студент", text: "Прохожу уроки по коду курса" },
@@ -7,6 +7,7 @@ export function RoleChoice({ defaultRole }: { defaultRole: "teacher" | "student"
   return (
     <fieldset>
       <legend className="text-sm font-medium">Роль</legend>
+      {defaultRole ? null : <p className="type-caption text-muted-foreground">Если профиль уже есть, роль не изменится. Новый профиль будет студенческим.</p>}
       <div className="mt-2 grid gap-2 sm:grid-cols-2">
         {options.map((o) => (
           <label

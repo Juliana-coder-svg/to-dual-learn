@@ -1,6 +1,9 @@
+import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import { teacherCourse, noCourseAccess } from "@/lib/auth/access";
 import { getCurrentUserId } from "@/lib/auth/session";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { AppShell } from "@/components/shared/AppShell";
 import { CourseTabs } from "@/components/teach/CourseTabs";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -17,8 +20,7 @@ export default async function CourseLayout({ children, params }: { children: Rea
   // Без сессии запрос ушёл бы под ролью anon, у которой нет права вызывать course_usage: вместо
   // страницы входа была бы ошибка. Проверка по JWT из cookie локальная, круга до базы не добавляет.
   if (!(await getCurrentUserId())) redirect(`/login?role=teacher&next=${encodeURIComponent(`/teach/${courseId}`)}`);
-  // Расход считает RPC с проверкой владельца, поэтому его можно запрашивать параллельно с проверкой доступа.
-  const [ctx, usage] = await Promise.all([teacherCourse(courseId), courseUsage(courseId)]);
+  const ctx = await teacherCourse(courseId);
   if (!ctx) return noCourseAccess(`/teach/${courseId}`);
   const { user, course } = ctx;
 
@@ -29,21 +31,18 @@ export default async function CourseLayout({ children, params }: { children: Rea
         title={course.title}
         description={course.description || undefined}
         actions={
+          <div className="flex flex-wrap items-center gap-2">
+          <Button nativeButton={false} render={<Link href={`/teach/${course.id}/share`} />} size="lg">Отправить студентам</Button>
           <dl className="flex flex-wrap gap-2 text-sm">
             <div className="flex items-center gap-2 rounded-lg border px-3 py-1.5">
               <dt className="text-muted-foreground">Код для студентов</dt>
               <dd className="font-mono font-semibold tracking-wider">{course.join_code}</dd>
             </div>
-            <div
-              className="flex items-center gap-2 rounded-lg border px-3 py-1.5"
-              title={`Модель: ${providerLabel()}. Сумма оценочная, в долларах: $${usage.cost_usd.toFixed(2)}`}
-            >
-              <dt className="text-muted-foreground">Расход на ИИ</dt>
-              <dd className="font-semibold tabular-nums">
-                ≈ {formatRub(usdToRub(usage.cost_usd))} <span className="font-normal text-muted-foreground">· {plural(usage.calls, "запрос", "запроса", "запросов")}</span>
-              </dd>
-            </div>
+            <Suspense fallback={<UsageBadge />}>
+              <CourseUsage courseId={course.id} />
+            </Suspense>
           </dl>
+          </div>
         }
       />
       {isDemoMode() ? (
@@ -54,5 +53,32 @@ export default async function CourseLayout({ children, params }: { children: Rea
       <CourseTabs courseId={course.id} showSignals={process.env.CONCEPT_SIGNALS === "1"} />
       <div className="mt-8">{children}</div>
     </AppShell>
+  );
+}
+
+/** Расход на ИИ считает отдельный запрос (RPC с проверкой владельца). Он не нужен для первой отрисовки:
+ *  страница отдаётся сразу, плашка подгружается потоком. Проверка владельца уже сделана в layout. */
+async function CourseUsage({ courseId }: { courseId: string }) {
+  const usage = await courseUsage(courseId);
+  return <UsageBadge usage={usage} />;
+}
+
+function UsageBadge({ usage }: { usage?: Awaited<ReturnType<typeof courseUsage>> }) {
+  return (
+    <div
+      className="flex items-center gap-2 rounded-lg border px-3 py-1.5"
+      title={usage ? `Модель: ${providerLabel()}. Сумма оценочная, в долларах: $${usage.cost_usd.toFixed(2)}` : undefined}
+    >
+      <dt className="text-muted-foreground">Расход на ИИ</dt>
+      <dd className="font-semibold tabular-nums">
+        {usage ? (
+          <>
+            ≈ {formatRub(usdToRub(usage.cost_usd))} <span className="font-normal text-muted-foreground">· {plural(usage.calls, "запрос", "запроса", "запросов")}</span>
+          </>
+        ) : (
+          <span className="text-muted-foreground">считаем…</span>
+        )}
+      </dd>
+    </div>
   );
 }

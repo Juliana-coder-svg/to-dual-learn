@@ -40,6 +40,12 @@ export function csvToWorks(text: string): string {
     .join("\n\n");
 }
 
+/** Строки, которые Excel принял бы за формулу (=, +, -, @, табуляция), получают ведущий апостроф. Числа не трогаем. */
+function safeCell(c: string | number): string {
+  const t = String(c);
+  return typeof c === "string" && /^[=+\-@\t\r]/.test(t) ? `'${t}` : t;
+}
+
 export function toCsv(rows: (string | number)[][]): string {
-  return rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(";")).join("\r\n");
+  return rows.map((r) => r.map((c) => `"${safeCell(c).replace(/"/g, '""')}"`).join(";")).join("\r\n");
 }

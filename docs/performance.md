@@ -121,3 +121,16 @@ SUPABASE_TRACE=1 PORT=3001 npm run dev
 ```
 
 В консоли на каждый запрос: `[proxy] /путь getClaims N ms` и `[sb:user] #n METHOD /rest/v1/... N ms`; строка Next `GET /путь 200 in N ms` даёт время страницы. Время ответа снаружи: `curl -s -o /dev/null -b cookies.txt -w "%{time_starttransfer}\n" http://localhost:3001/teach`.
+
+## Второй проход, 14 октября 2026
+
+Полный отчёт с таблицей «было/стало»: `docs/daily/2026-10-14/speed-2.md`. Коротко:
+
+- `/` статический, вошедших уводит клиентский `SessionRedirect` на `/enter`; proxy не вызывается на `/` и `/legal/*`.
+- Профиль и согласие, курс и запись на курс слиты в по одному запросу (embed PostgREST): на страницах с сессией на 1–2 запроса меньше.
+- Плашка «Расход на ИИ» страницы преподавателя идёт потоком (`Suspense`): TTFB `/teach/<курс>` 807 → 516 мс локально.
+- `ARTIFACT_KINDS` вынесен из файла с zod: `/teach/<курс>/generate` 224 → 193 кБ gzip.
+- Шрифт Onest, анимации (`transform`/`opacity`) и разделение клиентских компонентов по маршрутам проверены, менять не пришлось.
+- Открыто: замер на проде после выкладки; keep-alive пул к Supabase (нужен `undici`, обсудить); Lighthouse в видимом окне.
+
+Замеры повторять так: `curl -w "%{time_appconnect} %{time_starttransfer}"` (ожидание после TLS = разница) для публичных страниц, для страниц с сессией `fetch` из браузера на production-сборке (`next start`) и `SUPABASE_TRACE=1` для числа запросов.

@@ -1,5 +1,5 @@
 import type { PostgrestMaybeSingleResponse, PostgrestResponse, PostgrestSingleResponse } from "@supabase/supabase-js";
-import { getSupabase } from "@/lib/supabase/server";
+import { createServiceClient, getSupabase } from "@/lib/supabase/server";
 import type {
   AiCallRow,
   CalibrationSampleRow,
@@ -159,6 +159,32 @@ export async function hasActiveConsent(userId: string, kind: ConsentKind, versio
   return Boolean(row);
 }
 
+/** Профиль и признак действующего согласия одним запросом (embed consents по внешнему ключу):
+ *  вместо двух параллельных запросов, каждый из которых мог открыть своё соединение с базой. */
+export async function getUserWithConsent(
+  id: string,
+  kind: ConsentKind,
+  version: string,
+): Promise<{ user: User; consented: boolean } | undefined> {
+  const sb = await getSupabase();
+  const row = unwrapMaybe(
+    await sb
+      .from("profiles")
+      .select("*, consents(id)")
+      .eq("id", id)
+      .eq("consents.kind", kind)
+      .eq("consents.version", version)
+      .is("consents.withdrawn_at", null)
+      .limit(1, { foreignTable: "consents" })
+      .maybeSingle()
+      .overrideTypes<ProfileRow & { consents: Array<{ id: string }> }, { merge: false }>(),
+    "profile with consent",
+  );
+  if (!row) return undefined;
+  const { consents, ...user } = row;
+  return { user, consented: consents.length > 0 };
+}
+
 export async function withdrawConsent(userId: string, kind: ConsentKind): Promise<void> {
   const sb = await getSupabase();
   check(
@@ -211,6 +237,24 @@ export async function updateCourseSettings(
 export async function getCourse(id: string): Promise<Course | undefined> {
   const sb = await getSupabase();
   return unwrapMaybe(await sb.from("courses").select("*").eq("id", id).maybeSingle(), "course");
+}
+
+/** Курс и признак записи текущего студента одним запросом (embed enrollments с фильтром по user_id). */
+export async function getCourseWithEnrollment(id: string, userId: string): Promise<{ course: Course; enrolled: boolean } | undefined> {
+  const sb = await getSupabase();
+  const row = unwrapMaybe(
+    await sb
+      .from("courses")
+      .select("*, enrollments(user_id)")
+      .eq("id", id)
+      .eq("enrollments.user_id", userId)
+      .maybeSingle()
+      .overrideTypes<CourseRow & { enrollments: Array<{ user_id: string }> }, { merge: false }>(),
+    "course with enrollment",
+  );
+  if (!row) return undefined;
+  const { enrollments, ...course } = row;
+  return { course, enrolled: enrollments.length > 0 };
 }
 
 /** Через RPC: до записи на курс RLS не даёт прочитать его напрямую. */
@@ -799,6 +843,26 @@ export async function listDueFlashcards(userId: string, now = nowIso()): Promise
   });
 }
 
+/** Сколько карточек ждёт повторения в каждом курсе: course_id → число. Для звёздочки-прогресса (лучи точками)
+ *  на /learn и в шапке курса; с `courseId` считает только один курс. Считает строки на сервере приложения,
+ *  поэтому упирается в лимит выдачи PostgREST (1000 строк): для одного студента это недостижимо. */
+export async function countDueFlashcardsByCourse(userId: string, opts: { courseId?: string; now?: string } = {}): Promise<Map<string, number>> {
+  const sb = await getSupabase();
+  let q = sb
+    .from("flashcards")
+    .select("lesson_id, lessons!inner(course_id)")
+    .eq("user_id", userId)
+    .lte("next_due_at", opts.now ?? nowIso());
+  if (opts.courseId) q = q.eq("lessons.course_id", opts.courseId);
+  const rows = unwrap(
+    await q.overrideTypes<Array<{ lesson_id: string; lessons: { course_id: string } }>, { merge: false }>(),
+    "due by course",
+  );
+  const out = new Map<string, number>();
+  for (const r of rows) out.set(r.lessons.course_id, (out.get(r.lessons.course_id) ?? 0) + 1);
+  return out;
+}
+
 export async function countDueFlashcards(userId: string, now = nowIso()): Promise<number> {
   const sb = await getSupabase();
   const res = await sb.from("flashcards").select("id", { count: "exact", head: true }).eq("user_id", userId).lte("next_due_at", now);
@@ -1342,4 +1406,31 @@ export async function releaseTryCall(id: string): Promise<void> {
 export async function purgeTryIpHashes(olderThan: Date): Promise<void> {
   const sb = await getSupabase();
   check(await sb.from("ai_calls").update({ ip_hash: null }).not("ip_hash", "is", null).lt("created_at", olderThan.toISOString()), "try ip purge");
+}
+
+export interface JoinPreview {
+  title: string;
+  authorName: string;
+  lessons: number;
+}
+
+/** Что видит человек на /join/КОД до входа: название, автор, число опубликованных уроков и больше ничего.
+ *  Поиск по коду закрыт для anon (RPC course_by_join_code), поэтому здесь service role и узкая выборка полей;
+ *  ослаблять RLS ради этого не нужно. Вызывать только из серверных компонентов. */
+export async function getJoinPreview(code: string): Promise<JoinPreview | undefined> {
+  const normalized = code.trim().toUpperCase();
+  if (!/^[A-Z0-9]{4,12}$/.test(normalized)) return undefined;
+  const sb = createServiceClient();
+  const row = unwrapMaybe(
+    await sb
+      .from("courses")
+      .select("title, author:profiles!courses_owner_id_fkey(name, email), lessons(status)")
+      .eq("join_code", normalized)
+      .maybeSingle()
+      .overrideTypes<{ title: string; author: { name: string; email: string } | null; lessons: Array<{ status: LessonStatus }> }, { merge: false }>(),
+    "join preview",
+  );
+  if (!row) return undefined;
+  return { title: row.title, // Пока человек не менял имя, там заготовка из почты: её публично не показываем.
+    authorName: row.author && row.author.name !== row.author.email.split("@")[0] ? row.author.name : "", lessons: row.lessons.filter((l) => l.status === "published").length };
 }

@@ -1,15 +1,16 @@
 import Link from "next/link";
 import { requireUser, requireUserId } from "@/lib/auth/session";
-import { countDueFlashcards, countLessonsStartedToday, latestScoresByCourse, listCoursesForStudentWithLessons, listOwnedCoursesWithLessons } from "@/lib/db/queries";
+import { countDueFlashcardsByCourse, countLessonsStartedToday, latestScoresByCourse, listCoursesForStudentWithLessons, listOwnedCoursesWithLessons } from "@/lib/db/queries";
 import { joinCourseAction } from "@/lib/actions/courses";
-import { setDailyEmailAction } from "@/lib/actions/auth";
+import { DailyEmailCard } from "@/components/shared/DailyEmailCard";
 import { AppShell } from "@/components/shared/AppShell";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { EmptyState } from "@/components/shared/EmptyState";
 import { Notice } from "@/components/shared/Notice";
+import { ProgressAsterisk } from "@/components/shared/ProgressAsterisk";
 import { StepMarks } from "@/components/shared/StepMarks";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DEFAULT_TRY_SLUG } from "@/lib/try/catalog";
 import { plural } from "@/lib/utils/format";
 
 /** Показатель-счётчик: подпись сверху, число крупными табличными цифрами. Ссылка, когда за числом стоит действие. */
@@ -32,17 +33,19 @@ function Stat({ label, value, hint, href, accent }: { label: string; value: stri
 export default async function LearnPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   // Четыре независимых запроса одним кругом до базы: профиль, курсы с уроками, карточки, баллы по всем курсам.
   const userId = await requireUserId();
-  const [user, sp, joined, owned, due, scores] = await Promise.all([
+  const [user, sp, joined, owned, dueByCourse, scores] = await Promise.all([
     requireUser(),
     searchParams,
     listCoursesForStudentWithLessons(userId),
     listOwnedCoursesWithLessons(userId),
-    countDueFlashcards(userId),
+    countDueFlashcardsByCourse(userId),
     latestScoresByCourse(userId),
   ]);
   // Свои курсы преподаватель видит здесь без записи кодом: страница курса и урок ему и так открыты.
   const joinedIds = new Set(joined.map((e) => e.course.id));
   const enrolled = [...joined, ...owned.filter((o) => !joinedIds.has(o.course.id))];
+  // Общий счётчик повторения складывается из карточек по курсам: один запрос вместо двух.
+  const due = Array.from(dueByCourse.values()).reduce((a, b) => a + b, 0);
   // Дневной лимит считает та же RPC, что и /api/evaluate, чтобы страница и проверка ответа не расходились.
   // Второй круг до базы только для курсов с лимитом, параллельно по курсам.
   const startedToday = await Promise.all(
@@ -55,21 +58,29 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
     const next = lessons.find((l) => !done.has(l.id));
     const nextIndex = next ? lessons.indexOf(next) : lessons.length;
     const limitReached = c.owner_id !== user.id && c.daily_limit > 0 && startedToday[i] >= c.daily_limit;
-    return { course: c, lessons, completed, next, nextIndex, limitReached };
+    return { course: c, lessons, completed, next, nextIndex, limitReached, dueCards: dueByCourse.get(c.id) ?? 0 };
   });
   // Урок дня: первый курс, где есть непройденный урок и не исчерпан дневной лимит. Остальные курсы ждут в списке.
+  const joinForm = (
+    <form action={joinCourseAction} className="mt-4 flex gap-2">
+      <Input name="code" required placeholder="ABC234" aria-label="Код курса" className="font-mono uppercase tracking-widest" maxLength={6} />
+      <Button type="submit">Записаться</Button>
+    </form>
+  );
   const today = cards.find((card) => card.next && !card.limitReached);
   const paused = !today ? cards.find((card) => card.next && card.limitReached) : undefined;
 
   return (
     <AppShell user={user}>
-      <PageHeader title={`Привет, ${user.name}`} description="Один урок в день и карточки на повторение. Пять минут, и свободны." />
+      <PageHeader title="Сегодня" description="Один урок в день и карточки на повторение. Это пять минут." />
 
+      {courses.length > 0 || user.streak > 0 || user.xp > 0 || due > 0 ? (
       <div className="mt-10 grid grid-cols-3 gap-4 sm:gap-8">
-        <Stat label="Дней подряд" value={String(user.streak)} hint={user.streak > 0 ? "не прерывайте серию" : "начните сегодня"} />
+        <Stat label="Дней подряд" value={String(user.streak)} hint={user.streak > 0 ? "считается по урокам" : "начните сегодня"} />
         <Stat label="Баллы" value={String(user.xp)} hint="за уроки и повторение" />
-        <Stat label="Повторение" value={String(due)} hint={due > 0 ? `${plural(due, "карточка ждёт", "карточки ждут", "карточек ждут")} · открыть` : "на сегодня пусто"} href="/learn/review" accent={due > 0} />
+        <Stat label="Повторение" value={String(due)} hint={due > 0 ? `${plural(due, "карточка ждёт", "карточки ждут", "карточек ждут")} · открыть` : "на сегодня карточек нет"} href="/learn/review" accent={due > 0} />
       </div>
+      ) : null}
 
       {today?.next ? (
         <section aria-labelledby="today-title" className="accent-panel mt-12">
@@ -102,22 +113,41 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
         <section>
           <h2 className="type-heading">Мои курсы</h2>
           {courses.length === 0 ? (
-            <EmptyState className="mt-5" title="Пока нет курсов" description="Введите код курса в блоке «Записаться на курс», и курс появится здесь." />
+            <div className="mt-5 space-y-4">
+              <p className="text-muted-foreground">Курсы появятся здесь. Выберите, как начать.</p>
+              <div className="grid gap-3 md:grid-cols-2">
+                <section className="rounded-lg border border-primary p-5">
+                  <h3 className="type-heading">У меня есть код</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">Если у вас ссылка, откройте её. Если код из шести символов, введите его ниже.</p>
+                  {sp.error ? <Notice kind="error" className="mt-4">Курс с таким кодом не найден. Проверьте код или попросите преподавателя прислать ссылку.</Notice> : null}
+                  {joinForm}
+                </section>
+                <section className="rounded-lg border p-5">
+                  <h3 className="type-heading">Кода нет</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">Пройдите первый урок примера: идея, задача, разбор. Это пять минут, настраивать ничего не нужно.</p>
+                  <Button nativeButton={false} render={<Link href={`/try/${DEFAULT_TRY_SLUG}/1?from=learn`} />} variant="outline" className="mt-4">Попробовать урок</Button>
+                </section>
+              </div>
+            </div>
           ) : (
             <ul className="mt-5 space-y-3">
-              {cards.map(({ course: c, lessons, completed, next, nextIndex, limitReached }) => (
+              {cards.map(({ course: c, lessons, completed, next, limitReached, dueCards }) => (
                 <li key={c.id}>
-                  <Link href={`/learn/${c.id}`} className="card-link block rounded-lg border p-5 outline-none">
-                    <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
-                      <div className="min-w-0 max-w-xl">
-                        <h3 className="text-balance type-heading">{c.title}{c.owner_id === user.id ? <span className="ml-2 align-middle type-caption font-normal text-muted-foreground">ваш курс</span> : null}</h3>
-                        <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{c.description || "Без описания"}</p>
-                      </div>
-                      <span className="shrink-0 text-2xl font-semibold tracking-tight tabular-nums">
-                        {completed}<span className="text-muted-foreground">/{lessons.length}</span>
-                      </span>
+                  <Link href={`/learn/${c.id}`} className="card-link block rounded-lg p-5 outline-none">
+                    <div className="min-w-0 max-w-xl">
+                      <h3 className="text-balance type-heading">{c.title}{c.owner_id === user.id ? <span className="ml-2 align-middle type-caption font-normal text-muted-foreground">ваш курс</span> : null}</h3>
+                      <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{c.description || "Без описания"}</p>
                     </div>
-                    <StepMarks total={lessons.length} filled={nextIndex} current={next ? nextIndex + 1 : undefined} size="sm" className="mt-4" />
+                    {/* Звёздочка-прогресс на месте бывшей полосы, всегда с числом; лучи точками, если по курсу ждут карточки. Без уроков считать нечего. */}
+                    {lessons.length > 0 ? <ProgressAsterisk
+                      size={24}
+                      value={{ done: completed, total: lessons.length }}
+                      due={dueCards > 0}
+                      label={`Пройдено ${completed} из ${lessons.length}${dueCards > 0 ? `, ${plural(dueCards, "карточка ждёт", "карточки ждут", "карточек ждут")} повторения` : ""}`}
+                      count={`${completed} из ${lessons.length}`}
+                      countClassName="text-2xl font-semibold tracking-tight"
+                      className="mt-4"
+                    /> : null}
                     <p className="mt-3 text-sm text-muted-foreground">
                       {next && limitReached ? (
                         <>Сегодня пройдено. Завтра: <span className="text-foreground">{next.title}</span></>
@@ -136,27 +166,15 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
           )}
         </section>
         <aside className="space-y-10">
-          <section>
-            <h2 className="type-heading">Записаться на курс</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Код из шести символов даёт преподаватель.</p>
-            {sp.error ? <Notice kind="error" className="mt-4">Курс с таким кодом не найден.</Notice> : null}
-            <form action={joinCourseAction} className="mt-4 flex gap-2">
-              <Input name="code" required placeholder="ABC234" aria-label="Код курса" className="font-mono uppercase tracking-widest" maxLength={6} />
-              <Button type="submit">Записаться</Button>
-            </form>
-          </section>
-          <section className="rounded-lg bg-surface p-5">
-            <h2 className="text-base font-semibold">Письмо с уроком дня</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Каждое утро на {user.email}: какой урок ждёт и сколько карточек пора повторить.</p>
-            <form action={setDailyEmailAction} className="mt-4 flex items-center justify-between gap-3 text-sm">
-              <span className="flex items-center gap-2">
-                <span aria-hidden className={`size-2 rounded-full ${user.daily_email ? "bg-primary" : "bg-border"}`} />
-                {user.daily_email ? "Включено" : "Выключено"}
-              </span>
-              <input type="hidden" name="enabled" value={user.daily_email ? "0" : "1"} />
-              <Button type="submit" variant="outline" size="sm">{user.daily_email ? "Выключить" : "Включить"}</Button>
-            </form>
-          </section>
+          {courses.length > 0 ? (
+            <section>
+              <h2 className="type-heading">Записаться на курс</h2>
+              <p className="mt-1 text-sm text-muted-foreground">Код из шести символов даёт преподаватель.</p>
+              {sp.error ? <Notice kind="error" className="mt-4">Курс с таким кодом не найден.</Notice> : null}
+              {joinForm}
+            </section>
+          ) : null}
+          <DailyEmailCard user={user} next="/learn" />
           <p className="px-1 type-caption text-muted-foreground">
             <Link href="/account/data" className="underline underline-offset-4 hover:text-foreground">Мои данные</Link>: скачать всё, что мы храним о вас, или удалить аккаунт.
           </p>

@@ -10,7 +10,7 @@ GitHub `Juliana-coder-svg/to-dual-learn`, ветка `main` — теперь и�
 |---|---|---|
 | speed | Страницы курса отвечают 0,7–1 с вместо 2–3 с; функции в fra1 | [speed.md](speed.md) |
 | product + marketer + partnerships | Новый лендинг, план релиза на 19 ноября, материалы для ВШЭ и компаний | [product.md](product.md) |
-| editor | Тексты интерфейса, писем и промптов без штампов; навык `russian-editing` | [editor.md](editor.md) |
+| editor | Тексты интерфейса, писем и промптов без штампов; навык `textskill` | [editor.md](editor.md) |
 | lesson-ui | Экран урока: данные к задаче, признаки, «в прошлый раз» | [lesson-ui.md](lesson-ui.md) |
 | methodist + content-author | Промпты генерации и оценки по паттернам, второй курс «Проверка работ с ИИ» | [methodist.md](methodist.md) |
 | legal-dev | Экран согласия, пометки «текст подготовила модель», страница «Мои данные» с выгрузкой и удалением, отметка проверки урока преподавателем | [compliance.md](compliance.md) |

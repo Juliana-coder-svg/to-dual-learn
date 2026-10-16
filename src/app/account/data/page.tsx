@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth/session";
-import { listConsents, listOwnedCoursesWithStudents } from "@/lib/db/queries";
-import { deleteAccountAction, setMarketingConsentAction } from "@/lib/actions/account";
+import { listConsents, listCoursesByOwner, listOwnedCoursesWithStudents } from "@/lib/db/queries";
+import { deleteAccountAction, setMarketingConsentAction, updateNameAction } from "@/lib/actions/account";
 import { CONSENT_VERSION } from "@/lib/legal/versions";
 import { AppShell } from "@/components/shared/AppShell";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { DailyEmailCard } from "@/components/shared/DailyEmailCard";
 import { Notice } from "@/components/shared/Notice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +17,7 @@ import { plural } from "@/lib/utils/format";
 const ERRORS: Record<string, string> = {
   confirm: "Почта не совпадает. Введите адрес, под которым вы вошли.",
   courses: "Пока на ваших курсах есть студенты или их ответы, удалить аккаунт нельзя: ответы пропали бы вместе с курсом. Напишите нам, решим вручную.",
+  name: "Имя не сохранилось: в нём должно быть от 2 до 80 знаков. Исправьте и сохраните ещё раз.",
   delete: "Не удалось удалить аккаунт. Попробуйте ещё раз через минуту или напишите нам.",
 };
 
@@ -27,7 +29,7 @@ const KIND_LABELS = {
 
 /** «Мои данные»: что храним, согласия, выгрузка в JSON и удаление аккаунта (ст. 14 152-ФЗ).
  *  Открыта и без действующего согласия, чтобы человек мог отозвать его и удалить аккаунт. */
-/** Версия согласия хранится ключом вида consent:0.2;privacy:0.2; человеку показываем названия документов. */
+/** Версия согласия хранится ключом вида consent:0.3;privacy:0.3; человеку показываем названия документов. */
 const DOC_NAMES: Record<string, string> = { consent: "Согласие", privacy: "Политика", terms: "Соглашение" };
 function describeVersion(version: string): string {
   const parts = version.split(";").map((p) => p.split(":")).filter(([k, v]) => k && v);
@@ -35,10 +37,13 @@ function describeVersion(version: string): string {
   return parts.map(([k, v]) => `${DOC_NAMES[k] ?? k} ${v}`).join(", ");
 }
 
-export default async function MyDataPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+export default async function MyDataPage({ searchParams }: { searchParams: Promise<{ error?: string; saved?: string }> }) {
   const user = await requireUser();
   const sp = await searchParams;
-  const [consents, blockingCourses] = await Promise.all([listConsents(user.id), listOwnedCoursesWithStudents(user.id)]);
+  const [consents, blockingCourses, ownedCourses] = await Promise.all([listConsents(user.id), listOwnedCoursesWithStudents(user.id), listCoursesByOwner(user.id)]);
+  // Курсы без студентов и без их ответов пропадут вместе с аккаунтом: показываем их по названию, а не словом «курсы вообще».
+  const blockingIds = new Set(blockingCourses.map((c) => c.id));
+  const vanishing = ownedCourses.filter((c) => !blockingIds.has(c.id));
   const marketingOn = consents.some((c) => c.kind === "marketing" && c.withdrawn_at === null && c.version === CONSENT_VERSION.marketing);
 
   return (
@@ -55,19 +60,29 @@ export default async function MyDataPage({ searchParams }: { searchParams: Promi
       />
       <div className="mt-8 space-y-6">
         {sp.error ? <Notice kind="error">{ERRORS[sp.error] ?? ERRORS.delete}</Notice> : null}
+        {sp.saved === "name" ? <Notice kind="success">Имя сохранено.</Notice> : null}
 
         <Card>
           <CardHeader>
             <CardTitle>Профиль</CardTitle>
           </CardHeader>
           <CardContent>
-            <dl className="grid gap-3 text-sm sm:grid-cols-3">
-              <div><dt className="type-caption text-muted-foreground">Имя</dt><dd className="mt-0.5 font-medium">{user.name}</dd></div>
+            <form action={updateNameAction} className="flex flex-wrap items-end gap-3">
+              <div className="min-w-0 flex-1 space-y-2 sm:max-w-sm">
+                <Label htmlFor="name">Имя</Label>
+                <Input id="name" name="name" required minLength={2} maxLength={80} defaultValue={user.name} autoComplete="name" />
+              </div>
+              <Button type="submit" variant="outline">Сохранить</Button>
+            </form>
+            <p className="mt-2 type-caption text-muted-foreground">Имя видно вам в шапке, студентам ваших курсов и преподавателю, на чьём курсе вы учитесь.</p>
+            <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-2">
               <div><dt className="type-caption text-muted-foreground">Почта</dt><dd className="mt-0.5 break-all font-medium">{user.email}</dd></div>
               <div><dt className="type-caption text-muted-foreground">Роль</dt><dd className="mt-0.5 font-medium">{user.role === "teacher" ? "Преподаватель" : "Студент"}</dd></div>
             </dl>
           </CardContent>
         </Card>
+
+        <DailyEmailCard user={user} next="/account/data" />
 
         <Card>
           <CardHeader>
@@ -97,7 +112,7 @@ export default async function MyDataPage({ searchParams }: { searchParams: Promi
             )}
             <form action={setMarketingConsentAction} className="flex flex-wrap items-center justify-between gap-3 border-t pt-4 text-sm">
               <span className="flex items-center gap-2">
-                <span aria-hidden className={`size-2 rounded-full ${marketingOn ? "bg-primary" : "bg-border"}`} />
+                <span aria-hidden className={`size-2 rounded-none ${marketingOn ? "bg-primary" : "bg-border"}`} />
                 Письма о программах To Dual: {marketingOn ? "включены" : "выключены"}
               </span>
               <input type="hidden" name="enabled" value={marketingOn ? "0" : "1"} />
@@ -111,7 +126,7 @@ export default async function MyDataPage({ searchParams }: { searchParams: Promi
             <CardTitle>Удалить аккаунт</CardTitle>
             <CardDescription>
               Вместе с аккаунтом вы отзовёте согласие на обработку данных. Из рабочей базы сразу пропадут профиль, ответы, карточки, записи на курсы
-              {user.role === "teacher" || blockingCourses.length > 0 ? ", а также ваши курсы без студентов вместе с материалами и уроками" : ""}.
+              {vanishing.length > 0 ? ", а также ваши курсы без студентов вместе с материалами и уроками" : ""}.
               Из резервных копий данные исчезнут, когда копии обновятся.
             </CardDescription>
           </CardHeader>
@@ -126,6 +141,12 @@ export default async function MyDataPage({ searchParams }: { searchParams: Promi
               </div>
             ) : (
               <form action={deleteAccountAction} className="space-y-4">
+                {vanishing.length > 0 ? (
+                  <div className="border-l-2 border-destructive pl-3 text-sm">
+                    <p className="font-medium">Вместе с аккаунтом пропадут {plural(vanishing.length, "курс", "курса", "курсов")}: материалы, уроки и ссылки-приглашения перестанут работать.</p>
+                    <ul className="mt-2 list-disc pl-5 text-muted-foreground">{vanishing.map((c) => <li key={c.id}>{c.title}</li>)}</ul>
+                  </div>
+                ) : null}
                 <div className="space-y-2">
                   <Label htmlFor="confirm">Для подтверждения введите вашу почту: {user.email}</Label>
                   <Input id="confirm" name="confirm" type="email" required autoComplete="off" placeholder={user.email} />
