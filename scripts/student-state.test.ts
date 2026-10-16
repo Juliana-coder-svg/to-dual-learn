@@ -11,8 +11,8 @@ const run = (answers: StateAnswer[], ids = ["s"], lessons = L) => computeStudent
 test("без ответов — не начал", () => assert.equal(run([]).get("s")?.state, "not_started"));
 test("балл 1–2 на последней попытке — застрял", () => assert.equal(run([a("s", "L1", 2, "16")]).get("s")?.state, "stuck"));
 test("пересдача с высоким баллом снимает застревание", () => assert.equal(run([a("s", "L1", 1, "14"), a("s", "L1", 4, "16")]).get("s")?.state, "active"));
-test("ровно три дня тишины — ещё идёт, больше — застрял", () => {
-  assert.equal(run([a("s", "L1", 4, "13")]).get("s")?.state, "active");
+test("два дня тишины — идёт, четыре — застрял", () => {
+  assert.equal(run([a("s", "L1", 4, "14")]).get("s")?.state, "active");
   assert.equal(run([a("s", "L1", 4, "12")]).get("s")?.state, "stuck");
 });
 test("последний урок пройден — сдал, даже при старом низком балле", () => {
