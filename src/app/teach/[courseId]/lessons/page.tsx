@@ -83,9 +83,9 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
                       <Badge variant={l.status === "published" ? "default" : "secondary"}>{l.status === "published" ? "Опубликован" : "Черновик"}</Badge>
                       <span
                         className="type-caption text-muted-foreground"
-                        title={l.reviewed_at ? "Вы сохранили урок в редакторе. Студенты видят, что урок проверен." : "Урок собрала модель. Чтобы отметить его проверенным, нажмите «Править» и сохраните."}
+                        title={l.reviewed_at ? "Вы сохранили урок в редакторе. Студенты видят, что урок проверен." : "Урок собрал ИИ. Откройте «Править» и сохраните: тогда он отметится как проверенный, и студенты это увидят."}
                       >
-                        {l.reviewed_at ? `Проверен ${formatDateTime(l.reviewed_at)}` : "Собран моделью, вы его не правили"}
+                        {l.reviewed_at ? `Проверен ${formatDateTime(l.reviewed_at)}` : "Черновик ИИ, вы его ещё не правили"}
                       </span>
                     </div>
                     <h3 className="mt-3 type-heading">{l.title}</h3>

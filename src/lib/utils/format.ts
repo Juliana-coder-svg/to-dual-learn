@@ -15,5 +15,5 @@ export function plural(n: number, one: string, few: string, many: string): strin
 }
 
 export function formatChars(n: number): string {
-  return n < 1000 ? `${n} зн.` : `${(n / 1000).toFixed(n < 10000 ? 1 : 0)} тыс. зн.`;
+  return n < 1000 ? `${n} знаков` : `${(n / 1000).toFixed(n < 10000 ? 1 : 0).replace(".", ",")} тыс. знаков`;
 }

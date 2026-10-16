@@ -54,7 +54,7 @@ export async function AppShell({
               <span className="truncate">{user.name}</span>
             </Link>
             <form action={switchRole}>
-              <Button type="submit" variant="ghost" size="sm">
+              <Button type="submit" variant="ghost" size="sm" title={isTeacher ? "Открыть курсы как студент" : "Открыть кабинет преподавателя"}>
                 <span className="lg:hidden">{isTeacher ? "Как студент" : "Как преподаватель"}</span>
                 <span className="hidden lg:inline">{isTeacher ? "Режим студента" : "Режим преподавателя"}</span>
               </Button>
