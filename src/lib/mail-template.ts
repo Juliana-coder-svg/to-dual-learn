@@ -48,7 +48,7 @@ export function dailyMailHtml({ name, items, due, streakLine, settingsHref }: Da
     )
     .join("");
   return `<!doctype html>
-<html lang="ru"><body style="margin:0;padding:0;background:${C.surface};">
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Урок дня</title></head><body style="margin:0;padding:0;background:${C.surface};">
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:${C.surface};"><tr><td align="center" style="padding:24px 12px;">
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:${C.white};border:1px solid ${C.border};border-radius:16px;font-family:${FONT};color:${C.foreground};">
 <tr><td style="padding:20px 24px 0 24px;font-size:16px;font-weight:700;letter-spacing:0.04em;"><span style="color:${C.primary};font-size:20px;">&#10033;</span>&nbsp;TO DUAL</td></tr>
