@@ -37,7 +37,7 @@ export default async function SettingsPage({ params, searchParams }: { params: P
   const totalRub = usage.reduce((s, u) => s + usdToRub(u.cost_usd), 0);
 
   return (
-    <div className="grid items-start gap-12 lg:grid-cols-[1fr_1fr] lg:gap-16">
+    <div className="grid items-start gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-16">
       <section>
         <SectionHeader title="Курс" description="ИИ учитывает образовательные результаты и обращение везде: когда собирает уроки, проверяет их и оценивает ответы." />
         <div className="mt-6">
@@ -71,7 +71,7 @@ export default async function SettingsPage({ params, searchParams }: { params: P
         </div>
       </section>
 
-      <div className="divide-y">
+      <div className="min-w-0 divide-y">
         <section className="pb-10">
           <SectionHeader title="Приглашение" description="Ссылка ведёт на вход и сразу записывает на курс." />
           <dl className="panel-soft mt-5">

@@ -18,7 +18,7 @@ export function PublicShell({
       <header className="border-b">
         <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-4 px-4">
           <Brand />
-          {action ? <div className="flex items-center gap-2">{action}</div> : null}
+          {action ? <div className="flex min-w-0 items-center gap-2">{action}</div> : null}
         </div>
       </header>
       <main className={`mx-auto flex w-full flex-1 flex-col px-4 ${width === "wide" ? "max-w-5xl" : "max-w-md"}`}>{children}</main>

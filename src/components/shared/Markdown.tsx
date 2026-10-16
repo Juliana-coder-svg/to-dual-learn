@@ -75,9 +75,11 @@ export function Markdown({ text }: { text: string }) {
         i++;
       }
       blocks.push(
-        <table key={key++} className="my-3 w-full border-collapse text-sm">
-          <tbody>{rows.map((r, ri) => <tr key={ri} className="border-b">{r.map((c, ci) => <td key={ci} className="px-2 py-1 align-top">{inline(c)}</td>)}</tr>)}</tbody>
-        </table>,
+        <div key={key++} className="my-3 overflow-x-auto" tabIndex={0} role="region" aria-label="Таблица">
+          <table className="w-full border-collapse text-sm">
+            <tbody>{rows.map((r, ri) => <tr key={ri} className="border-b">{r.map((c, ci) => <td key={ci} className="px-2 py-1 align-top">{inline(c)}</td>)}</tr>)}</tbody>
+          </table>
+        </div>,
       );
       continue;
     }

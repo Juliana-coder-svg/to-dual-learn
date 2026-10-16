@@ -37,13 +37,13 @@ export default async function LegalPage({ params }: { params: Promise<{ doc: str
   return (
     <PublicShell
       action={
-        <nav aria-label="Документы" className="flex gap-1">
+        <nav aria-label="Документы" className="-mr-2 flex min-w-0 gap-0.5 overflow-x-auto sm:gap-1">
           {SLUGS.map((s) => (
             <Link
               key={s}
               href={`/legal/${s}`}
               aria-current={s === doc ? "page" : undefined}
-              className={`inline-flex h-8 items-center rounded-lg px-3 text-sm ${s === doc ? "bg-muted font-medium" : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"}`}
+              className={`inline-flex h-8 items-center whitespace-nowrap rounded-lg px-2 text-sm sm:px-3 ${s === doc ? "bg-muted font-medium" : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"}`}
             >
               {LEGAL_TITLES[s]}
             </Link>
