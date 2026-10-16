@@ -11,12 +11,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CONTACT_EMAIL } from "@/lib/pilot";
 import { formatDateTime } from "@/lib/utils/format";
 import { plural } from "@/lib/utils/format";
 
 const ERRORS: Record<string, string> = {
   confirm: "Почта не совпадает. Введите адрес, под которым вы вошли.",
-  courses: "Пока на ваших курсах есть студенты или их ответы, удалить аккаунт нельзя: ответы пропали бы вместе с курсом. Напишите нам, решим вручную.",
+  courses: "Аккаунт не удалён: на ваших курсах есть студенты или их ответы, а вместе с аккаунтом пропали бы и они. Что делать дальше, написано в блоке «Удалить аккаунт» ниже.",
   name: "Имя не сохранилось: в нём должно быть от 2 до 80 знаков. Исправьте и сохраните ещё раз.",
   delete: "Не удалось удалить аккаунт. Попробуйте ещё раз через минуту или напишите нам.",
 };
@@ -133,11 +134,18 @@ export default async function MyDataPage({ searchParams }: { searchParams: Promi
           <CardContent>
             {blockingCourses.length > 0 ? (
               <div className="space-y-3 text-sm">
-                <p>Пока на ваших курсах есть студенты или их ответы, удалить аккаунт нельзя: вместе с курсом пропали бы их ответы.</p>
+                <p>Аккаунт сейчас удалить нельзя: на этих курсах есть студенты или их ответы, и вместе с аккаунтом пропали бы и они.</p>
                 <ul className="list-disc pl-5 text-muted-foreground">
                   {blockingCourses.map((c) => <li key={c.id}>{c.title}: {plural(c.students, "студент", "студента", "студентов")}</li>)}
                 </ul>
-                <p className="text-muted-foreground">Убрать студентов с курса или передать курс другому преподавателю в сервисе пока нельзя. Напишите нам, решим вручную.</p>
+                <div>
+                  <p className="font-medium">Как удалить аккаунт</p>
+                  <ol className="mt-1 list-decimal space-y-1 pl-5 text-muted-foreground">
+                    <li>Предупредите студентов, что курс закроется, и выгрузите результаты: вкладка «Студенты» в курсе, кнопка «Скачать CSV».</li>
+                    <li>Напишите на <a href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Закрыть курс и удалить аккаунт")}`} className="underline underline-offset-4 hover:text-foreground">{CONTACT_EMAIL}</a> с почты аккаунта. Мы закроем курсы вместе с ответами студентов и после этого удалим аккаунт.</li>
+                  </ol>
+                </div>
+                <p className="text-muted-foreground">Передать курс другому преподавателю в сервисе пока нельзя. Если студентам курс ещё нужен, оставьте аккаунт как есть.</p>
               </div>
             ) : (
               <form action={deleteAccountAction} className="space-y-4">
