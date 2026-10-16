@@ -119,7 +119,7 @@ export default async function SettingsPage({ params, searchParams }: { params: P
           <SectionHeader title="Расход по курсу" description={`Оценка в рублях по курсу ${usdRubRate()} ₽ за доллар. Точная сумма в кабинете поставщика модели.`} />
           <div className="mt-5">
             {usage.length === 0 ? <p className="text-sm text-muted-foreground">Запросов к ИИ пока не было.</p> : (
-              <div className="table-frame">
+              <div className="table-frame" tabIndex={0} role="region" aria-label="Расход по операциям">
                 <table className="data-table min-w-[520px]">
                   <thead><tr><th>Операция</th><th className="text-right">Запросов</th><th className="text-right">Объём, тыс. (запрос / ответ)</th><th className="text-right">Рубли</th></tr></thead>
                   <tbody>{usage.map((u) => (

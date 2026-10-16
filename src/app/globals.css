@@ -257,7 +257,7 @@
   }
   /* Рамка таблицы: прокрутка внутри, отступы крайних ячеек задаёт сама рамка. */
   .table-frame {
-    @apply overflow-x-auto rounded-xl border;
+    @apply overflow-x-auto rounded-xl border outline-none focus-visible:ring-3 focus-visible:ring-ring/40;
   }
   .table-frame .data-table th:first-child,
   .table-frame .data-table td:first-child {

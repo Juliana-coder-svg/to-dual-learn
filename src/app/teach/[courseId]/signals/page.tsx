@@ -60,7 +60,7 @@ export default async function SignalsPage({ params }: { params: Promise<{ course
               ))}
             </ul>
           )}
-          <div className="table-frame">
+          <div className="table-frame" tabIndex={0} role="region" aria-label="Сигналы по урокам">
             <table className="data-table min-w-[720px]">
               <thead>
                 <tr>
