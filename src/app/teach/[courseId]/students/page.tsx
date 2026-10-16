@@ -90,23 +90,23 @@ export default async function StudentsPage({ params, searchParams }: { params: P
           <p className="mt-4 max-w-prose type-caption text-muted-foreground">
             Баллы копятся за уроки и повторение. Серия — дни без пропуска. Застрял: последний балл 1–2 или нет ответов больше трёх дней.
           </p>
-          <div className="mt-4 overflow-x-auto rounded-lg border" tabIndex={0} role="region" aria-label="Таблица студентов">
+          <div className="table-frame mt-4" tabIndex={0} role="region" aria-label="Таблица студентов">
             <table className="data-table min-w-[760px] whitespace-nowrap">
               <thead>
                 <tr>
-                  <th className="pl-4">Студент</th>
+                  <th>Студент</th>
                   <th>Состояние</th>
                   <th>Пройдено</th>
                   <th>Последний ответ</th>
                   <th>Средний балл</th>
                   <th>Серия</th>
-                  <th className="pr-4 text-right">Баллы</th>
+                  <th className="text-right">Баллы</th>
                 </tr>
               </thead>
               <tbody>
                 {shown.map((s) => (
                   <tr key={s.user_id}>
-                    <td className="pl-4"><div className="font-medium">{s.name}</div><div className="type-caption font-normal text-muted-foreground">{s.email}</div></td>
+                    <td><div className="font-medium">{s.name}</div><div className="type-caption font-normal text-muted-foreground">{s.email}</div></td>
                     <td><Badge variant={stateOf(s.user_id) === "stuck" ? "destructive" : stateOf(s.user_id) === "done" ? "default" : "outline"}>{STATE_LABEL[stateOf(s.user_id)]}</Badge></td>
                     <td>
                       <ProgressAsterisk size={16} value={{ done: progress.get(s.user_id)?.completed ?? 0, total: published }} label={`Пройдено ${progress.get(s.user_id)?.completed ?? 0} из ${published}`} count={`${progress.get(s.user_id)?.completed ?? 0}/${published}`} />
@@ -114,7 +114,7 @@ export default async function StudentsPage({ params, searchParams }: { params: P
                     <td>{progress.get(s.user_id)?.lastAnswerAt ? formatDate(progress.get(s.user_id)!.lastAnswerAt!) : <span className="text-muted-foreground">—</span>}</td>
                     <td>{s.avg_score != null ? s.avg_score.toFixed(1) : <span className="text-muted-foreground">—</span>}</td>
                     <td>{s.streak}</td>
-                    <td className="pr-4 text-right font-medium">{s.xp}</td>
+                    <td className="text-right font-medium">{s.xp}</td>
                   </tr>
                 ))}
               </tbody>
@@ -127,7 +127,7 @@ export default async function StudentsPage({ params, searchParams }: { params: P
       {submissions.length > 0 ? (
         <section>
           <SectionHeader title="Последние ответы" description={`${plural(submissions.length, "ответ", "ответа", "ответов")}, новые сверху.`} />
-          <ul className="mt-4 divide-y rounded-lg border">
+          <ul className="mt-4 frame divide-y">
             {submissions.map((s) => (
               <li key={s.id} className="p-4 text-sm">
                 <div className="flex flex-wrap items-start justify-between gap-2">

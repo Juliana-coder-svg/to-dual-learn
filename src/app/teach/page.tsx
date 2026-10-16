@@ -61,7 +61,7 @@ export default async function TeachPage({ searchParams }: { searchParams: Promis
               {cards.map(({ course: c, lessons, published, materials, students }) => {
                 const ready = lessons > 0 && published === lessons;
                 return (
-                  <Link key={c.id} href={`/teach/${c.id}`} className="card-link group flex flex-col rounded-lg p-5 outline-none">
+                  <Link key={c.id} href={`/teach/${c.id}`} className="card-link group flex flex-col rounded-xl p-5 outline-none">
                     <StepMarks total={lessons} filled={published} size="sm" />
                     <h3 className="mt-4 text-balance type-heading group-hover:text-primary-strong">{c.title}</h3>
                     <p className="mt-1 line-clamp-3 text-sm text-muted-foreground">{c.description || "Без описания"}</p>
@@ -112,7 +112,7 @@ export default async function TeachPage({ searchParams }: { searchParams: Promis
               </form>
             </div>
           </section>
-          <section className="rounded-lg bg-surface p-5">
+          <section className="panel-soft">
             <h2 className="text-base font-semibold">Готовые курсы для примера</h2>
             <p className="mt-1 text-sm text-muted-foreground">Методичка и уроки с задачами уже опубликованы: можно показать формат студентам и коллегам.</p>
             <ul className="mt-4 divide-y">

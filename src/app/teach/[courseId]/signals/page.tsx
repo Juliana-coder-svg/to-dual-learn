@@ -47,7 +47,7 @@ export default async function SignalsPage({ params }: { params: Promise<{ course
           ) : r.top.length === 0 ? (
             <Notice>Повторяющихся ошибок в ответах группы не нашли.</Notice>
           ) : (
-            <ul className="divide-y rounded-lg border">
+            <ul className="frame divide-y">
               {r.top.map((s) => (
                 <li key={s.key} className="p-4 text-sm">
                   <div className="flex flex-wrap items-center gap-2">
@@ -60,22 +60,22 @@ export default async function SignalsPage({ params }: { params: Promise<{ course
               ))}
             </ul>
           )}
-          <div className="overflow-x-auto rounded-lg border">
+          <div className="table-frame">
             <table className="data-table min-w-[720px]">
               <thead>
                 <tr>
-                  <th className="pl-4">Урок</th>
+                  <th>Урок</th>
                   <th>Сдали</th>
                   <th>Средний балл</th>
                   <th>Слабее всего</th>
                   <th>Возражения</th>
-                  <th className="pr-4">Сигналы</th>
+                  <th>Сигналы</th>
                 </tr>
               </thead>
               <tbody>
                 {r.lessons.map((l) => (
                   <tr key={l.lessonId}>
-                    <td className="pl-4">{l.position}. {l.title}</td>
+                    <td>{l.position}. {l.title}</td>
                     <td>{l.submitters}</td>
                     <td>{l.avgScore ?? "—"}</td>
                     <td>
@@ -86,7 +86,7 @@ export default async function SignalsPage({ params }: { params: Promise<{ course
                       ) : "—"}
                     </td>
                     <td>{l.objections}{l.objectionsScoreChanged ? ` (балл изменился у ${l.objectionsScoreChanged})` : ""}</td>
-                    <td className="pr-4">
+                    <td>
                       {l.signals.length > 0 ? l.signals.map((s) => <div key={s.key}>{SIGNAL_LABELS[s.kind]}</div>) : <span className="text-muted-foreground">{l.enoughData ? "нет" : "мало данных"}</span>}
                     </td>
                   </tr>

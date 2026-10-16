@@ -24,7 +24,7 @@ export default async function GeneratePage({ params }: { params: Promise<{ cours
       {history.length > 0 ? (
         <section>
           <SectionHeader title="История" />
-          <ul className="mt-4 divide-y rounded-lg border">
+          <ul className="mt-4 frame divide-y">
             {history.map((g) => (
               <li key={g.id} className="p-4">
                 <details className="group">

@@ -8,7 +8,7 @@ import { AiNote } from "@/components/shared/AiNote";
 /** Карточка сводки. Пустое состояние словами, а не пустой рамкой: преподаватель должен понять, что в этой колонке ничего нет, а не что она не загрузилась. */
 function OverviewCard({ title, empty, accent, children }: { title: string; empty: string; accent?: boolean; children: ReactNode | null }) {
   return (
-    <section aria-label={title} className={`min-w-0 text-sm ${accent ? "callout" : "rounded-lg border p-4"}`}>
+    <section aria-label={title} className={`min-w-0 text-sm ${accent ? "callout" : "rounded-xl border p-4"}`}>
       <h4 className={accent ? "callout-label" : "eyebrow"}>{title}</h4>
       {children ?? <p className="mt-2 text-muted-foreground">{empty}</p>}
     </section>
@@ -59,9 +59,9 @@ export function HomeworkResultsView({ results }: { results: StoredHomeworkResult
             ) : null}
           </OverviewCard>
         </div>
-        {results.overviewText ? <p className="mt-3 whitespace-pre-wrap rounded-lg bg-muted p-4 text-sm">{results.overviewText}</p> : null}
+        {results.overviewText ? <p className="mt-3 whitespace-pre-wrap rounded-xl bg-muted p-4 text-sm">{results.overviewText}</p> : null}
       </section>
-      <ul className="divide-y rounded-lg border">
+      <ul className="frame divide-y">
         {results.results.map((r, i) => (
           <li key={i} className="p-4 text-sm md:p-5">
             <div className="flex flex-wrap items-center justify-between gap-2">

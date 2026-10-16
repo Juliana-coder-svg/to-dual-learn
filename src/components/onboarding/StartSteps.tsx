@@ -11,7 +11,7 @@ export function StartSteps({ steps, className }: { steps: TeacherStep[]; classNa
         <li
           key={s.id}
           aria-current={s.state === "current" ? "step" : undefined}
-          className={cn("flex flex-col rounded-lg border p-5", s.state === "current" ? "border-primary" : "")}
+          className={cn("flex flex-col panel", s.state === "current" ? "border-primary" : "")}
         >
           <div className="flex items-center gap-3">
             <span

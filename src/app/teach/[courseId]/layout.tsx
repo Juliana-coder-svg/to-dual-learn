@@ -34,7 +34,7 @@ export default async function CourseLayout({ children, params }: { children: Rea
           <div className="flex flex-wrap items-center gap-2">
           <Button nativeButton={false} render={<Link href={`/teach/${course.id}/share`} />} size="lg">Отправить студентам</Button>
           <dl className="flex flex-wrap gap-2 text-sm">
-            <div className="flex items-center gap-2 rounded-lg border px-3 py-1.5">
+            <div className="chip">
               <dt className="text-muted-foreground">Код для студентов</dt>
               <dd className="font-mono font-semibold tracking-wider">{course.join_code}</dd>
             </div>
@@ -66,7 +66,7 @@ async function CourseUsage({ courseId }: { courseId: string }) {
 function UsageBadge({ usage }: { usage?: Awaited<ReturnType<typeof courseUsage>> }) {
   return (
     <div
-      className="flex items-center gap-2 rounded-lg border px-3 py-1.5"
+      className="chip"
       title={usage ? `Модель: ${providerLabel()}. Сумма оценочная, в долларах: $${usage.cost_usd.toFixed(2)}` : undefined}
     >
       <dt className="text-muted-foreground">Расход на ИИ</dt>

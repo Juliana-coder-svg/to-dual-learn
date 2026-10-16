@@ -42,7 +42,7 @@ export function CourseChat({ courseId, initial }: { courseId: string; initial: M
 
   return (
     <div className="flex flex-col gap-4">
-      <div className={`min-h-72 space-y-5 rounded-lg border p-4 md:p-5 ${messages.length === 0 ? "flex items-center justify-center" : ""}`}>
+      <div className={`min-h-72 space-y-5 rounded-xl border p-4 md:p-5 ${messages.length === 0 ? "flex items-center justify-center" : ""}`}>
         {messages.length === 0 ? (
           <p className="max-w-md text-center text-sm text-muted-foreground">
             Пока пусто. Например: «Какие темы есть в материалах?» или «Составь три вопроса для обсуждения по второму разделу».
@@ -50,7 +50,7 @@ export function CourseChat({ courseId, initial }: { courseId: string; initial: M
         ) : null}
         {messages.map((m) => (
           m.role === "user" ? (
-            <div key={m.id} className="ml-auto max-w-[85%] rounded-lg bg-primary-soft px-4 py-2.5 text-sm">
+            <div key={m.id} className="ml-auto max-w-[85%] rounded-xl bg-primary-soft px-4 py-2.5 text-sm">
               <p className="whitespace-pre-wrap">{m.content}</p>
             </div>
           ) : (

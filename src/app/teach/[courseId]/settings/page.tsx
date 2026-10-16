@@ -20,9 +20,6 @@ const KIND_LABELS: Record<string, string> = {
   chat: "Вопросы по материалам",
 };
 
-const SELECT = "h-9 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/40";
-const TILE = "flex cursor-pointer items-center gap-3 rounded-lg border border-input px-3 py-2.5 text-sm transition-colors hover:border-foreground/40 has-[:checked]:border-primary has-[:checked]:bg-primary-soft";
-
 export default async function SettingsPage({ params, searchParams }: { params: Promise<{ courseId: string }>; searchParams: Promise<{ saved?: string; error?: string }> }) {
   const { courseId } = await params;
   const [sp, ctx, lessons, samples, usage] = await Promise.all([
@@ -55,13 +52,13 @@ export default async function SettingsPage({ params, searchParams }: { params: P
             <fieldset className="space-y-2">
               <legend className="text-sm font-medium">Обращение к студенту</legend>
               <div className="grid grid-cols-2 gap-2">
-                <label className={TILE}><input type="radio" name="tone" value="ty" defaultChecked={course.tone === "ty"} /> На «ты»</label>
-                <label className={TILE}><input type="radio" name="tone" value="vy" defaultChecked={course.tone === "vy"} /> На «вы»</label>
+                <label className="tile items-center"><input type="radio" name="tone" value="ty" defaultChecked={course.tone === "ty"} /> На «ты»</label>
+                <label className="tile items-center"><input type="radio" name="tone" value="vy" defaultChecked={course.tone === "vy"} /> На «вы»</label>
               </div>
             </fieldset>
             <div className="space-y-2">
               <Label htmlFor="daily_limit">Новых уроков в день</Label>
-              <select id="daily_limit" name="daily_limit" defaultValue={course.daily_limit} className={SELECT}>
+              <select id="daily_limit" name="daily_limit" defaultValue={course.daily_limit} className="field-select">
                 <option value={0}>Без лимита</option>
                 {[1, 2, 3].map((n) => <option key={n} value={n}>{n}</option>)}
               </select>
@@ -75,7 +72,7 @@ export default async function SettingsPage({ params, searchParams }: { params: P
       <div className="divide-y">
         <section className="pb-10">
           <SectionHeader title="Приглашение" description="Ссылка ведёт на вход и сразу записывает на курс." />
-          <dl className="mt-5 rounded-lg bg-surface p-5">
+          <dl className="panel-soft mt-5">
             <dt className="eyebrow">Код курса</dt>
             <dd className="mt-2 font-mono type-counter tracking-[0.12em]">{course.join_code}</dd>
             <dt className="mt-5 eyebrow">Ссылка</dt>
@@ -103,11 +100,11 @@ export default async function SettingsPage({ params, searchParams }: { params: P
             ) : null}
             <form action={addCalibrationSampleAction.bind(null, courseId)} className="space-y-3">
               <div className="grid grid-cols-[1fr_96px] gap-2">
-                <select name="lessonId" defaultValue="" aria-label="Урок" className={SELECT}>
+                <select name="lessonId" defaultValue="" aria-label="Урок" className="field-select">
                   <option value="">Весь курс</option>
                   {lessons.map((l) => <option key={l.id} value={l.id}>Урок {l.position}: {l.title}</option>)}
                 </select>
-                <select name="score" defaultValue="4" aria-label="Балл" className={SELECT}>
+                <select name="score" defaultValue="4" aria-label="Балл" className="field-select">
                   {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n}/5</option>)}
                 </select>
               </div>
@@ -122,18 +119,18 @@ export default async function SettingsPage({ params, searchParams }: { params: P
           <SectionHeader title="Расход по курсу" description={`Оценка в рублях по курсу ${usdRubRate()} ₽ за доллар. Точная сумма в кабинете поставщика модели.`} />
           <div className="mt-5">
             {usage.length === 0 ? <p className="text-sm text-muted-foreground">Запросов к ИИ пока не было.</p> : (
-              <div className="overflow-x-auto">
+              <div className="table-frame">
                 <table className="data-table">
-                  <thead><tr><th>Операция</th><th className="text-right">Запросов</th><th className="text-right">Объём, тыс. (запрос / ответ)</th><th className="pr-0 text-right">Рубли</th></tr></thead>
+                  <thead><tr><th>Операция</th><th className="text-right">Запросов</th><th className="text-right">Объём, тыс. (запрос / ответ)</th><th className="text-right">Рубли</th></tr></thead>
                   <tbody>{usage.map((u) => (
                     <tr key={u.kind}>
                       <td>{KIND_LABELS[u.kind] ?? u.kind}</td>
                       <td className="text-right">{u.calls}</td>
                       <td className="text-right text-muted-foreground">{Math.round(u.input_tokens / 1000)} / {Math.round(u.output_tokens / 1000)}</td>
-                      <td className="pr-0 text-right" title={`$${u.cost_usd.toFixed(3)}`}>{formatRub(usdToRub(u.cost_usd))}</td>
+                      <td className="text-right" title={`$${u.cost_usd.toFixed(3)}`}>{formatRub(usdToRub(u.cost_usd))}</td>
                     </tr>
                   ))}</tbody>
-                  <tfoot><tr><td className="border-b-0 pt-3 font-medium" colSpan={3}>Всего</td><td className="border-b-0 pr-0 pt-3 text-right font-semibold">{formatRub(totalRub)}</td></tr></tfoot>
+                  <tfoot><tr><td className="border-b-0 pt-3 font-medium" colSpan={3}>Всего</td><td className="border-b-0 pt-3 text-right font-semibold">{formatRub(totalRub)}</td></tr></tfoot>
                 </table>
               </div>
             )}

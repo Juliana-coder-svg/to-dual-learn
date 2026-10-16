@@ -24,7 +24,7 @@ export default async function EditLessonPage({ params, searchParams }: { params:
       <p className="mt-1 text-sm text-muted-foreground">После сохранения урок считается проверенным преподавателем: студенты увидят это в шапке урока.</p>
       {sp.error ? <Notice kind="error" className="mt-4">Не удалось сохранить: проверьте, что заполнены все поля, есть хотя бы два признака и два критерия.</Notice> : null}
       {lesson.review?.flags.length ? (
-        <div className="mt-4 rounded-lg border border-dashed p-4 text-sm">
+        <div className="mt-4 rounded-xl border border-dashed p-4 text-sm">
           <div className="font-medium">Что нашла проверка уроков</div>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground">{lesson.review.flags.map((f, i) => <li key={i}>{f}</li>)}</ul>
         </div>

@@ -61,7 +61,7 @@ export function ArtifactGenerator({ courseId, disabled }: { courseId: string; di
             <legend className="text-sm font-medium">Тип</legend>
             <div className="grid gap-1.5">
               {(Object.keys(ARTIFACT_KINDS) as ArtifactKind[]).map((k) => (
-                <label key={k} className="flex cursor-pointer items-center gap-3 rounded-lg border border-input px-3 py-2 text-sm transition-colors hover:border-foreground/40 has-[:checked]:border-primary has-[:checked]:bg-primary-soft">
+                <label key={k} className="tile items-center py-2">
                   <input type="radio" name="kind" value={k} checked={kind === k} onChange={() => setKind(k)} />
                   {ARTIFACT_KINDS[k]}
                 </label>
@@ -77,7 +77,7 @@ export function ArtifactGenerator({ courseId, disabled }: { courseId: string; di
           {error ? <Notice kind="error">{error}</Notice> : null}
         </CardContent>
       </Card>
-      <div className={`min-h-60 rounded-lg border p-5 ${result ? "" : "flex items-center justify-center"}`}>
+      <div className={`min-h-60 rounded-xl border p-5 ${result ? "" : "flex items-center justify-center"}`}>
         {result ? (
           <>
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b pb-4">

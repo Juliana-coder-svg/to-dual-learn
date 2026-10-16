@@ -57,7 +57,7 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
           }
         />
         {proposals > 0 ? (
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary px-4 py-3 text-sm">
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary px-4 py-3 text-sm">
             <span>Проверка предлагает правки в {plural(proposals, "уроке", "уроках", "уроках")}. Под каждым уроком видно, что меняется и почему.</span>
             <div className="flex gap-2">
               <form action={decideAllProposalsAction.bind(null, courseId, "accepted")}><Button type="submit" size="sm">Принять все</Button></form>
@@ -75,7 +75,7 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
         ) : (
           <ol className="mt-6 space-y-3">
             {lessons.map((l, i) => (
-              <li key={l.id} className="rounded-lg border p-4 md:p-5">
+              <li key={l.id} className="rounded-xl border p-4 md:p-5">
                 <div className="grid gap-4">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">

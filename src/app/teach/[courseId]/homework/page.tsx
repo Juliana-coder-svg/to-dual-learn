@@ -16,7 +16,7 @@ export default async function HomeworkPage({ params }: { params: Promise<{ cours
       {history.length > 0 ? (
         <section>
           <SectionHeader title="Прошлые проверки" />
-          <ul className="mt-4 divide-y rounded-lg border">
+          <ul className="mt-4 frame divide-y">
             {history.map((h) => (
               <li key={h.id} className="p-4">
                 <details className="group">

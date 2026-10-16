@@ -24,7 +24,7 @@ export default async function MaterialsPage({ params }: { params: Promise<{ cour
         {materials.length === 0 ? (
           <EmptyState className="mt-6" title="Материалов пока нет" description="Загрузите файл или вставьте текст в блоках «Загрузить файлы» и «Вставить текст»: из них соберутся уроки." />
         ) : (
-          <ul className="mt-6 divide-y rounded-lg border">
+          <ul className="mt-6 frame divide-y">
             {materials.map((m) => (
               <li key={m.id} className="flex items-start justify-between gap-4 px-4 py-3">
                 <div className="min-w-0 flex-1">

@@ -123,7 +123,7 @@ export function LessonsGenerator({ courseId, disabled }: { courseId: string; dis
             <span className="text-sm font-medium">Шаг 1 <span className="font-normal text-muted-foreground">· необязательный</span></span>
           </div>
           {questions ? (
-            <div className="space-y-4 rounded-lg bg-surface p-4">
+            <div className="space-y-4 rounded-xl bg-surface p-4">
               <p className="text-sm font-medium">Вопросы перед сборкой</p>
               {questions.map((q, i) => (
                 <div key={i} className="space-y-1.5">
@@ -149,11 +149,11 @@ export function LessonsGenerator({ courseId, disabled }: { courseId: string; dis
           <span className="text-sm font-medium">Шаг 2 <span className="font-normal text-muted-foreground">· сборка</span></span>
           <div className="space-y-2">
             <Label htmlFor="count">Сколько уроков</Label>
-            <select id="count" value={count} onChange={(e) => setCount(Number(e.target.value))} className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/40">
+            <select id="count" value={count} onChange={(e) => setCount(Number(e.target.value))} className="field-select">
               {[3, 5, 8, 10].map((n) => <option key={n} value={n}>{n}</option>)}
             </select>
           </div>
-          <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-input px-3 py-3 text-sm has-[:checked]:border-primary">
+          <label className="tile py-3">
             <input type="checkbox" checked={review} onChange={(e) => setReview(e.target.checked)} className="mt-0.5 size-4 shrink-0" />
             <span>
               <span className="font-medium">Проверить уроки <span className="font-normal text-muted-foreground">· +1–2 минуты</span></span>
@@ -162,7 +162,7 @@ export function LessonsGenerator({ courseId, disabled }: { courseId: string; dis
           </label>
           <Button onClick={generate} disabled={working || disabled} className="w-full">{busy ? <><ProgressAsterisk thinking size={16} />{review ? "Собираю и проверяю…" : "Собираю…"}</> : "Собрать уроки"}</Button>
           {busy ? (
-            <div role="status" className="space-y-2 rounded-lg bg-surface p-3 text-sm">
+            <div role="status" className="space-y-2 rounded-xl bg-surface p-3 text-sm">
               <ol className="space-y-1">
                 {stages.map((st, i) => (
                   <li key={st.label} className={i === currentStage ? "font-medium" : i < currentStage ? "text-muted-foreground" : "text-muted-foreground/70"}>

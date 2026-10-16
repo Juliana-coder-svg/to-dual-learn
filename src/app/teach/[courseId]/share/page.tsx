@@ -39,7 +39,7 @@ export default async function SharePage({ params }: { params: Promise<{ courseId
       <SectionHeader title="Отправить студентам" description="Скопируйте приглашение и отправьте в чат или на почту. Студент откроет ссылку, войдёт и сразу окажется на курсе." />
 
       {published === 0 ? (
-        <div className="mt-6 rounded-lg border border-dashed p-5">
+        <div className="mt-6 rounded-xl border border-dashed p-5">
           <p className="font-medium">Ссылка пока не готова</p>
           <p className="mt-1 text-sm text-muted-foreground">
             В курсе нет опубликованных уроков: студент записался бы и увидел пустой курс. Опубликуйте хотя бы один урок, и здесь появится приглашение.
