@@ -308,7 +308,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
                   </div>
                   <div>
                     <dt className="eyebrow">Серия</dt>
-                    <dd className="mt-1 type-counter">{progress.streak}<span className="ml-1 text-base font-normal text-muted-foreground">{plural(progress.streak, "день", "дня", "дней").replace(/^\d+\s/, "")}</span></dd>
+                    <dd className="mt-1 type-counter">{progress.streak}{" "}<span className="text-base font-normal text-muted-foreground">{plural(progress.streak, "день", "дня", "дней").replace(/^\d+\s/, "")}</span></dd>
                   </div>
                 </>
               ) : null}
@@ -351,10 +351,12 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
                     <li key={i} className="flex gap-3 p-4 type-body">
                       <span aria-hidden className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full text-xs ${cr.met ? "bg-primary text-primary-foreground" : "border-2 border-foreground font-bold text-foreground"}`}>{cr.met ? "✓" : "✗"}</span>
                       <span>
-                        <span className="sr-only">{cr.met ? (reservation ? "Выполнено с оговоркой: " : "Выполнено: ") : "Не выполнено: "}</span>
+                        <span className="sr-only">{cr.met ? (reservation ? "Выполнено, но с оговоркой: " : "Выполнено: ") : "Не выполнено: "}</span>
                         <span className={cr.met ? "text-muted-foreground" : "font-medium"}>{cr.criterion}</span>
                         {reservation ? <Badge variant="soft" className="ml-2 align-middle">С оговоркой</Badge> : null}
-                        {comment ? <span className="mt-1 block text-sm text-muted-foreground">{comment}</span> : null}
+                        {reservation ? (
+                          <span className="mt-1 block text-sm text-muted-foreground"><span className="font-medium text-foreground">Оговорка: </span>{comment || "критерий выполнен не до конца."}</span>
+                        ) : comment ? <span className="mt-1 block text-sm text-muted-foreground">{comment}</span> : null}
                       </span>
                     </li>
                   );
