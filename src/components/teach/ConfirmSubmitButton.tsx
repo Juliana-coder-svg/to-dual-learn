@@ -13,7 +13,7 @@ export function ConfirmSubmitButton({ message, confirmLabel, onClick, ...props }
       <div role="alertdialog" aria-label="Подтверждение" className="w-80 max-w-full space-y-3 rounded-lg border border-primary p-3 text-sm">
         <p>{message}</p>
         <div className="flex flex-wrap gap-2">
-          <Button type="submit" size="sm" autoFocus>{confirmLabel ?? "Да, опубликовать"}</Button>
+          <Button type="submit" size="sm" autoFocus onClick={() => setTimeout(() => setAsking(false), 0)}>{confirmLabel ?? "Да, опубликовать"}</Button>
           <Button type="button" size="sm" variant="outline" onClick={() => setAsking(false)}>Отмена</Button>
         </div>
       </div>

@@ -3,8 +3,8 @@
 
 export const BUILD_KIND = "lessons_build";
 
-/** Сборка в функции живёт не дольше maxDuration (300 с). Запись «идёт» старше этого срока с запасом считаем прерванной. */
-export const BUILD_STALE_SECONDS = 360;
+/** Сборка в функции живёт не дольше maxDuration (300 с). Запись «идёт» старше этого срока (с небольшим запасом) считаем прерванной. */
+export const BUILD_STALE_SECONDS = 320;
 
 export interface BuildParams {
   count: number;
@@ -48,7 +48,8 @@ export function parseBuildOutput(output: string): BuildOutput {
   } catch {
     /* ниже запись считается идущей: так её увидит и устаревший порог */
   }
-  return { status: "running" };
+  // Нераспознанная запись не должна вечно держать сборку «идущей»: считаем её оборванной.
+  return { status: "failed", error: "Сборка не удалась. Попробуйте ещё раз." };
 }
 
 /** Без истории: замер 15–16 октября 2026. Пять уроков с проверкой заняли от 4 до 7 минут. Берём верхнюю границу:

@@ -1347,7 +1347,7 @@ export async function exportUserData(userId: string): Promise<UserDataExport | u
     inCourses<MaterialRow>("materials", "export materials"),
     inCourses<LessonRow>("lessons", "export lessons"),
     inCourses<CalibrationSampleRow>("calibration_samples", "export calibration"),
-    fetchAll<GenerationRow>((from, to) => sb.from("generations").select("*").eq("user_id", userId).order("created_at").range(from, to), "export generations"),
+    fetchAll<GenerationRow>((from, to) => sb.from("generations").select("*").eq("user_id", userId).neq("kind", BUILD_KIND).order("created_at").range(from, to), "export generations"),
     fetchAll<ChatMessageRow>((from, to) => sb.from("chat_messages").select("*").eq("user_id", userId).order("created_at").range(from, to), "export chat"),
     fetchAll<HomeworkCheckRow>((from, to) => sb.from("homework_checks").select("*").eq("user_id", userId).order("created_at").range(from, to), "export homework"),
   ]);

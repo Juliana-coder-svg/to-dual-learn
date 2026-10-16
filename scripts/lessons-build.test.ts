@@ -33,5 +33,5 @@ test("запись «идёт» старше порога считается п�
   assert.equal(buildStatus({ output: { status: "running" }, ageSeconds: 100 }), "running");
   assert.equal(buildStatus({ output: { status: "running" }, ageSeconds: 4000 }), "stale");
   assert.equal(buildStatus({ output: { status: "done", added: 3, seconds: 9 }, ageSeconds: 4000 }), "done");
-  assert.deepEqual(parseBuildOutput("не json"), { status: "running" });
+  assert.equal(parseBuildOutput("не json").status, "failed");
 });

@@ -35,10 +35,17 @@ export async function POST(req: Request) {
       reviewSummary = reviewed.summary;
     }
     const inserted = await insertLessons(ctx.course.id, lessons);
-    if (notes) {
-      for (const [i, l] of inserted.entries()) await setLessonReview(l.id, ctx.course.id, notes[i] ?? null);
+    // Уроки уже в базе: сбой пометок проверки или записи итога не должен выглядеть как неудачная сборка, иначе повтор даст дубли.
+    const doneId = buildId;
+    buildId = null;
+    try {
+      if (notes) {
+        for (const [i, l] of inserted.entries()) await setLessonReview(l.id, ctx.course.id, notes[i] ?? null);
+      }
+    } catch (e) {
+      console.error("[lessons/generate] review notes", e);
     }
-    await finishLessonBuild(buildId, { status: "done", added: inserted.length, seconds: Math.round((Date.now() - startedAt) / 1000), summary: reviewSummary });
+    if (doneId) await finishLessonBuild(doneId, { status: "done", added: inserted.length, seconds: Math.round((Date.now() - startedAt) / 1000), summary: reviewSummary }).catch((e) => console.error("[lessons/generate] build state", e));
     return NextResponse.json({ ok: true, added: inserted.length, reviewSummary });
   } catch (e) {
     if (buildId) await finishLessonBuild(buildId, { status: "failed", error: "Сборка не удалась. Попробуйте ещё раз, а если снова не выйдет, возьмите меньше уроков." }).catch(() => undefined);

@@ -77,6 +77,7 @@ export function LessonsGenerator({ courseId, disabled, builds }: { courseId: str
         body: JSON.stringify({ courseId, count, review }),
       });
       const data = (await res.json()) as { ok?: boolean; error?: string; added?: number; reviewSummary?: string };
+      if (res.status === 409) router.refresh();
       if (!res.ok || !data.ok) throw new Error(data.error ?? "Не удалось собрать уроки. Попробуйте ещё раз: если не выйдет, уменьшите число уроков.");
       setMsg({ text: `Собрано ${plural(data.added ?? 0, "урок", "урока", "уроков")}. ${data.reviewSummary ?? "Откройте их, поправьте и опубликуйте."}`, kind: "success" });
       router.refresh();
@@ -106,7 +107,10 @@ export function LessonsGenerator({ courseId, disabled, builds }: { courseId: str
     const tick = () => setElapsed(offset + Math.floor((Date.now() - started) / 1000));
     tick();
     const id = window.setInterval(tick, 1000);
-    return () => window.clearInterval(id);
+    return () => {
+      window.clearInterval(id);
+      setElapsed(0);
+    };
   }, [active, serverRunning, latest]);
   // Пока сборка идёт без этой вкладки, подтягиваем состояние с сервера: когда запись станет «готово», уроки появятся в списке.
   useEffect(() => {
