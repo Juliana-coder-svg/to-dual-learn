@@ -47,7 +47,7 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
                 <form action={publishAllAction.bind(null, courseId)}>
                   <ConfirmSubmitButton
                     size="sm"
-                    message={draftsWithProposal > 0 ? `${plural(draftsWithProposal, "урок", "урока", "уроков")} с непринятыми правками проверки. Студенты увидят их без этих правок. Опубликовать все?` : undefined}
+                    message={draftsWithProposal > 0 ? `В ${plural(draftsWithProposal, "уроке", "уроках", "уроках")} из ${drafts} есть правки проверки, которые вы не приняли и не отклонили. Студенты увидят эти уроки без правок. Опубликовать все ${drafts}?` : undefined}
                   >
                     Опубликовать все ({drafts})
                   </ConfirmSubmitButton>
@@ -120,7 +120,7 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
                       <ConfirmSubmitButton
                         variant={l.status === "published" ? "outline" : "secondary"}
                         size="sm"
-                        message={l.status === "draft" && l.review?.proposal ? "У урока есть непринятые правки проверки. Студенты увидят текст без них. Опубликовать?" : undefined}
+                        message={l.status === "draft" && l.review?.proposal ? "У урока есть правки проверки, которые вы не приняли и не отклонили. Студенты увидят текст без них. Опубликовать?" : undefined}
                       >
                         {l.status === "published" ? "Снять с публикации" : "Опубликовать"}
                       </ConfirmSubmitButton>
