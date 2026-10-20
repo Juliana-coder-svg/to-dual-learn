@@ -4,7 +4,7 @@ import { PublicShell } from "@/components/shared/PublicShell";
 import { StepMarks } from "@/components/shared/StepMarks";
 import { Asterisk } from "@/components/shared/Asterisk";
 import { DEFAULT_TRY_SLUG, getTryLesson } from "@/lib/try/catalog";
-import { CONTACT_EMAIL, PILOT_MAILTO } from "@/lib/pilot";
+import { PILOT_MAILTO } from "@/lib/pilot";
 import { SessionRedirect } from "@/components/shared/SessionRedirect";
 
 /** Лендинг статический: без чтения cookie и базы в рендере, его отдаёт CDN. Вошедших уводит SessionRedirect. */
@@ -23,18 +23,9 @@ interface Finding {
 }
 
 const STEPS: Step[] = [
-  {
-    title: "Преподаватель загружает материалы",
-    text: "Методичку, программу или конспект: PDF, текст или вставка. ИИ задаёт 3–5 вопросов о целях и аудитории.",
-  },
-  {
-    title: "ИИ собирает уроки, преподаватель правит и публикует",
-    text: "В уроке короткая теория, открытая задача и критерии. ИИ отмечает, где материалов не хватает. Студенты видят только опубликованное.",
-  },
-  {
-    title: "Студент проходит урок в день",
-    text: "Решает задачу, получает разбор по критериям с цитатой из ответа. Если не согласен, может оспорить разбор. Карточки возвращаются через день, неделю, две недели и месяц.",
-  },
+  { title: "Загрузите материалы", text: "Методичка, программа или конспект: PDF или текст." },
+  { title: "Поправьте уроки и опубликуйте", text: "ИИ собирает черновики, последнее слово за вами." },
+  { title: "Студенты решают по уроку в день", text: "Пять минут, разбор ответа с цитатой, карточки на повторение." },
 ];
 
 interface Role {
@@ -44,60 +35,17 @@ interface Role {
 }
 
 const ROLES: Role[] = [
-  {
-    label: "Преподаватель",
-    text: "загрузите методичку, получите курс уроков по пять минут, дайте группе ссылку и смотрите ответы.",
-    actions: [{ label: "Собрать курс", href: "/login?role=teacher", primary: true }],
-  },
-  {
-    label: "Студент",
-    text: "если преподаватель прислал ссылку, откройте её. Если нет, начните с пробного урока.",
-    actions: [
-      { label: "Пробный урок", href: `/try/${DEFAULT_TRY_SLUG}/1` },
-      { label: "Войти", href: "/login?role=student" },
-    ],
-  },
-  {
-    label: "Автор курса или эксперт",
-    text: "соберите из лекций и статей курс «урок в день» и дайте ссылку своей аудитории. Оплаты внутри сервиса пока нет.",
-    actions: [{ label: "Собрать курс", href: "/login?role=teacher" }],
-  },
-  {
-    label: "Компания или вуз",
-    text: `пилот на одной группе, 4–6 недель, бесплатно. Цену называем после пилота. Почта: ${CONTACT_EMAIL}.`,
-    actions: [
-      { label: "Запросить пилот", href: PILOT_MAILTO, external: true, primary: true },
-      { label: "Условия", href: "/pilot", aria: "Условия пилота" },
-      { label: "Данные и безопасность", href: "/about/data" },
-    ],
-  },
+  { label: "Преподаватель", text: "соберите курс из своих материалов.", actions: [{ label: "Собрать курс", href: "/login?role=teacher", primary: true }] },
+  { label: "Студент", text: "откройте ссылку от преподавателя или попробуйте урок.", actions: [{ label: "Пробный урок", href: `/try/${DEFAULT_TRY_SLUG}/1` }] },
+  { label: "Автор курса", text: "сделайте тренажёр по своим лекциям.", actions: [{ label: "Собрать курс", href: "/login?role=teacher" }] },
+  { label: "Компания или вуз", text: "бесплатный пилот на одной группе.", actions: [{ label: "Запросить пилот", href: PILOT_MAILTO, external: true }, { label: "Условия", href: "/pilot", aria: "Условия пилота" }] },
 ];
 
 const FINDINGS: Finding[] = [
-  {
-    title: "Возвращаем к теме через паузы",
-    text: "Карточки по уроку возвращаются через день, неделю, две недели и месяц: так материал запоминается лучше. В метаанализе 317 экспериментов повторение с перерывами работало лучше, чем подряд за то же время.",
-    source: "Cepeda и др., Psychological Bulletin, 2006",
-    href: "https://pubmed.ncbi.nlm.nih.gov/16719566/",
-  },
-  {
-    title: "Учим короткими уроками",
-    text: "Один урок занимает около пяти минут, как короткий модуль. В пяти исследованиях в вузах (654 студента) группы с короткими модулями написали итоговый тест лучше. Исследований пока мало, вывод предварительный.",
-    source: "Senandheera и др., Journal of Multidisciplinary & Translational Research, 2024",
-    href: "https://jmtr.sljol.info/en/articles/2",
-  },
-  {
-    title: "Куда развиваем наставника",
-    text: "Сейчас наставник разбирает готовый ответ. В планах режим с наводящими вопросами: в Гарварде ИИ-тьютор, который ведёт вопросами, дал прирост знаний более чем вдвое больше, чем занятие в аудитории (194 студента).",
-    source: "Kestin и др., Scientific Reports, 2025",
-    href: "https://pmc.ncbi.nlm.nih.gov/articles/PMC12179260/",
-  },
-  {
-    title: "Объясняем каждый балл",
-    text: "Наставник разбирает ответ по каждому критерию с цитатой и сверяется с образцами оценок преподавателя. Студент может оспорить разбор, преподаватель видит все ответы. Почему так: когда пять моделей оценивали 67 эссе, оценки слабо совпадали с преподавательскими и менялись при повторных прогонах.",
-    source: "Gaggioli и др., arXiv, 2025",
-    href: "https://arxiv.org/abs/2508.02442",
-  },
+  { title: "Повторение с паузами", text: "Карточки возвращаются через день, неделю и месяц: так запоминается лучше, чем подряд.", source: "Cepeda и др., 2006", href: "https://pubmed.ncbi.nlm.nih.gov/16719566/" },
+  { title: "Короткие уроки", text: "Пять минут на урок: в пяти вузовских исследованиях такие группы писали тест лучше.", source: "Senandheera и др., 2024", href: "https://jmtr.sljol.info/en/articles/2" },
+  { title: "Разбор по критериям", text: "Каждый балл объяснён с цитатой из ответа, оценку можно оспорить, итог за преподавателем.", source: "Gaggioli и др., 2025", href: "https://arxiv.org/abs/2508.02442" },
+  { title: "Наставник вопросами", text: "Дальше: режим наводящих вопросов, который в Гарварде дал вдвое больший прирост знаний.", source: "Kestin и др., 2025", href: "https://pmc.ncbi.nlm.nih.gov/articles/PMC12179260/" },
 ];
 
 const TEAM = ["НИУ ВШЭ", "Яндекс", "ВТБ", "Сколково"];
@@ -137,25 +85,24 @@ export default function Home() {
           <h1 className="mt-5 max-w-3xl text-balance type-display">
             Из&nbsp;ваших материалов получится курс пятиминутных уроков
           </h1>
-          <ul aria-label="Выберите, кто вы" className="mt-8 divide-y border-y">
+          <p className="mt-6 max-w-lg text-lg leading-relaxed text-muted-foreground">
+            Загрузите методичку, ИИ соберёт уроки с задачей и разберёт ответы. Итог решаете вы.
+          </p>
+          <ul aria-label="Выберите, кто вы" className="mt-8 space-y-3">
             {ROLES.map((role) => (
-              <li key={role.label} className="flex flex-col gap-3 py-4">
-                <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">
-                  <span className="font-medium text-foreground">{role.label}:</span> {role.text}
-                </p>
-                <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2">
-                  {role.actions.map((a) =>
-                    a.primary ? (
-                      <Button key={a.label} nativeButton={false} render={a.external ? <a href={a.href} /> : <Link href={a.href} />} size="lg">{a.label}</Button>
-                    ) : (
-                      <Link key={a.label} href={a.href} aria-label={a.aria} className="inline-flex min-h-11 items-center text-sm text-primary-strong underline decoration-primary/40 underline-offset-4 hover:decoration-primary sm:min-h-0">{a.label}</Link>
-                    ),
-                  )}
-                </div>
+              <li key={role.label} className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                <span><span className="font-medium text-foreground">{role.label}:</span> <span className="text-muted-foreground">{role.text}</span></span>
+                {role.actions.map((a) =>
+                  a.primary ? (
+                    <Button key={a.label} nativeButton={false} render={a.external ? <a href={a.href} /> : <Link href={a.href} />} size="sm">{a.label}</Button>
+                  ) : (
+                    <Link key={a.label} href={a.href} aria-label={a.aria} className="inline-flex min-h-11 items-center text-sm text-primary-strong underline decoration-primary/40 underline-offset-4 hover:decoration-primary sm:min-h-0">{a.label}</Link>
+                  ),
+                )}
               </li>
             ))}
           </ul>
-          <p className="mt-4 text-sm text-muted-foreground">Бесплатно. Пароль не нужен: войдите по почте и имени.</p>
+          <p className="mt-6 text-sm text-muted-foreground">Бесплатно, без пароля.</p>
         </div>
         <div className="relative"><LessonSketch /></div>
       </section>
@@ -176,9 +123,7 @@ export default function Home() {
       <section className="border-t py-12 md:py-16">
         <div className="max-w-2xl">
           <h2 className="type-title">На чём построен продукт</h2>
-          <p className="mt-3 text-sm text-muted-foreground">
-            Мы опирались на исследования других команд. Результатов своих пилотов пока нет, добавим, когда появятся.
-          </p>
+          <p className="mt-3 text-sm text-muted-foreground">Чужие исследования. Свои пилоты добавим, когда будут.</p>
         </div>
         <ul className="mt-10 grid gap-4 md:grid-cols-2">
           {FINDINGS.map((finding) => (
@@ -204,9 +149,7 @@ export default function Home() {
           <div className="max-w-lg">
             <p className="type-body text-muted-foreground">
               {/* text-lint-ignore: «AI» из официального названия программы */}
-              Команда TO DUAL Education. Преподаём в магистратуре ИИМУП «AI в маркетинге и продакт-менеджменте» (Яндекс и НИУ ВШЭ)
-              и проводим программы по ИИ для Яндекса, ВТБ и Сколково. В занятиях у нас 25% теории и 75% практики, в уроках сервиса так же:
-              короткая теория и сразу задача.
+              TO DUAL Education: магистратура ИИМУП «AI в маркетинге и продакт-менеджменте» (Яндекс и НИУ ВШЭ), программы по ИИ для Яндекса, ВТБ и Сколково.
             </p>
             <ul className="mt-5 flex flex-wrap gap-2">
               {TEAM.map((t) => (
