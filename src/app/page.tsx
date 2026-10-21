@@ -1,19 +1,48 @@
+import Image, { getImageProps } from "next/image";
 import Link from "next/link";
+import { BookOpen, Building2, GraduationCap, PenLine, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PublicShell } from "@/components/shared/PublicShell";
-import { StepMarks } from "@/components/shared/StepMarks";
 import { Asterisk } from "@/components/shared/Asterisk";
-import { DEFAULT_TRY_SLUG, getTryLesson } from "@/lib/try/catalog";
+import { DEFAULT_TRY_SLUG } from "@/lib/try/catalog";
 import { PILOT_MAILTO } from "@/lib/pilot";
 import { SessionRedirect } from "@/components/shared/SessionRedirect";
 
 /** Лендинг статический: без чтения cookie и базы в рендере, его отдаёт CDN. Вошедших уводит SessionRedirect. */
 export const dynamic = "force-static";
 
+/** Каждый блок занимает экран и несёт одну мысль. Отступы кратны 8 px. */
+const SCREEN = "flex flex-col justify-center border-t py-16 md:min-h-[calc(100svh-3.5rem)] md:py-24";
+
+const TEACHER_HREF = "/login?role=teacher";
+const TRY_HREF = `/try/${DEFAULT_TRY_SLUG}/1`;
+
 interface Step {
-  title: string;
-  text: string;
+  caption: string;
+  image: string;
+  alt: string;
 }
+
+/** Снимки сняты с рабочей сборки на тестовом курсе «Критическое мышление в эпоху ИИ». */
+const STEPS: Step[] = [
+  { caption: "Загрузите материалы.", image: "/landing/step-materials.webp", alt: "Экран преподавателя: вкладка «Материалы» с загруженной методичкой и формой загрузки файлов." },
+  { caption: "Поправьте черновики и опубликуйте.", image: "/landing/step-lessons.webp", alt: "Экран преподавателя: вкладка «Уроки», два опубликованных урока с кнопками «Править» и «Снять с публикации»." },
+  { caption: "Урок в день и разбор с цитатой.", image: "/landing/step-review.webp", alt: "Экран студента: разбор ответа с баллом 5 из 5, пометкой «Что получилось» и одним следующим шагом." },
+];
+
+interface Role {
+  label: string;
+  text: string;
+  icon: LucideIcon;
+  action: { label: string; href: string; external?: boolean };
+}
+
+const ROLES: Role[] = [
+  { label: "Преподаватель", text: "Курс из ваших материалов", icon: GraduationCap, action: { label: "Собрать курс", href: TEACHER_HREF } },
+  { label: "Студент", text: "Ссылка от преподавателя или пробный урок", icon: BookOpen, action: { label: "Пробный урок", href: TRY_HREF } },
+  { label: "Автор курса", text: "Тренажёр по вашим лекциям", icon: PenLine, action: { label: "Собрать курс", href: TEACHER_HREF } },
+  { label: "Компания или вуз", text: "Пилот на одной группе", icon: Building2, action: { label: "Запросить пилот", href: PILOT_MAILTO, external: true } },
+];
 
 interface Finding {
   title: string;
@@ -22,54 +51,26 @@ interface Finding {
   href: string;
 }
 
-const STEPS: Step[] = [
-  { title: "Загрузите материалы", text: "Методичка, программа или конспект: PDF или текст." },
-  { title: "Поправьте уроки и опубликуйте", text: "ИИ собирает черновики, последнее слово за вами." },
-  { title: "Студенты решают по уроку в день", text: "Пять минут, разбор ответа с цитатой, карточки на повторение." },
-];
-
-interface Role {
-  label: string;
-  text: string;
-  actions: { label: string; href: string; external?: boolean; aria?: string; primary?: boolean }[];
-}
-
-const ROLES: Role[] = [
-  { label: "Преподаватель", text: "соберите курс из своих материалов.", actions: [{ label: "Собрать курс", href: "/login?role=teacher", primary: true }] },
-  { label: "Студент", text: "откройте ссылку от преподавателя или попробуйте урок.", actions: [{ label: "Пробный урок", href: `/try/${DEFAULT_TRY_SLUG}/1` }] },
-  { label: "Автор курса", text: "сделайте тренажёр по своим лекциям.", actions: [{ label: "Собрать курс", href: "/login?role=teacher" }] },
-  { label: "Компания или вуз", text: "бесплатный пилот на одной группе.", actions: [{ label: "Запросить пилот", href: PILOT_MAILTO, external: true }, { label: "Условия", href: "/pilot", aria: "Условия пилота" }] },
-];
-
 const FINDINGS: Finding[] = [
-  { title: "Повторение с паузами", text: "Карточки возвращаются через день, неделю и месяц: так запоминается лучше, чем подряд.", source: "Cepeda и др., 2006", href: "https://pubmed.ncbi.nlm.nih.gov/16719566/" },
-  { title: "Короткие уроки", text: "Пять минут на урок: в пяти вузовских исследованиях такие группы писали тест лучше.", source: "Senandheera и др., 2024", href: "https://jmtr.sljol.info/en/articles/2" },
-  { title: "Разбор по критериям", text: "Каждый балл объяснён с цитатой из ответа, оценку можно оспорить, итог за преподавателем.", source: "Gaggioli и др., 2025", href: "https://arxiv.org/abs/2508.02442" },
-  { title: "Наставник вопросами", text: "Дальше: режим наводящих вопросов, который в Гарварде дал вдвое больший прирост знаний.", source: "Kestin и др., 2025", href: "https://pmc.ncbi.nlm.nih.gov/articles/PMC12179260/" },
+  { title: "Повторение с паузами", text: "Карточки через день, неделю, месяц", source: "Cepeda и др., 2006", href: "https://pubmed.ncbi.nlm.nih.gov/16719566/" },
+  { title: "Короткие уроки", text: "Пять минут на урок", source: "Senandheera и др., 2024", href: "https://jmtr.sljol.info/en/articles/2" },
+  { title: "Разбор по критериям", text: "Балл с цитатой, итог за преподавателем", source: "Gaggioli и др., 2025", href: "https://arxiv.org/abs/2508.02442" },
+  { title: "Наставник вопросами", text: "В планах: наводящие вопросы", source: "Kestin и др., 2025", href: "https://pmc.ncbi.nlm.nih.gov/articles/PMC12179260/" },
 ];
 
-const TEAM = ["НИУ ВШЭ", "Яндекс", "ВТБ", "Сколково"];
+const LINK = "inline-flex min-h-11 items-center text-sm text-primary-strong underline decoration-primary/40 underline-offset-4 hover:decoration-primary";
 
-/** Статичный набросок экрана пробного урока: те же название, навык и задача, что в /try, шаг «Задача». Без поля ответа и кнопки: набросок не должен выглядеть рабочим. */
-function LessonSketch() {
-  const lesson = getTryLesson(DEFAULT_TRY_SLUG, 1);
-  if (!lesson) return null;
-  const { title, concept, task } = lesson.content;
+/** Один снимок для телефона и другой для широкого экрана: таблица студентов на 375 нечитаема, поэтому у телефона свой кадр. */
+function StudentsShot() {
+  const alt = "Вкладка «Студенты»: фильтры «Не начали», «Застряли», «Сдали», «Идут» и таблица с состоянием, пройденными уроками и средним баллом.";
+  const common = { alt, sizes: "(min-width: 1024px) 992px, 100vw" };
+  const { props: desktop } = getImageProps({ ...common, src: "/landing/students.webp", width: 2016, height: 1600 });
+  const { props: { srcSet: mobileSet, ...mobile } } = getImageProps({ ...common, src: "/landing/students-m.webp", width: 840, height: 1300, sizes: "100vw" });
   return (
-    <figure aria-hidden className="rounded-xl border border-dashed bg-card p-5 text-sm">
-      <figcaption className="eyebrow text-muted-foreground">Так выглядит урок</figcaption>
-      <div className="mt-4 flex items-center justify-between gap-4">
-        <span className="eyebrow">Урок 1 · шаг 2 из 3</span>
-        <StepMarks total={3} filled={2} size="sm" />
-      </div>
-      <p className="mt-3 type-heading">{title}</p>
-      <p className="mt-1 text-muted-foreground">{concept}</p>
-      <div className="mt-5">
-        <p className="eyebrow">Задача</p>
-        <p className="mt-1 line-clamp-5 type-body">{task}</p>
-      </div>
-      <p className="mt-5 type-caption text-muted-foreground">Дальше: ответ своими словами и разбор по критериям. Около пяти минут.</p>
-    </figure>
+    <picture>
+      <source media="(min-width: 768px)" srcSet={desktop.srcSet} sizes={desktop.sizes} />
+      <img {...mobile} srcSet={mobileSet} alt={alt} className="h-auto w-full" />
+    </picture>
   );
 }
 
@@ -77,87 +78,112 @@ export default function Home() {
   return (
     <PublicShell width="wide" action={<Button nativeButton={false} render={<Link href="/login" />} size="sm" variant="outline">Войти</Button>}>
       <SessionRedirect />
-      <section className="relative grid items-center gap-10 overflow-clip py-10 md:grid-cols-[1.15fr_1fr] md:gap-16 md:py-28">
-        {/* Фирменная звёздочка огромным бледным фоном, как на страницах брендбука. Плоская линия, без градиента. */}
+
+      {/* 1. Первый экран: заголовок, одна фраза, один главный призыв и снимок урока. */}
+      <section className="relative grid items-center gap-10 overflow-clip py-10 md:min-h-[calc(100svh-3.5rem)] md:grid-cols-[1fr_360px] md:gap-16 md:py-16">
         <Asterisk className="pointer-events-none absolute -right-24 -top-10 size-[460px] text-muted md:-right-16 md:size-[620px]" />
         <div className="relative flex flex-col">
-          <p className="eyebrow text-primary-strong">Микрообучение</p>
-          <h1 className="mt-5 max-w-3xl text-balance type-display">
+          <h1 className="max-w-3xl text-balance type-display">
             Из&nbsp;ваших материалов получится курс пятиминутных уроков
           </h1>
-          <p className="mt-6 max-w-lg text-lg leading-relaxed text-muted-foreground">
-            Загрузите методичку, ИИ соберёт уроки с задачей и разберёт ответы. Итог решаете вы.
-          </p>
-          <ul aria-label="Выберите, кто вы" className="mt-8 space-y-3">
-            {ROLES.map((role) => (
-              <li key={role.label} className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-                <span><span className="font-medium text-foreground">{role.label}:</span> <span className="text-muted-foreground">{role.text}</span></span>
-                {role.actions.map((a) =>
-                  a.primary ? (
-                    <Button key={a.label} nativeButton={false} render={a.external ? <a href={a.href} /> : <Link href={a.href} />} size="sm">{a.label}</Button>
-                  ) : (
-                    <Link key={a.label} href={a.href} aria-label={a.aria} className="inline-flex min-h-11 items-center text-sm text-primary-strong underline decoration-primary/40 underline-offset-4 hover:decoration-primary sm:min-h-0">{a.label}</Link>
-                  ),
-                )}
-              </li>
-            ))}
-          </ul>
-          <p className="mt-6 text-sm text-muted-foreground">Бесплатно, без пароля.</p>
+          <p className="mt-6 max-w-md text-lg leading-relaxed text-muted-foreground">ИИ соберёт уроки, итог решаете вы.</p>
+          <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2">
+            <Button nativeButton={false} render={<Link href={TEACHER_HREF} />} size="lg">Собрать курс</Button>
+            <Link href={TRY_HREF} className={LINK}>Попробовать урок</Link>
+          </div>
         </div>
-        <div className="relative"><LessonSketch /></div>
+        <div className="relative mx-auto w-full max-w-[360px] md:ml-auto">
+          <div className="max-h-[400px] overflow-hidden rounded-xl border bg-card md:max-h-none">
+            <Image src="/landing/hero-lesson.webp" alt="Экран урока: заголовок «Уверенно, но неправда», короткое объяснение, блок «Идея урока» и признаки, на что смотреть." width={840} height={1280} priority sizes="(min-width: 768px) 360px, 100vw" className="h-auto w-full" />
+          </div>
+        </div>
       </section>
 
-      <section className="border-t py-12 md:py-16">
-        <h2 className="max-w-2xl type-title">Как это работает</h2>
-        <ol className="mt-10 grid gap-10 md:grid-cols-3 md:gap-8">
+      {/* 2. Как это работает: три шага, по снимку и одной строке. */}
+      <section aria-labelledby="how" className={SCREEN}>
+        <h2 id="how" className="type-title">Как это работает</h2>
+        <ol className="mt-10 grid gap-8 md:grid-cols-3">
           {STEPS.map((step, i) => (
-            <li key={step.title} className="border-t-2 border-primary pt-5">
-              <span className="type-counter text-primary">{String(i + 1).padStart(2, "0")}</span>
-              <h3 className="mt-4 type-heading">{step.title}</h3>
-              <p className="mt-2 max-w-prose text-sm leading-relaxed text-muted-foreground">{step.text}</p>
+            <li key={step.caption} className="flex flex-col overflow-hidden rounded-xl bg-ink text-ink-foreground">
+              <div className="p-5 md:p-6">
+                <span aria-hidden className="type-counter text-primary">{String(i + 1).padStart(2, "0")}</span>
+                <p className="mt-2 md:min-h-14 type-heading">{step.caption}</p>
+              </div>
+              <div className="mt-auto aspect-[4/5] overflow-hidden bg-card">
+                <Image src={step.image} alt={step.alt} width={840} height={1340} sizes="(min-width: 768px) 320px, 100vw" className="h-auto w-full" />
+              </div>
             </li>
           ))}
         </ol>
       </section>
 
-      <section className="border-t py-12 md:py-16">
-        <div className="max-w-2xl">
-          <h2 className="type-title">На чём построен продукт</h2>
-          <p className="mt-3 text-sm text-muted-foreground">Чужие исследования. Свои пилоты добавим, когда будут.</p>
-        </div>
-        <ul className="mt-10 grid gap-4 md:grid-cols-2">
-          {FINDINGS.map((finding) => (
-            <li key={finding.title} className="flex flex-col rounded-xl bg-surface p-6">
-              <h3 className="type-heading">{finding.title}</h3>
-              <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">{finding.text}</p>
-              <a
-                href={finding.href}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-4 inline-block text-sm text-primary-strong underline decoration-primary/40 underline-offset-4 hover:decoration-primary"
-              >
-                {finding.source}
-              </a>
-            </li>
-          ))}
+      {/* 3. Кому: четыре плитки, у каждой строка и одна кнопка. */}
+      <section aria-labelledby="who" className={SCREEN}>
+        <h2 id="who" className="type-title">Кому подойдёт</h2>
+        <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {ROLES.map((role) => {
+            const Icon = role.icon;
+            return (
+              <li key={role.label} className="flex flex-col rounded-xl border bg-card p-6">
+                <span aria-hidden className="flex size-12 items-center justify-center rounded-lg bg-primary-soft text-primary-strong"><Icon className="size-6" /></span>
+                <h3 className="mt-6 type-heading">{role.label}</h3>
+                <p className="mt-2 flex-1 text-sm text-muted-foreground">{role.text}</p>
+                <Button
+                  nativeButton={false}
+                  render={role.action.external ? <a href={role.action.href} /> : <Link href={role.action.href} />}
+                  size="lg"
+                  variant="outline"
+                  className="mt-6 w-full"
+                >
+                  {role.action.label}
+                </Button>
+              </li>
+            );
+          })}
         </ul>
       </section>
 
-      <section className="border-t py-12 md:py-16">
-        <div className="grid gap-6 md:grid-cols-[1fr_1fr] md:gap-16">
-          <h2 className="type-title">Кто делает</h2>
-          <div className="max-w-lg">
-            <p className="type-body text-muted-foreground">
-              {/* text-lint-ignore: «AI» из официального названия программы */}
-              TO DUAL Education: магистратура ИИМУП «AI в маркетинге и продакт-менеджменте» (Яндекс и НИУ ВШЭ), программы по ИИ для Яндекса, ВТБ и Сколково.
-            </p>
-            <ul className="mt-5 flex flex-wrap gap-2">
-              {TEAM.map((t) => (
-                <li key={t} className="rounded-full border px-3 py-1 text-sm">{t}</li>
-              ))}
-            </ul>
+      {/* 4. Что видит преподаватель. */}
+      <section aria-labelledby="teacher" className={SCREEN}>
+        <h2 id="teacher" className="type-title">Что видит преподаватель</h2>
+        <p className="mt-4 text-lg text-muted-foreground">Кто не начал, кто застрял, кто сдал.</p>
+        <div className="mt-10 overflow-hidden rounded-xl border bg-card p-0 md:p-2">
+          <StudentsShot />
+        </div>
+      </section>
+
+      {/* 5. На чём построено. */}
+      <section aria-labelledby="science" className={SCREEN}>
+        <h2 id="science" className="type-title">На чём построено</h2>
+        <p className="mt-4 text-lg text-muted-foreground">Чужие исследования. Своих данных пока нет.</p>
+        <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {FINDINGS.map((f) => (
+            <li key={f.title} className="flex flex-col rounded-xl bg-surface p-6">
+              <h3 className="type-heading">{f.title}</h3>
+              <p className="mt-2 flex-1 text-sm text-muted-foreground">{f.text}</p>
+              <a href={f.href} target="_blank" rel="noreferrer" className={`${LINK} mt-4`}>{f.source}</a>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-10 text-sm text-muted-foreground">Делает TO DUAL Education: НИУ ВШЭ, Яндекс, ВТБ, Сколково.</p>
+      </section>
+
+      {/* 6. Финал: тот же призыв, что на первом экране. */}
+      <section aria-labelledby="final" className="border-t py-16 md:py-24">
+        <div className="accent-panel relative overflow-clip py-12 md:py-16">
+          <Asterisk className="pointer-events-none absolute -right-16 -top-16 size-[360px] text-primary-foreground/15" />
+          <div className="relative">
+            <h2 id="final" className="max-w-2xl type-title">Соберите первый курс из своих материалов</h2>
+            <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2">
+              <Button nativeButton={false} render={<Link href={TEACHER_HREF} />} size="lg" variant="inverse">Собрать курс</Button>
+              <span className="text-base font-medium">Бесплатно, без пароля</span>
+            </div>
           </div>
         </div>
+        <p className="mt-6 flex flex-wrap gap-x-6 text-sm">
+          <Link href="/about/data" className={LINK}>Данные и безопасность</Link>
+          <Link href="/pilot" className={LINK}>Пилот для вуза или компании</Link>
+        </p>
       </section>
     </PublicShell>
   );
