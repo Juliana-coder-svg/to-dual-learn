@@ -134,6 +134,7 @@ export default function Home() {
                   size="lg"
                   variant="outline"
                   className="mt-6 w-full"
+                  aria-label={`${role.action.label}: ${role.label.toLowerCase()}`}
                 >
                   {role.action.label}
                 </Button>
