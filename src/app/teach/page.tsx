@@ -7,11 +7,8 @@ import { createDemoCourseAction } from "@/lib/actions/seed";
 import { AppShell } from "@/components/shared/AppShell";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { Notice } from "@/components/shared/Notice";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { NewCourseDialog } from "@/components/teach/NewCourseDialog";
 import { StepMarks } from "@/components/shared/StepMarks";
 import { StartSteps } from "@/components/onboarding/StartSteps";
 import { DailyEmailCard } from "@/components/shared/DailyEmailCard";
@@ -33,13 +30,18 @@ export default async function TeachPage({ searchParams }: { searchParams: Promis
   const userId = await requireUserId();
   const [user, sp, cards] = await Promise.all([requireUser(), searchParams, listCourseSummariesByOwner(userId)]);
   const courses = cards.map((c) => c.course);
+  const demos = DEMO_COURSES.map((d) => ({ ...d, action: createDemoCourseAction.bind(null, d.slug) }));
   // Панель «С чего начать» живёт, пока не пройдены все шаги, и уходит по «Скрыть». «Как это работает» в шапке открывает её снова.
   const steps = teacherSteps(cards);
   const showStart = !allStepsDone(steps) && !(await cookies()).has(START_HIDDEN_COOKIE);
 
   return (
     <AppShell user={user}>
-      <PageHeader title="Мои курсы" description={courses.length > 0 ? `${plural(courses.length, "курс", "курса", "курсов")}. Откройте курс, чтобы загрузить материалы, собрать уроки и посмотреть ответы.` : undefined} />
+      <PageHeader
+        title="Мои курсы"
+        description={courses.length > 0 ? `${plural(courses.length, "курс", "курса", "курсов")}. Откройте курс, чтобы загрузить материалы, собрать уроки и посмотреть ответы.` : undefined}
+        actions={<NewCourseDialog createAction={createCourseAction} demos={demos} error={sp.error} />}
+      />
       {showStart ? (
         <section aria-labelledby="start-title" className="mt-8">
           <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
@@ -52,15 +54,15 @@ export default async function TeachPage({ searchParams }: { searchParams: Promis
           <StartSteps steps={steps} className="mt-4" />
         </section>
       ) : null}
-      <div className="mt-10 grid gap-12 lg:grid-cols-[1fr_340px] lg:gap-16">
+      <div className="mt-10">
         <section>
           {courses.length === 0 ? (
             <EmptyState
               title="Пока нет курсов"
-              description="Создайте первый курс в форме «Новый курс»: название и пара слов о нём. Материалы загрузите после. Если материалов нет, добавьте готовый курс-пример."
+              description="Нажмите «Создать курс»: название и пара слов о нём, материалы загрузите после. Если материалов нет, в том же окне есть готовый курс-пример."
             />
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {cards.map(({ course: c, lessons, published, materials, students }) => {
                 const ready = lessons > 0 && published === lessons;
                 return (
@@ -91,49 +93,9 @@ export default async function TeachPage({ searchParams }: { searchParams: Promis
             </div>
           )}
         </section>
-        <aside className="space-y-10">
-          <section id="new-course" className="scroll-mt-6">
-            <h2 className="type-heading">Новый курс</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Потом загрузите материалы и соберите уроки.</p>
-            <div className="mt-5">
-              {sp.error === "title" ? <Notice kind="error" className="mb-4">Введите название курса.</Notice> : null}
-              {sp.error === "seed" ? <Notice kind="error" className="mb-4">Файл курса-примера не найден. Попробуйте ещё раз или напишите нам.</Notice> : null}
-              <form action={createCourseAction} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="title">Название</Label>
-                  <Input id="title" name="title" required placeholder="Например, «Переговоры с клиентами»" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="description">О чём курс</Label>
-                  <Textarea id="description" name="description" rows={3} placeholder="Чему научатся и зачем" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="audience">Аудитория</Label>
-                  <Input id="audience" name="audience" placeholder="Маркетологи и продакты 25–40 лет" />
-                </div>
-                <Button type="submit" className="w-full">Создать курс</Button>
-              </form>
-            </div>
-          </section>
-          <section className="panel-soft">
-            <h2 className="text-base font-semibold">Готовые курсы для примера</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Методичка и уроки с задачами уже опубликованы: можно показать формат студентам и коллегам.</p>
-            <ul className="mt-4 divide-y">
-              {DEMO_COURSES.map((d) => (
-                <li key={d.slug} className="space-y-3 py-4 first:pt-0 last:pb-0">
-                  <p className="text-sm">
-                    <span className="font-medium">{d.title}</span>
-                    <span className="text-muted-foreground">: {d.note}</span>
-                  </p>
-                  <form action={createDemoCourseAction.bind(null, d.slug)}>
-                    <Button type="submit" variant="outline" size="sm" className="w-full">Добавить «{d.short}»</Button>
-                  </form>
-                </li>
-              ))}
-            </ul>
-          </section>
-          <DailyEmailCard user={user} next="/teach" />
-        </aside>
+      </div>
+      <div className="mt-12 max-w-md">
+        <DailyEmailCard user={user} next="/teach" />
       </div>
     </AppShell>
   );
