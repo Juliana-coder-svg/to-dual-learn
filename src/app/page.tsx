@@ -12,7 +12,7 @@ import { SessionRedirect } from "@/components/shared/SessionRedirect";
 export const dynamic = "force-static";
 
 /** Каждый блок занимает экран и несёт одну мысль. Отступы кратны 8 px. */
-const SCREEN = "flex flex-col justify-center border-t py-16 md:min-h-[calc(100svh-3.5rem)] md:py-24";
+const SCREEN = "rule flex flex-col justify-center py-16 md:min-h-[calc(100svh-4.25rem)] md:py-24";
 
 const TEACHER_HREF = "/login?role=teacher";
 const TRY_HREF = `/try/${DEFAULT_TRY_SLUG}/1`;
@@ -58,7 +58,7 @@ const FINDINGS: Finding[] = [
   { title: "Наставник вопросами", text: "В планах: наводящие вопросы", source: "Kestin и др., 2025", href: "https://pmc.ncbi.nlm.nih.gov/articles/PMC12179260/" },
 ];
 
-const LINK = "inline-flex min-h-11 items-center text-sm text-primary-strong underline decoration-primary/40 underline-offset-4 hover:decoration-primary";
+const LINK = "inline-flex min-h-11 items-center text-[0.9375rem] font-medium text-foreground underline decoration-1 underline-offset-[3px] hover:text-primary-strong";
 
 /** Один снимок для телефона и другой для широкого экрана: таблица студентов на 375 нечитаема, поэтому у телефона свой кадр. */
 function StudentsShot() {
@@ -80,15 +80,15 @@ export default function Home() {
       <SessionRedirect />
 
       {/* 1. Первый экран: заголовок, одна фраза, один главный призыв и снимок урока. */}
-      <section className="relative grid items-center gap-10 overflow-clip py-10 md:min-h-[calc(100svh-3.5rem)] md:grid-cols-[1fr_360px] md:gap-16 md:py-16">
-        <Asterisk className="pointer-events-none absolute -right-24 -top-10 size-[460px] text-muted md:-right-16 md:size-[620px]" />
+      <section className="relative my-3 grid items-center gap-10 overflow-clip rounded-3xl bg-surface-deep p-[clamp(1.5rem,5vw,4.5rem)] md:my-6 md:min-h-[calc(100svh-6.5rem)] md:grid-cols-[1fr_360px] md:gap-16">
+        <Asterisk className="pointer-events-none absolute -right-24 -top-10 size-[460px] text-white/80 md:-right-16 md:size-[620px]" />
         <div className="relative flex flex-col">
-          <h1 className="max-w-3xl text-balance type-display">
+          <h1 className="max-w-3xl text-balance type-mega">
             Из&nbsp;ваших материалов получится курс пятиминутных уроков
           </h1>
-          <p className="mt-6 max-w-md text-lg leading-relaxed text-muted-foreground">ИИ соберёт уроки, итог решаете вы.</p>
+          <p className="mt-6 max-w-md type-lead text-ink-soft">ИИ соберёт уроки, итог решаете вы.</p>
           <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2">
-            <Button nativeButton={false} render={<Link href={TEACHER_HREF} />} size="lg">Собрать курс</Button>
+            <Button nativeButton={false} render={<Link href={TEACHER_HREF} />} size="lg" variant="accent">Собрать курс</Button>
             <Link href={TRY_HREF} className={LINK}>Попробовать урок</Link>
           </div>
         </div>
@@ -125,9 +125,9 @@ export default function Home() {
             const Icon = role.icon;
             return (
               <li key={role.label} className="flex flex-col rounded-xl border bg-card p-6">
-                <span aria-hidden className="flex size-12 items-center justify-center rounded-lg bg-primary-soft text-primary-strong"><Icon className="size-6" /></span>
+                <span aria-hidden className="flex size-12 items-center justify-center rounded-full bg-surface text-foreground"><Icon className="size-6" /></span>
                 <h3 className="mt-6 type-heading">{role.label}</h3>
-                <p className="mt-2 flex-1 text-sm text-muted-foreground">{role.text}</p>
+                <p className="mt-2 flex-1 text-[0.9375rem] leading-normal text-ink-soft">{role.text}</p>
                 <Button
                   nativeButton={false}
                   render={role.action.external ? <a href={role.action.href} /> : <Link href={role.action.href} />}
@@ -147,8 +147,8 @@ export default function Home() {
       {/* 4. Что видит преподаватель. */}
       <section aria-labelledby="teacher" className={SCREEN}>
         <h2 id="teacher" className="type-title">Что видит преподаватель</h2>
-        <p className="mt-4 text-lg text-muted-foreground">Кто не начал, кто застрял, кто сдал.</p>
-        <div className="mt-10 overflow-hidden rounded-xl border bg-card p-0 md:p-2">
+        <p className="mt-4 type-lead text-ink-soft">Кто не начал, кто застрял, кто сдал.</p>
+        <div className="mt-10 overflow-hidden rounded-2xl border bg-card p-0 md:p-2">
           <StudentsShot />
         </div>
       </section>
@@ -156,23 +156,23 @@ export default function Home() {
       {/* 5. На чём построено. */}
       <section aria-labelledby="science" className={SCREEN}>
         <h2 id="science" className="type-title">На чём построено</h2>
-        <p className="mt-4 text-lg text-muted-foreground">Чужие исследования. Своих данных пока нет.</p>
+        <p className="mt-4 type-lead text-ink-soft">Чужие исследования. Своих данных пока нет.</p>
         <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {FINDINGS.map((f) => (
             <li key={f.title} className="flex flex-col rounded-xl bg-surface p-6">
               <h3 className="type-heading">{f.title}</h3>
-              <p className="mt-2 flex-1 text-sm text-muted-foreground">{f.text}</p>
+              <p className="mt-2 flex-1 text-[0.9375rem] leading-normal text-ink-soft">{f.text}</p>
               <a href={f.href} target="_blank" rel="noreferrer" className={`${LINK} mt-4`}>{f.source}</a>
             </li>
           ))}
         </ul>
-        <p className="mt-10 text-sm text-muted-foreground">Делает TO DUAL Education: НИУ ВШЭ, Яндекс, ВТБ, Сколково.</p>
+        <p className="mt-10 text-[0.9375rem] text-ink-soft">Делает TO DUAL Education: НИУ ВШЭ, Яндекс, ВТБ, Сколково.</p>
       </section>
 
       {/* 6. Финал: тот же призыв, что на первом экране. */}
-      <section aria-labelledby="final" className="border-t py-16 md:py-24">
+      <section aria-labelledby="final" className="rule py-16 md:py-24">
         <div className="accent-panel relative overflow-clip py-12 md:py-16">
-          <Asterisk className="pointer-events-none absolute -right-16 -top-16 size-[360px] text-primary-foreground/15" />
+          <Asterisk className="pointer-events-none absolute -right-16 -top-16 size-[360px] text-white/70" />
           <div className="relative">
             <h2 id="final" className="max-w-2xl type-title">Соберите первый курс из своих материалов</h2>
             <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2">
