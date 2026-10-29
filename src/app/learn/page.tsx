@@ -135,7 +135,7 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
             <ul className="mt-5 space-y-3">
               {cards.map(({ course: c, lessons, completed, next, limitReached, dueCards }) => (
                 <li key={c.id}>
-                  <Link href={`/learn/${c.id}`} className="card-link block rounded-xl p-5 outline-none">
+                  <Link href={`/learn/${c.id}`} className="card-link block rounded-xl p-5">
                     <div className="min-w-0 max-w-xl">
                       <h3 className="text-balance type-heading">{c.title}{c.owner_id === user.id ? <span className="ml-2 align-middle type-caption font-normal text-muted-foreground">ваш курс</span> : null}</h3>
                       <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{c.description || "Без описания"}</p>
