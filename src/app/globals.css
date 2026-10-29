@@ -6,9 +6,10 @@
 
 /*
   Дизайн-токены To Dual Learn. Словарь и правила: docs/design.md.
-  Плоский минимализм: один акцент (фирменный оранжевый), шрифт Onest с системным запасным,
-  рамки и воздух вместо теней и градиентов. Радиус один: 2 px у блоков и кнопок, углы почти
-  прямые. Сегменты шага и бейджи тоже прямоугольные.
+  Стиль опроса («Тишина v3», проект to-dual-research): графит и белый, оранжевый только как метка,
+  шрифт Onest одним семейством, кнопки-пилюли, поля 12 px, карточки 16/20 px, полоса раздела 20/28 px.
+  Теней и градиентов нет (правило CLAUDE.md): вместо --elev-1…3 карточка получает рамку 1 px.
+  Соответствие токенов опроса и наших: раздел «Стиль опроса» в docs/design.md.
 */
 @theme inline {
   --color-background: var(--background);
@@ -47,6 +48,8 @@
   --color-primary-soft: var(--primary-soft);
   /* Фон страницы за карточками, когда нужно отделить колонку или шапку. */
   --color-surface: var(--surface);
+  /* Сцена первого экрана лендинга (--color-surface-deep опроса): на ней видна белая звёздочка. */
+  --color-surface-deep: var(--surface-deep);
   --color-paper: var(--paper);
   /* Графит из брендбука: тёмные поверхности и карточки на них. Нейтраль, не акцент. */
   --color-ink: var(--ink);
@@ -59,51 +62,62 @@
   --radius-sm: calc(var(--radius) * 0.75);
   --radius-md: var(--radius);
   --radius-lg: var(--radius);
-  --radius-xl: 1rem;
-  --radius-2xl: calc(var(--radius) * 1.5);
-  --radius-3xl: calc(var(--radius) * 2);
+  /* Карточка опроса: 16 px на телефоне, 20 px от 560 px (--radius-card в :root). */
+  --radius-xl: var(--radius-card);
+  --radius-2xl: var(--radius-inner);
+  /* Полоса раздела и тёмная панель. */
+  --radius-3xl: var(--radius-panel);
   --radius-4xl: 9999px;
 }
 
 :root {
   /* Onest подключён через next/font в layout.tsx; пока он не загрузился или его нет, работает системный. */
-  --font-display: var(--font-unbounded), var(--font-onest), ui-sans-serif, system-ui, sans-serif;
+  /* Стиль опроса: Onest одним семейством, без отдельного шрифта для заголовков. */
+  --font-display: var(--font-onest), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-sans: var(--font-onest), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.17 0.005 60);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.17 0.005 60);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.17 0.005 60);
-  /* Фирменный оранжевый #FF4A07. */
-  --primary: oklch(0.67 0.22 36);
-  /* Текст на оранжевой заливке: графит, 6,5:1. Белый на #FF4A07 даёт 3,4:1 и не проходит AA для мелкого текста. */
-  --primary-foreground: oklch(0.17 0.005 60);
-  --primary-strong: oklch(0.52 0.19 36);
-  --primary-soft: oklch(0.97 0.02 50);
-  --surface: oklch(0.985 0.002 60);
+  --background: #ffffff;
+  --foreground: #161616;
+  --card: #ffffff;
+  --card-foreground: #161616;
+  --popover: #ffffff;
+  --popover-foreground: #161616;
+  /* Фирменный оранжевый #FF4A07: метка, а не заливка. Заливкой остаётся только одна главная кнопка экрана. */
+  --primary: #ff4a07;
+  /* Текст на оранжевой заливке: графит, 6,5:1. Белый на #FF4A07 даёт 3,4:1 и не проходит AA для мелкого текста (в опросе белый: здесь осознанно иначе). */
+  --primary-foreground: #161616;
+  /* Оранжевый для текста и наведения: #C43C00, 5,3:1 на белом. */
+  --primary-strong: #c43c00;
+  --primary-soft: #fbeee7;
+  --surface: #f6f6f4;
+  --surface-deep: #efeeeb;
   /* Бумага разбора: тёплый светлый фон тетради. Не акцент, а нейтраль с оттенком. */
-  --paper: oklch(0.975 0.014 85);
-  --ink: oklch(0.3 0.002 60);
-  --ink-soft: oklch(0.45 0.002 60);
-  --ink-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.965 0.003 60);
-  --secondary-foreground: oklch(0.21 0.005 60);
-  --muted: oklch(0.965 0.003 60);
-  --muted-foreground: oklch(0.5 0.01 60);
-  --accent: oklch(0.965 0.003 60);
-  --accent-foreground: oklch(0.21 0.005 60);
-  --destructive: oklch(0.55 0.22 27);
-  --border: oklch(0.84 0.005 60);
-  /* Границы полей и контурных кнопок: не светлее 3:1 к белому (WCAG 1.4.11). Декоративные рамки карточек остаются на --border. */
-  --input: oklch(0.6 0.01 60);
-  --ring: oklch(0.67 0.22 36);
+  --paper: #f6f6f4;
+  --ink: #161616;
+  --ink-soft: #4a4a47;
+  --ink-foreground: #ffffff;
+  --secondary: #f6f6f4;
+  --secondary-foreground: #161616;
+  --muted: #f6f6f4;
+  --muted-foreground: #6b6b66;
+  --accent: #f1f0ed;
+  --accent-foreground: #161616;
+  --destructive: #b3261e;
+  --border: #e6e5e1;
+  /* Границы полей и контурных кнопок: #8A8A85, 3,4:1 к белому (WCAG 1.4.11). Рамки карточек остаются на --border. */
+  --input: #8a8a85;
+  /* Фокус в опросе графитовый (кольцо 2 px), не оранжевый. */
+  --ring: #161616;
   --chart-1: oklch(0.67 0.22 36);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
+  /* Радиусы опроса (system.md 12.2): поле 12 px, малая карточка 14/16, карточка 16/20, панель и полоса 20/28. */
   --radius: 0.75rem;
+  --radius-field: 0.75rem;
+  --radius-inner: 0.875rem;
+  --radius-card: 1rem;
+  --radius-panel: 1.25rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -155,6 +169,14 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+@media (min-width: 35rem) {
+  :root {
+    --radius-inner: 1rem;
+    --radius-card: 1.25rem;
+    --radius-panel: 1.75rem;
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring;
@@ -162,7 +184,30 @@
   body {
     @apply bg-background text-foreground;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    font-size: 1rem;
+    line-height: 1.55;
+    overflow-wrap: break-word;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    text-wrap: balance;
+  }
+  /* Фокус опроса: графитовое кольцо 2 px с отступом 3 px, появляется сразу. */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+  }
+  /* Ссылка в тексте: подчёркивание 1 px, отступ 3 px (system.md 4.2). */
+  a {
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
   }
   html {
     @apply font-sans;
@@ -179,55 +224,75 @@
   }
 }
 
-/* Шкала текста. Утилиты, а не токены font-size: иначе cn() из shadcn принимает их за цвет и выкидывает при слиянии классов.
-   display и title текучие: 34 → 72 px и 28 → 40 px от телефона к десктопу, поэтому без md:-префиксов. */
-@utility type-display {
-  font-family: var(--font-display) !important;
-  font-size: clamp(1.9rem, 1rem + 3.2vw, 3.5rem);
-  line-height: 1.02;
-  letter-spacing: -0.03em;
-  font-weight: 600;
-}
-/* Мега: только герой лендинга. 44 → 104 px, плотный интерлиньяж, заголовок занимает всю ширину. */
+/* Шкала текста опроса (system.md 2.2). Утилиты, а не токены font-size: иначе cn() из shadcn принимает их за цвет и выкидывает при слиянии классов.
+   Заголовки Onest 400–500, плотный трекинг; текучие ступени растут от телефона к десктопу без md:-префиксов. */
+/* Мега: только герой лендинга. Ступень H1 опроса: 40 → 72 px. */
 @utility type-mega {
-  font-family: var(--font-display) !important;
-  font-size: clamp(1.9rem, 0.6rem + 5.2vw, 4.5rem);
-  line-height: 0.96;
-  letter-spacing: -0.03em;
-  font-weight: 600;
+  font-size: clamp(2.5rem, 1.796rem + 3.005vw, 4.5rem);
+  line-height: 1.04;
+  letter-spacing: -0.028em;
+  font-weight: 400;
 }
+/* Заголовок первого экрана и крупных разделов: ступень H2 опроса, 32 → 56 px. */
+@utility type-display {
+  font-size: clamp(2rem, 1.472rem + 2.254vw, 3.5rem);
+  line-height: 1.08;
+  letter-spacing: -0.022em;
+  font-weight: 400;
+}
+/* Заголовок раздела и страницы: H3 крупный, 26 → 36 px. */
 @utility type-title {
-  font-family: var(--font-display) !important;
-  font-size: clamp(1.4rem, 1rem + 1.4vw, 2.1rem);
-  line-height: 1.1;
-  letter-spacing: -0.025em;
-  font-weight: 600;
+  font-size: clamp(1.625rem, 1.405rem + 0.939vw, 2.25rem);
+  line-height: 1.18;
+  letter-spacing: -0.015em;
+  font-weight: 400;
 }
-/* Счётчик: большие табличные цифры для номера урока, серии дней, баллов. Цифры одной ширины, чтобы не прыгали. */
+/* Заголовок рабочего экрана: как H1 страницы анкеты, 21 → 24 px, вес 500. */
+@utility type-page {
+  font-size: clamp(1.3125rem, 1.246rem + 0.282vw, 1.5rem);
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  font-weight: 500;
+}
+/* Счётчик: крупные цифры для номера урока, серии дней, баллов (ступень numeral опроса, 36 → 52 px). Цифры одной ширины. */
 @utility type-counter {
-  font-family: var(--font-display) !important;
-  font-size: clamp(2rem, 1.6rem + 1.4vw, 3rem);
+  font-size: clamp(2.25rem, 1.898rem + 1.502vw, 3.25rem);
   line-height: 1;
-  letter-spacing: -0.02em;
-  font-weight: 600;
+  letter-spacing: -0.03em;
+  font-weight: 400;
   font-variant-numeric: tabular-nums;
 }
+/* Заголовок карточки и блока: H4, 18 px. */
 @utility type-heading {
-  font-size: 1.25rem;
-  line-height: 1.4;
-  letter-spacing: -0.01em;
-  font-weight: 600;
+  font-size: 1.125rem;
+  line-height: 1.35;
+  letter-spacing: -0.005em;
+  font-weight: 500;
 }
 @utility type-body {
-  font-size: 0.9375rem;
-  line-height: 1.6;
+  font-size: 1rem;
+  line-height: 1.55;
+}
+/* Подзаголовок первого экрана и лид раздела: 18 → 22 px (text-lead опроса). */
+@utility type-lead {
+  font-size: clamp(1.125rem, 1.037rem + 0.376vw, 1.375rem);
+  line-height: 1.45;
 }
 @utility type-caption {
-  font-size: 0.75rem;
-  line-height: 1.35;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  letter-spacing: 0.005em;
 }
 
 @layer components {
+  /* Контейнер опроса: до 77,5 rem, боковое поле clamp(18 px, 4vw, 48 px). Шапка, подвал и страницы на одной вертикали. */
+  .container-x {
+    width: 100%;
+    max-width: 77.5rem;
+    margin-inline: auto;
+    padding-inline: clamp(1.125rem, 4vw, 3rem);
+  }
+  /* Ссылка раздела в шапке и подвале: secondary, без подчёркивания; текущая графитовая с подчёркиванием. */
   /* Блок с акцентом: подложка без рамки, подпись тёмно-оранжевая. */
   .callout {
     @apply rounded-xl bg-primary-soft p-4;
@@ -235,23 +300,30 @@
   .callout-label {
     @apply type-caption font-semibold text-primary-strong;
   }
-  /* Подпись к разделу: «Урок 3 · шаг 2 из 3», «Опубликовано 5 из 5». */
+  /* Подпись к разделу: «Урок 3 · шаг 2 из 3», «Опубликовано 5 из 5». Метка опроса: caption, muted. */
   .eyebrow {
-    @apply type-caption font-medium text-muted-foreground;
+    @apply type-caption font-normal text-muted-foreground;
   }
   /* Пустое состояние: рамка пунктиром, текст по центру, действие внутри. */
   .empty-state {
     @apply flex flex-col items-center gap-3 rounded-xl border border-dashed px-6 py-10 text-center;
   }
-  /* Контейнеры 16 px (rounded-xl), органы управления 12 px (rounded-lg), бейджи и чипы пилюлями. Внутри контейнера
-     вложенный блок на ступень мельче: rounded-lg. Классы ниже закрепляют это, чтобы экраны не собирали рамки заново. */
-  /* Карточка: рамка 1 px, белый фон. Основной контейнер экрана. */
+  /* Контейнеры по радиусам опроса: карточка 16/20 px (rounded-xl), поле и плитка выбора 12 px (rounded-lg),
+     малая карточка и вложенный блок 14/16 px (rounded-2xl), полоса и панель 20/28 px (rounded-3xl),
+     пилюли и бейджи rounded-full. Теней нет: вместо --elev-2 карточке достаточно рамки 1 px. */
+  /* Карточка: рамка 1 px, белый фон. Карточка опроса на белом (--card-on-white). */
   .panel {
     @apply rounded-xl border bg-card p-5;
   }
-  /* Мягкая панель: серая подложка без рамки. Боковые колонки и справочные блоки: письмо дня, готовые курсы, код курса. */
+  /* Полоса раздела: серая подложка без рамки, радиус панели. Справочные блоки, боковые колонки: письмо дня, готовые курсы, код курса.
+     Карточки внутри полосы без рамки: белые на сером. */
   .panel-soft {
     @apply rounded-xl bg-surface p-5;
+  }
+  .band {
+    background: var(--surface);
+    border-radius: var(--radius-panel);
+    padding: clamp(12px, 3vw, 40px);
   }
   /* Рамка для списка строк: строки внутри разделяются divide-y, рамки у каждой строки нет. */
   .frame {
@@ -269,13 +341,14 @@
   .table-frame .data-table td:last-child {
     padding-right: 1rem;
   }
-  /* Плитка выбора (радио, чекбокс, тон, тип): отмеченная обводится акцентом и получает подложку. */
+  /* Плитка выбора (радио, чекбокс, тон, тип): как вариант ответа в анкете. Отмеченная получает обводку 2 px
+     оранжевым (inset, размер не меняется) и 7 % оранжевой подложки. */
   .tile {
-    @apply flex cursor-pointer items-start gap-3 rounded-lg border border-input px-3 py-2.5 text-sm transition-colors hover:border-foreground/40 has-[:checked]:border-primary has-[:checked]:bg-primary-soft has-[:focus-visible]:ring-3 has-[:focus-visible]:ring-ring;
+    @apply flex min-h-14 cursor-pointer items-start gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm transition-colors hover:border-input has-[:checked]:border-primary has-[:checked]:bg-primary-soft has-[:checked]:border-2 has-[:checked]:px-[15px] has-[:checked]:py-[11px] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring;
   }
-  /* Нативный select в одном ряду с Input: 36 px, рамка --input. */
+  /* Нативный select в одном ряду с Input: 44 px, рамка --input. */
   .field-select {
-    @apply h-9 w-full rounded-lg border border-input bg-background px-3 text-base outline-none transition-colors hover:border-foreground/40 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring md:text-sm;
+    @apply h-11 w-full rounded-lg border border-input bg-background px-3 text-base outline-none transition-colors hover:border-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring md:text-sm;
   }
   /* Чип-пилюля: пары «ключ: значение» в шапке курса, фильтры. */
   .chip {
@@ -294,23 +367,34 @@
   .data-table tr:last-child td {
     @apply border-b-0;
   }
-  /* Оранжевая плашка: сплошной фирменный цвет как поверхность, а не только кнопка. Текст белый,
-     подписи белые с прозрачностью. Один главный блок на экран: «Урок дня», финальный призыв на лендинге. */
+  /* Акцентный блок: тёплая светлая подложка (--surface-accent опроса) вместо сплошной оранжевой заливки,
+     оранжевый остаётся меткой. Один главный блок на экран: «Урок дня», финальный призыв на лендинге.
+     Радиус панели, графитовый текст. */
   .accent-panel {
-    @apply rounded-xl bg-primary p-6 text-primary-foreground md:p-8;
+    @apply rounded-3xl bg-primary-soft p-6 text-foreground md:p-8;
   }
   .accent-panel .eyebrow,
   .accent-panel-muted {
-    @apply text-primary-foreground/90;
+    @apply text-ink-soft;
   }
-  /* Карточка-ссылка: на наведении рамка становится фирменной, заголовок темнеет. Без тени и сдвига. */
+  /* Карточка-ссылка: на наведении рамка графитовая. Без тени и сдвига. */
   .card-link {
-    border: 2px solid var(--foreground);
-    @apply transition-colors hover:border-primary focus-visible:border-primary focus-visible:ring-3 focus-visible:ring-ring;
+    border: 1px solid var(--border);
+    @apply transition-colors hover:border-foreground focus-visible:border-foreground focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-ring;
   }
-  /* Толстая линия вместо мягкой карточки: разделитель секции и верх блока. */
+  /* Линейка раздела опроса: тонкая линия вместо мягкой карточки, разделитель секции и верх блока. */
   .rule {
-    border-top: 2px solid var(--foreground);
+    border-top: 1px solid var(--foreground);
+  }
+  /* Метка с квадратной точкой (label-dot опроса): точка 6 × 6 перед первым словом. */
+  .label-dot::before {
+    content: "";
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    margin-right: 0.5rem;
+    vertical-align: 0.12em;
+    background: var(--primary);
   }
   /* Полоса прогресса вырастает слева направо при появлении на странице (ширину задаёт style). */
   .bar-grow {
