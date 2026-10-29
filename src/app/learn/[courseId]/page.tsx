@@ -92,7 +92,7 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
             const sub = done.get(l.id);
             const isNext = next?.id === l.id;
             const locked = !sub && limitReached;
-            const number = sub ? "text-primary" : isNext ? "text-foreground" : "text-muted-foreground";
+            const number = sub ? "text-primary-strong" : isNext ? "text-foreground" : "text-muted-foreground";
             return (
               <li key={l.id}>
                 <Link

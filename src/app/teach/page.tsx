@@ -73,7 +73,7 @@ export default async function TeachPage({ searchParams }: { searchParams: Promis
                     <dl className="mt-5 grid grid-cols-3 gap-3 border-t pt-4">
                       <div>
                         <dt className="type-caption text-muted-foreground">Уроков</dt>
-                        <dd className={`mt-1 text-2xl font-semibold tracking-tight tabular-nums ${ready ? "text-primary" : ""}`}>{published}<span className="text-muted-foreground">/{lessons}</span></dd>
+                        <dd className={`mt-1 text-2xl font-semibold tracking-tight tabular-nums ${ready ? "text-primary-strong" : ""}`}>{published}<span className="text-muted-foreground">/{lessons}</span></dd>
                       </div>
                       <div>
                         <dt className="type-caption text-muted-foreground">Материалы</dt>

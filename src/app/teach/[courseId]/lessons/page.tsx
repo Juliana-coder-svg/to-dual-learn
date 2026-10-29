@@ -81,7 +81,7 @@ export default async function LessonsPage({ params }: { params: Promise<{ course
                 <div className="grid gap-4">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="type-counter text-primary"><span className="sr-only">Урок </span>{String(l.position).padStart(2, "0")}</span>
+                      <span className="type-counter"><span className="sr-only">Урок </span>{String(l.position).padStart(2, "0")}</span>
                       <Badge variant={l.status === "published" ? "default" : "secondary"}>{l.status === "published" ? "Опубликован" : "Черновик"}</Badge>
                       <span
                         className="type-caption text-muted-foreground"

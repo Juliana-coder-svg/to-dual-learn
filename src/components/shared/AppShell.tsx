@@ -40,8 +40,8 @@ export async function AppShell({
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="border-b bg-background">
-        <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-3 px-4">
+      <header className="sticky top-0 z-20 border-b bg-background/90 backdrop-blur-md">
+        <div className="container-x flex min-h-15 items-center justify-between gap-3 lg:min-h-17">
           <div className="flex min-w-0 items-center gap-5">
             <Brand href={isTeacher ? "/teach" : "/learn"} />
             <NavLinks items={nav} className="hidden md:flex" />
@@ -49,7 +49,7 @@ export async function AppShell({
           <div className="flex shrink-0 items-center gap-1 sm:gap-2">
             <Link
               href="/account/data"
-              className="hidden h-9 max-w-40 items-center rounded-lg px-3 text-sm text-muted-foreground hover:bg-muted/60 hover:text-foreground lg:inline-flex"
+              className="hidden min-h-11 max-w-40 items-center px-2 text-[0.9375rem] text-ink-soft hover:text-foreground lg:inline-flex"
               title={`${user.name} · ${user.email}`}
             >
               <span className="truncate">{user.name}</span>
@@ -65,11 +65,11 @@ export async function AppShell({
             </form>
           </div>
         </div>
-        <div className="border-t md:hidden">
-          <NavLinks items={nav} className="mx-auto w-full max-w-5xl overflow-x-auto px-3 py-1.5" />
+        <div className="md:hidden">
+          <NavLinks items={nav} className="container-x overflow-x-auto" />
         </div>
       </header>
-      <main className={`mx-auto w-full flex-1 px-4 py-8 md:py-10 ${width === "narrow" ? "max-w-2xl" : "max-w-5xl"}`}>{children}</main>
+      <main id="main" className={`mx-auto w-full flex-1 px-[clamp(1.125rem,4vw,3rem)] py-6 md:py-12 ${width === "narrow" ? "max-w-[calc(46rem+2*clamp(1.125rem,4vw,3rem))]" : "max-w-[77.5rem]"}`}>{children}</main>
       <SiteFooter signedIn />
     </div>
   );

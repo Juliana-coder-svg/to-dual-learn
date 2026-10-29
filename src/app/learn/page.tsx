@@ -18,7 +18,7 @@ function Stat({ label, value, hint, href, accent }: { label: string; value: stri
   const body = (
     <>
       <div className="eyebrow">{label}</div>
-      <div className={`mt-3 type-counter ${accent ? "text-primary" : ""}`}>{value}</div>
+      <div className={`mt-3 type-counter ${accent ? "text-primary-strong" : ""}`}>{value}</div>
       {hint ? <div className="mt-2 type-caption text-muted-foreground">{hint}</div> : null}
     </>
   );

@@ -17,7 +17,7 @@ export interface NavItem {
 export function NavLinks({ items, className }: { items: NavItem[]; className?: string }) {
   const pathname = usePathname();
   return (
-    <nav aria-label="Разделы" className={cn("flex items-center gap-1", className)}>
+    <nav aria-label="Разделы" className={cn("flex items-center gap-5 lg:gap-7", className)}>
       {items.map((item) => {
         const active = !item.except?.some((e) => pathname === e || pathname.startsWith(e + "/")) && (item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(item.href + "/"));
         return (
@@ -26,8 +26,8 @@ export function NavLinks({ items, className }: { items: NavItem[]; className?: s
             href={item.href}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "inline-flex h-9 items-center rounded-lg px-3 text-sm whitespace-nowrap transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring",
-              active ? "bg-muted font-medium text-foreground" : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+              "inline-flex min-h-11 items-center rounded-lg text-[0.9375rem] whitespace-nowrap transition-colors",
+              active ? "text-foreground underline decoration-1 underline-offset-[6px]" : "text-ink-soft hover:text-foreground",
             )}
           >
             {item.label}

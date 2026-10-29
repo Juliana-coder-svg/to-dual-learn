@@ -9,19 +9,19 @@ export function PublicShell({
   children,
 }: {
   action?: ReactNode;
-  /** narrow — формы и документы (448 px); wide — лендинг (1024 px). */
+  /** narrow — формы и документы (480 px); wide — лендинг (1240 px). */
   width?: "narrow" | "wide";
   children: ReactNode;
 }) {
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="border-b">
-        <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-4 px-4">
+      <header className="sticky top-0 z-20 border-b bg-background/90 backdrop-blur-md">
+        <div className="container-x flex min-h-15 items-center justify-between gap-4 lg:min-h-17">
           <Brand />
           {action ? <div className="flex min-w-0 items-center gap-2">{action}</div> : null}
         </div>
       </header>
-      <main className={`mx-auto flex w-full flex-1 flex-col px-4 ${width === "wide" ? "max-w-5xl" : "max-w-md"}`}>{children}</main>
+      <main id="main" className={`mx-auto flex w-full flex-1 flex-col px-[clamp(1.125rem,4vw,3rem)] ${width === "wide" ? "max-w-[77.5rem]" : "max-w-[calc(30rem+2*clamp(1.125rem,4vw,3rem))]"}`}>{children}</main>
       <SiteFooter />
     </div>
   );

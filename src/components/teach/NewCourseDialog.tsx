@@ -39,7 +39,7 @@ export function NewCourseDialog({ createAction, demos, error, variant = "default
       <dialog
         ref={ref}
         aria-labelledby="new-course-title"
-        className="m-auto w-[min(100%-2rem,36rem)] rounded-2xl border bg-background p-0 text-foreground backdrop:bg-foreground/40"
+        className="m-auto w-[min(100%-2rem,36rem)] rounded-3xl border bg-background p-0 text-foreground backdrop:bg-foreground/30"
         onClick={(e) => { if (e.target === ref.current) ref.current.close(); }}
       >
         <div className="p-6 md:p-8">

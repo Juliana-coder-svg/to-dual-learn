@@ -15,8 +15,8 @@ export function EmptyState({
 }) {
   return (
     <div className={cn("empty-state", className)}>
-      <p className="font-medium">{title}</p>
-      {description ? <p className="max-w-md text-sm text-muted-foreground">{description}</p> : null}
+      <p className="type-heading">{title}</p>
+      {description ? <p className="max-w-md text-sm text-ink-soft">{description}</p> : null}
       {action ? <div className="mt-1">{action}</div> : null}
     </div>
   );

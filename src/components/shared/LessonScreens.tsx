@@ -18,7 +18,7 @@ function Frame({ step, caption, children }: { step: 1 | 2 | 3; caption: string; 
         </div>
         <div className="p-5 text-sm">
           <div className="flex items-start gap-4">
-            <span className="type-counter text-primary">02</span>
+            <span className="type-counter">02</span>
             <div className="min-w-0 pt-1">
               <p className="type-heading">Первая цифра решает</p>
               <p className="mt-1 text-muted-foreground">Заметить эффект якоря после подсказки модели</p>
@@ -65,7 +65,7 @@ export function LessonTaskScreen() {
         <span className="ml-px inline-block h-4 w-px translate-y-0.5 bg-foreground" />
       </div>
       <div className="mt-4 flex items-center justify-between gap-3">
-        <span className="inline-flex h-9 items-center rounded-lg bg-primary px-4 font-medium text-primary-foreground">Отправить на разбор</span>
+        <span className="inline-flex h-9 items-center rounded-full bg-foreground px-5 font-medium text-background">Отправить на разбор</span>
         <span className="type-caption text-muted-foreground">около 5 минут</span>
       </div>
     </Frame>
@@ -84,7 +84,7 @@ export function LessonFeedbackScreen() {
       <div className="mt-5 flex items-end gap-8 border-t-2 border-foreground pt-4">
         <div>
           <p className="eyebrow">Балл</p>
-          <p className="mt-1 type-counter text-primary">4<span className="text-muted-foreground">/5</span></p>
+          <p className="mt-1 type-counter">4<span className="text-muted-foreground">/5</span></p>
         </div>
         <div>
           <p className="eyebrow">Серия</p>

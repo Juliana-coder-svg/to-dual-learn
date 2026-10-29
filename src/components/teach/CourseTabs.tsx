@@ -38,7 +38,7 @@ export function CourseTabs({ courseId, showSignals = false }: { courseId: string
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   "-mb-px inline-flex h-11 items-center whitespace-nowrap border-b-2 px-2.5 text-sm lg:px-3 transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring",
-                  active ? "border-primary font-medium text-foreground" : "border-transparent text-muted-foreground hover:border-border hover:text-foreground",
+                  active ? "border-foreground font-medium text-foreground" : "border-transparent text-muted-foreground hover:border-border hover:text-foreground",
                 )}
               >
                 {t.label}

@@ -201,7 +201,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
           <StepMarks total={3} filled={stepIndex} size="md" labels={["Идея", "Задача", "Разбор"]} />
         </div>
         <div className="mt-6 flex items-start gap-5">
-          <span aria-hidden className="type-counter shrink-0 text-primary">{String(lesson.position).padStart(2, "0")}</span>
+          <span aria-hidden className="type-counter shrink-0">{String(lesson.position).padStart(2, "0")}</span>
           <div className="min-w-0 pt-1">
             <h1 className="text-balance type-title">{c.title}</h1>
             <p className="mt-2 type-body text-muted-foreground">{c.concept}</p>
@@ -299,7 +299,7 @@ export function LessonPlayer({ lesson, reviewed, previous, nextHref, nextLabel, 
             <dl className="flex shrink-0 gap-8">
               <div>
                 <dt className="eyebrow">Балл</dt>
-                <dd className="mt-1 type-counter text-primary"><span className="sr-only">{feedback.score} из 5</span><span aria-hidden>{feedback.score}<span className="text-muted-foreground">/5</span></span></dd>
+                <dd className="mt-1 type-counter"><span className="sr-only">{feedback.score} из 5</span><span aria-hidden>{feedback.score}<span className="text-muted-foreground">/5</span></span></dd>
               </div>
               {progress ? (
                 <>
