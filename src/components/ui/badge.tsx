@@ -4,7 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "cn"
 
 /**
- * Плашка статуса: круглая, 22 px. default — акцентная заливка (опубликовано, балл, «сегодня»),
+ * Плашка статуса: пилюля, 22 px. default — светло-оранжевая подложка и тёмно-оранжевый текст, как «.soon» опроса (опубликовано, балл, «сегодня»),
  * secondary — серая заливка (черновик, пройдено), outline — рамка (справочное: «не проверен», «завтра»),
  * soft — светло-оранжевая подложка с тёмным текстом (отметки, которые не должны кричать).
  */
@@ -13,7 +13,7 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground [a]:hover:bg-[color-mix(in_oklch,var(--primary),white_14%)]",
+        default: "bg-primary-soft text-primary-strong [a]:hover:bg-[color-mix(in_oklch,var(--primary-soft),var(--primary)_12%)]",
         secondary: "bg-secondary text-secondary-foreground [a]:hover:bg-muted",
         soft: "bg-primary-soft text-primary-strong",
         destructive: "bg-destructive/10 text-destructive",
